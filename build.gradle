@@ -1,0 +1,74 @@
+plugins {
+    id 'java'
+    //id 'org.springframework.boot' version '2.5.12'
+    id 'maven-publish'
+}
+
+apply plugin: 'java'
+//apply plugin: 'org.springframework.boot'
+
+group 'com.trecapps.auth'
+version buildVersion
+
+repositories {
+    mavenCentral()
+}
+
+jar{
+    archiveClassifier=''
+    enabled = true
+}
+
+dependencies {
+    implementation 'org.projectlombok:lombok:1.18.24'
+    annotationProcessor 'org.projectlombok:lombok:1.18.24'
+
+    implementation 'org.springframework.boot:spring-boot-starter:+'
+
+    implementation 'org.hibernate:hibernate-core:+'
+    implementation 'org.hibernate:hibernate-entitymanager:+'
+    implementation 'javax.validation:validation-api:+'
+    implementation 'mysql:mysql-connector-java:+' // mySQL
+
+    implementation 'org.springframework.boot:spring-boot-starter-security:+'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa:+'
+
+    implementation 'com.azure:azure-storage-blob:+'
+
+    implementation "io.projectreactor.netty:reactor-netty-core:+"
+    implementation "io.projectreactor.netty:reactor-netty-http:+"
+
+    // Use JWT for token generation and verification
+    implementation 'com.auth0:java-jwt:+'
+    implementation 'org.bouncycastle:bcpkix-jdk15on:1.66'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+publishing {
+
+    publications {
+        myPublication(MavenPublication) {
+            groupId group
+            artifactId 'TrecAuth'
+            version buildVersion
+            artifact 'build/libs/'.concat(artifactId).concat('-').concat(buildVersion).concat('.jar')
+        }
+    }
+
+    repositories{
+        maven {
+            url azureRepoUrl
+            name 'tcMavenRepo'
+            credentials {
+                username azureRepoUsername
+                password azureRepoPassword
+            }
+        }
+    }
+}
