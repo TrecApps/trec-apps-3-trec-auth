@@ -178,6 +178,22 @@ public class JwtTokenService {
 
 	}
 
+	public String generateRefreshToken(TrecAccount account)
+	{
+		if(account == null)
+			return null;
+
+		if(!setKeys())
+			return null;
+		Date now = new Date(Calendar.getInstance().getTime().getTime());
+		return JWT.create().withIssuer(app)
+				.withClaim("ID", account.getId())
+				.withClaim("Username", account.getUsername())
+				.withClaim("Purpose", "Refresh")
+				.withIssuedAt(now)
+				.sign(Algorithm.RSA512(publicKey, privateKey));
+	}
+
 	public String getSessionId(String token)
 	{
 		if(!setKeys())
