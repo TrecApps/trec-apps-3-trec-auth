@@ -37,6 +37,16 @@ public class UserStorageService {
         objectMapper = new ObjectMapper();
     }
 
+    public String retrieveKey(String keyId)
+    {
+        BlobContainerClient containerClient = client.getBlobContainerClient("trec-apps-users");
+
+        BlobClient client = containerClient.getBlobClient(keyId);
+
+        BinaryData bData = client.downloadContent();
+
+        return new String(bData.toBytes(), StandardCharsets.UTF_8);
+    }
 
     public TcUser retrieveUser(String id) throws JsonProcessingException {
         BlobContainerClient containerClient = client.getBlobContainerClient("trec-apps-users");

@@ -9,16 +9,14 @@ import com.trecapps.auth.models.TcBrands;
 import com.trecapps.auth.models.primary.TrecAccount;
 import com.trecapps.auth.repos.primary.TrecAccountRepo;
 
+import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemReader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.RSAPrivateKey;
@@ -54,6 +52,9 @@ public class JwtTokenService {
 	
 	@Autowired
 	TrecAccountRepo accountRepo;
+
+	@Autowired
+	UserStorageService userStorageService;
 
 
 	private DecodedJWT decodeJWT(String token)
@@ -102,26 +103,14 @@ public class JwtTokenService {
 		{
 			File publicFile = new File(publicKeyStr);
 
-			Scanner keyfis;
+
 			try {
-				String encKey = "";
-				
-				keyfis = new Scanner(publicFile);
-				
-				while(keyfis.hasNext())
-				{
-					encKey += keyfis.next();
-				}
-				
-				keyfis.close();
-				
+				String encKey = userStorageService.retrieveKey(publicKeyStr);
+
 				X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(Base64.getDecoder().decode(encKey));
 				
 				publicKey = (RSAPublicKey)KeyFactory.getInstance("RSA").generatePublic(pubKeySpec);
 				
-			} catch (FileNotFoundException e2) {
-				// TODO Auto-generated catch block
-				e2.printStackTrace();
 			} catch (InvalidKeySpecException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -134,12 +123,10 @@ public class JwtTokenService {
 		
 		if(privateKey == null)
 		{
-			File privateFile = new File(privateKeyStr);
-			
-			try (FileReader keyReader = new FileReader(privateFile);
-				      PemReader pemReader = new PemReader(keyReader)) {
-				 
-				        PemObject pemObject = pemReader.readPemObject();
+			String encKey = userStorageService.retrieveKey(privateKeyStr);
+			try (PEMParser parser = new PEMParser(new StringReader(encKey))) {
+
+				        PemObject pemObject = parser.readPemObject();
 				        byte[] content = pemObject.getContent();
 				        PKCS8EncodedKeySpec privKeySpec = new PKCS8EncodedKeySpec(content);
 				        privateKey =  (RSAPrivateKey) KeyFactory.getInstance("RSA").generatePrivate(privKeySpec);

@@ -50,14 +50,14 @@ public class TrecAccountService implements UserDetailsService {
         return trecRepo.existsByUsername(username);
     }
 
-    public boolean saveNewAccount(TrecAccount account)
+    public TrecAccount saveNewAccount(TrecAccount account)
     {
         // First, see if the TrecAccount already Exists.
         boolean exists = trecRepo.existsByUsername(account.getUsername());
 
         if(exists)
         {
-            return false;
+            return null;
         }
         else
         {
@@ -73,8 +73,8 @@ public class TrecAccountService implements UserDetailsService {
             saltRepo.save(userSalt);
 
             account.setPasswordHash(BCrypt.hashpw(curPassword, userSalt.getSalt()));
-            trecRepo.save(account);
-            return true;
+            return trecRepo.save(account);
+
         }
 
 
