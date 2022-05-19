@@ -39,12 +39,80 @@ public class TrecAccountService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return null;
+        if(!trecRepo.existsByUsername(username))
+            return null;
+
+        return trecRepo.findByUsername(username);
     }
+
+    public boolean userNameExists(String username)
+    {
+        return trecRepo.existsByUsername(username);
+    }
+
+    public boolean saveNewAccount(TrecAccount account)
+    {
+        // First, see if the TrecAccount already Exists.
+        boolean exists = trecRepo.existsByUsername(account.getUsername());
+
+        if(exists)
+        {
+            return false;
+        }
+        else
+        {
+            // Let the Repo Set the ID
+            account.setId(null);
+            String curPassword = account.getPasswordHash();
+
+            // Never Store raw passwords in a database
+            account.setPasswordHash(null);
+            account = trecRepo.save(account);
+
+            UserSalt userSalt = new UserSalt(account.getId(), generateRandomString());
+            saltRepo.save(userSalt);
+
+            account.setPasswordHash(BCrypt.hashpw(curPassword, userSalt.getSalt()));
+            trecRepo.save(account);
+            return true;
+        }
+
+
+    }
+
+
 
     public Optional<TrecAccount> getAccountById(String id)
     {
         return trecRepo.findById(id);
+    }
+
+    public boolean changePassword(TrecAccount account, String oldPassword, String newPassword)
+    {
+        Optional<TrecAccount> savedAccount = trecRepo.findById(account.getId());
+
+        TrecAccount trecAccount = savedAccount.get();
+
+        Optional<UserSalt> salt = saltRepo.findById(trecAccount.getId());
+
+        if(salt.isEmpty())
+            return false;
+
+        UserSalt actSalt = salt.get();
+
+        if(trecAccount.getPassword().equals(BCrypt.hashpw(oldPassword, actSalt.getSalt())))
+        {
+            String newSalt = generateRandomString();
+
+            trecAccount.setPasswordHash(BCrypt.hashpw(newPassword, newSalt));
+            trecAccount = trecRepo.save(trecAccount);
+
+            actSalt.setSalt(newSalt);
+            actSalt = saltRepo.save(actSalt);
+
+            return true;
+        }
+        return false;
     }
 
     public TrecAccount logInUsername(String username, String password) {
