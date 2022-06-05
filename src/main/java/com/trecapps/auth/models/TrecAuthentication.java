@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Collection;
 
-@Component
+
 public class TrecAuthentication implements Authentication {
 
     TrecAccount account;
