@@ -1,6 +1,7 @@
 package com.trecapps.auth.models.primary;
 
 import lombok.Data;
+import org.hibernate.annotations.GenericGenerator;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -15,7 +16,8 @@ import java.util.List;
 public class TrecAccount implements UserDetails {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(generator="system-uuid")
+    @GenericGenerator(name="system-uuid", strategy = "uuid")
     String id;
 
     @Column(unique = true)

@@ -1,5 +1,6 @@
 package com.trecapps.auth.services;
 
+import com.trecapps.auth.models.LoginToken;
 import com.trecapps.auth.models.TrecAuthentication;
 import com.trecapps.auth.models.primary.TrecAccount;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,7 +56,11 @@ public class TrecSecurityContext implements SecurityContextRepository {
                 cook = new Cookie("TRECSESSION", null);
                 cook.setMaxAge(0);
             } else {
-                cook = new Cookie("TRECSESSION", jwtService.generateToken(trecAuth.getAccount(), null));
+
+                LoginToken token = trecAuth.getLoginToken();
+
+                cook = new Cookie("TRECSESSION", token == null ?
+                        jwtService.generateToken(trecAuth.getAccount(), null) : token.getAccess_token());
                 cook.setMaxAge(-1);
 
             }

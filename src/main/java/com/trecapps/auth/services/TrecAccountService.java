@@ -24,7 +24,7 @@ public class TrecAccountService implements UserDetailsService {
     final String AlphaNumericString = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
             + "0123456789"
             + "abcdefghijklmnopqrstuvxyz";
-    final int RANDOM_STRING_LENGTH = 20;
+    final int RANDOM_STRING_LENGTH = 30;
 
     private String generateRandomString()
     {
@@ -69,8 +69,8 @@ public class TrecAccountService implements UserDetailsService {
             account.setPasswordHash(null);
             account = trecRepo.save(account);
 
-            UserSalt userSalt = new UserSalt(account.getId(), generateRandomString());
-            saltRepo.save(userSalt);
+            UserSalt userSalt = new UserSalt(account.getId(), BCrypt.gensalt());
+            userSalt = saltRepo.save(userSalt);
 
             account.setPasswordHash(BCrypt.hashpw(curPassword, userSalt.getSalt()));
             return trecRepo.save(account);
@@ -102,7 +102,7 @@ public class TrecAccountService implements UserDetailsService {
 
         if(trecAccount.getPassword().equals(BCrypt.hashpw(oldPassword, actSalt.getSalt())))
         {
-            String newSalt = generateRandomString();
+            String newSalt = BCrypt.gensalt();
 
             trecAccount.setPasswordHash(BCrypt.hashpw(newPassword, newSalt));
             trecAccount = trecRepo.save(trecAccount);

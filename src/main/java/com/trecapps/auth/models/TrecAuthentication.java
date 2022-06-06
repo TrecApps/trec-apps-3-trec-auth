@@ -15,12 +15,18 @@ public class TrecAuthentication implements Authentication {
 
     boolean regularSession;
 
+    LoginToken loginToken;
+
     public TrecAuthentication(TrecAccount account)
     {
         this.account = account;
         isTrusted = true;
         regularSession = true;
     }
+
+    public void setLoginToken(LoginToken token) {loginToken = token;}
+
+    public LoginToken getLoginToken(){return loginToken;}
 
     public boolean isRegularSession() {
         return regularSession;
