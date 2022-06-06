@@ -8,12 +8,14 @@ import com.azure.storage.blob.BlobServiceClient;
 import com.azure.storage.blob.BlobServiceClientBuilder;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.trecapps.auth.models.TcBrands;
 import com.trecapps.auth.models.TcUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
@@ -30,11 +32,13 @@ public class UserStorageService {
     @Autowired
     UserStorageService(@Value("${trecauth.storage.account-name}") String name,
                        @Value("${trecauth.storage.account-key}") String key,
-                       @Value("${trecauth.storage.blob-endpoint}") String endpoint)
+                       @Value("${trecauth.storage.blob-endpoint}") String endpoint,
+                       Jackson2ObjectMapperBuilder objectMapperBuilder)
     {
         AzureNamedKeyCredential credential = new AzureNamedKeyCredential(name, key);
         client = new BlobServiceClientBuilder().credential(credential).endpoint(endpoint).buildClient();
-        objectMapper = new ObjectMapper();
+        objectMapper = objectMapperBuilder.createXmlMapper(false).build();
+        objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
     }
 
     public String retrieveKey(String keyId)
