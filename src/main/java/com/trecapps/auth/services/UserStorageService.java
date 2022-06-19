@@ -83,7 +83,7 @@ public class UserStorageService {
 
         BlobClient client = containerClient.getBlobClient("user-" + user.getId());
 
-        client.upload(BinaryData.fromObject(user));
+        client.upload(BinaryData.fromObject(user),true);
     }
 
     public void saveBrand(TcBrands brand)
@@ -92,6 +92,6 @@ public class UserStorageService {
 
         BlobClient client = containerClient.getBlobClient("brand-" + brand.getId());
 
-        client.upload(BinaryData.fromObject(brand));
+        client.upload(BinaryData.fromObject(brand), true);
     }
 }

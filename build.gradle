@@ -10,6 +10,10 @@ apply plugin: 'java'
 group 'com.trecapps.auth'
 version buildVersion
 
+ext {
+    springbootVersion = '2.5.12'
+}
+
 repositories {
     mavenCentral()
 }
@@ -27,10 +31,10 @@ dependencies {
     implementation 'javax.activation:activation:1.1'
     implementation 'org.glassfish.jaxb:jaxb-runtime:2.3.0'
 
-    implementation 'org.springframework.boot:spring-boot-starter:+'
+    implementation "org.springframework.boot:spring-boot-starter:$springbootVersion"
 
-    implementation 'org.hibernate:hibernate-core:+'
-    implementation 'org.hibernate:hibernate-entitymanager:+'
+    implementation 'org.hibernate:hibernate-core:5.4.11.Final'
+    implementation 'org.hibernate:hibernate-entitymanager:5.4.11.Final'
     implementation 'javax.validation:validation-api:+'
     implementation 'mysql:mysql-connector-java:+' // mySQL
 
@@ -43,8 +47,8 @@ dependencies {
     // This dependency is used by the application.
     implementation 'com.google.guava:guava:28.0-jre'
 
-    implementation 'org.springframework.boot:spring-boot-starter-security:+'
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa:+'
+    implementation "org.springframework.boot:spring-boot-starter-security:$springbootVersion"
+    implementation "org.springframework.boot:spring-boot-starter-data-jpa:$springbootVersion"
 
     implementation 'com.azure:azure-storage-blob:+'
 
