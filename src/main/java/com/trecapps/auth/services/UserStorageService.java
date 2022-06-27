@@ -9,6 +9,7 @@ import com.azure.storage.blob.BlobServiceClientBuilder;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.trecapps.auth.models.SessionList;
 import com.trecapps.auth.models.TcBrands;
 import com.trecapps.auth.models.TcUser;
 import org.slf4j.Logger;
@@ -64,6 +65,18 @@ public class UserStorageService {
         return objectMapper.readValue(data, TcUser.class);
     }
 
+    public SessionList retrieveSessions(String id) throws JsonProcessingException {
+        BlobContainerClient containerClient = client.getBlobContainerClient("trec-apps-users");
+
+        BlobClient client = containerClient.getBlobClient("sessions-" + id);
+
+        BinaryData bData = client.downloadContent();
+
+        String data = new String(bData.toBytes(), StandardCharsets.UTF_8);
+
+        return objectMapper.readValue(data, SessionList.class);
+    }
+
     public TcBrands retrieveBrand(UUID id) throws JsonProcessingException
     {
         BlobContainerClient containerClient = client.getBlobContainerClient("trec-apps-users");
@@ -91,6 +104,15 @@ public class UserStorageService {
         BlobContainerClient containerClient = client.getBlobContainerClient("trec-apps-users");
 
         BlobClient client = containerClient.getBlobClient("brand-" + brand.getId());
+
+        client.upload(BinaryData.fromObject(brand), true);
+    }
+
+    public void saveSessions(SessionList brand, String id)
+    {
+        BlobContainerClient containerClient = client.getBlobContainerClient("trec-apps-users");
+
+        BlobClient client = containerClient.getBlobClient("sessions-" + id);
 
         client.upload(BinaryData.fromObject(brand), true);
     }

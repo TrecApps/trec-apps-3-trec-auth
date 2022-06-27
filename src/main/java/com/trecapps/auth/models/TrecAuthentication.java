@@ -17,6 +17,18 @@ public class TrecAuthentication implements Authentication {
 
     LoginToken loginToken;
 
+    String sessionId;
+
+    public String getSessionId()
+    {
+        return sessionId;
+    }
+
+    public void setSessionId(String sessionId1)
+    {
+        sessionId = sessionId1;
+    }
+
     public TrecAuthentication(TrecAccount account)
     {
         this.account = account;

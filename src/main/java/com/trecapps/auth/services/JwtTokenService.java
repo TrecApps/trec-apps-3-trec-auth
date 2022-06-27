@@ -56,6 +56,9 @@ public class JwtTokenService {
 	@Autowired
 	UserStorageService userStorageService;
 
+	@Autowired
+	SessionManager sessionManager;
+
 
 	private DecodedJWT decodeJWT(String token)
 	{
@@ -154,25 +157,26 @@ public class JwtTokenService {
 	 * @param account
 	 * @return
 	 */
-	public String generateToken(TrecAccount account, TcBrands brand)
+	public String generateToken(TrecAccount account, String sessionId, TcBrands brand)
 	{
 		if(account == null)
 			return null;
 		
 		if(!setKeys())
 			return null;
-		
-//		if(!verifyUnlocked(account))
-//			return null;
-		
-		privateKey.getAlgorithm();
-		
+
+		if(sessionId == null) {
+			String userId = account.getId();
+			sessionManager.prepNewUser(userId);
+			sessionId = sessionManager.addSession(app, account.getId());
+		}
 		Date now = new Date(Calendar.getInstance().getTime().getTime());
 
 		return JWT.create().withIssuer(app)
 				.withClaim("ID", account.getId())
 				.withClaim("Username", account.getUsername())
 				.withClaim("Brand", brand == null ? "null" : brand.getId().toString())
+				.withClaim("SessionId", sessionId)
 				.withIssuedAt(now)
 				.sign(Algorithm.RSA512(publicKey, privateKey));
 
@@ -196,7 +200,7 @@ public class JwtTokenService {
 
 	public String getSessionId(String token)
 	{
-		if(!setKeys())
+		if(!setKeys() || token== null)
 			return null;
 
 		DecodedJWT decodedJwt = null;
@@ -212,7 +216,7 @@ public class JwtTokenService {
 			return null;
 		}
 
-		Claim idClaim = decodedJwt.getClaim("sessionId");
+		Claim idClaim = decodedJwt.getClaim("SessionId");
 
 		return idClaim.asString();
 	}
@@ -224,6 +228,8 @@ public class JwtTokenService {
 	 */
 	public TrecAccount verifyToken(String token)
 	{
+		if(token == null)
+			return null;
 		DecodedJWT decodedJwt = decodeJWT(token);
 
 		if(decodedJwt == null) {
