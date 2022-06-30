@@ -3,6 +3,8 @@ package com.trecapps.auth.services;
 import com.trecapps.auth.models.LoginToken;
 import com.trecapps.auth.models.TrecAuthentication;
 import com.trecapps.auth.models.primary.TrecAccount;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContext;
@@ -24,6 +26,8 @@ public class TrecSecurityContext implements SecurityContextRepository {
 
     @Value("${trecauth.app}")
     String app;
+
+    Logger logger = LoggerFactory.getLogger(TrecSecurityContext.class);
 
     @Override
     public SecurityContext loadContext(HttpRequestResponseHolder requestResponseHolder) {
@@ -85,6 +89,7 @@ public class TrecSecurityContext implements SecurityContextRepository {
         String sessionId = jwtService.getSessionId(auth);
         // Only authenticate if both the user, app, and session can be verified
         if(sessionId != null && sessionManager.isValidSession(acc.getId(), app, sessionId)) {
+            logger.info("Found Valid Session!");
             tAuth.setSessionId(sessionId);
             context.setAuthentication(tAuth);
         }

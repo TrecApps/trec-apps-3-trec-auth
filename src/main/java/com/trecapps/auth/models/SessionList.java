@@ -3,6 +3,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.persistence.Transient;
 import java.time.OffsetDateTime;
@@ -23,6 +25,8 @@ public class SessionList {
     final int RANDOM_STRING_LENGTH = 6;
 
     final static int MAX_SESSION_COUNT = 30;
+
+    static Logger logger = LoggerFactory.getLogger(SessionList.class);
 
     boolean notExpired(OffsetDateTime dateTime) {
         return OffsetDateTime.now().isBefore(dateTime);
@@ -69,6 +73,7 @@ public class SessionList {
         {
             if(session.sessionId.equals(id))
             {
+                logger.info("Found Session {}, comparing to target Session {}", session, id);
                 return app.equals(session.appId) && (session.expiration == null ? true : notExpired(session.expiration));
             }
         }
