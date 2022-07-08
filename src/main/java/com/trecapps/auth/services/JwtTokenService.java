@@ -59,7 +59,6 @@ public class JwtTokenService {
 	@Autowired
 	SessionManager sessionManager;
 
-
 	private DecodedJWT decodeJWT(String token)
 	{
 		if(!setKeys())
@@ -157,7 +156,7 @@ public class JwtTokenService {
 	 * @param account
 	 * @return
 	 */
-	public String generateToken(TrecAccount account, String sessionId, TcBrands brand)
+	public String generateToken(TrecAccount account, String userAgent, TcBrands brand)
 	{
 		if(account == null)
 			return null;
@@ -165,11 +164,11 @@ public class JwtTokenService {
 		if(!setKeys())
 			return null;
 
-		if(sessionId == null) {
-			String userId = account.getId();
-			sessionManager.prepNewUser(userId);
-			sessionId = sessionManager.addSession(app, account.getId());
-		}
+
+		String userId = account.getId();
+		sessionManager.prepNewUser(userId);
+		String sessionId = sessionManager.addSession(app, account.getId(), userAgent);
+
 		Date now = new Date(Calendar.getInstance().getTime().getTime());
 
 		return JWT.create().withIssuer(app)

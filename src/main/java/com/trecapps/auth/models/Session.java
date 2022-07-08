@@ -16,6 +16,8 @@ public class Session {
     @NotNull
     String appId;
 
+    String deviceInfo;
+
     OffsetDateTime expiration;
 
 

@@ -47,7 +47,7 @@ public class SessionList {
 
     List<Session> sessions;
 
-    public String addNewSession(String app, OffsetDateTime expiration)
+    public String addNewSession(String app, String userInfo, OffsetDateTime expiration)
     {
         List<String> currentIds = new ArrayList<>();
         for(Session session: sessions){
@@ -60,7 +60,7 @@ public class SessionList {
             newId = generateRandomString();
             if(!currentIds.contains(newId))
             {
-                sessions.add(new Session(newId,app, expiration));
+                sessions.add(new Session(newId,app, userInfo, expiration));
                 return newId;
             }
         }

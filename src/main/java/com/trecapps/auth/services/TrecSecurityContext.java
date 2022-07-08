@@ -60,7 +60,7 @@ public class TrecSecurityContext implements SecurityContextRepository {
                 LoginToken token = trecAuth.getLoginToken();
 
                 cook = new Cookie("TRECSESSION", token == null ?
-                        jwtService.generateToken(trecAuth.getAccount(), trecAuth.getSessionId(), null) : token.getAccess_token());
+                        jwtService.generateToken(trecAuth.getAccount(), request.getHeader("User-Agent"), null) : token.getAccess_token());
             }
         }
 
