@@ -1,6 +1,8 @@
 package com.trecapps.auth.services;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.trecapps.auth.models.LoginToken;
+import com.trecapps.auth.models.TcUser;
 import com.trecapps.auth.models.TrecAuthentication;
 import com.trecapps.auth.models.primary.TrecAccount;
 import org.slf4j.Logger;
@@ -23,6 +25,9 @@ public class TrecSecurityContext implements SecurityContextRepository {
     @Autowired
     JwtTokenService jwtService;
     @Autowired SessionManager sessionManager;
+
+    @Autowired
+    UserStorageService userStorageService;
 
     @Value("${trecauth.app}")
     String app;
@@ -93,6 +98,21 @@ public class TrecSecurityContext implements SecurityContextRepository {
             tAuth.setSessionId(sessionId);
             context.setAuthentication(tAuth);
         }
+
+        try {
+            TcUser tcUser = userStorageService.retrieveUser(acc.getId());
+
+            if(tcUser.isEmailVerified())
+                acc.addAuthority("EMAIL_VERIFIED");
+            if(tcUser.isPhoneVerified())
+                acc.addAuthority("PHONE_VERIFIED");
+
+            for(String role : tcUser.getAuthRoles())
+                acc.addAuthority(role);
+        } catch (NullPointerException | JsonProcessingException e) {
+            e.printStackTrace();
+        }
+
         return context;
     }
 

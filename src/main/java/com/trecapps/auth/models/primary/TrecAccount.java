@@ -1,6 +1,7 @@
 package com.trecapps.auth.models.primary;
 
 import lombok.Data;
+import lombok.Getter;
 import org.hibernate.annotations.GenericGenerator;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -28,6 +29,15 @@ public class TrecAccount implements UserDetails {
     @Transient
     List<String> authorities;
 
+    TrecAccount()
+    {
+        authorities = new ArrayList<>();
+    }
+
+    public void addAuthority(String auth)
+    {
+        authorities.add(auth);
+    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

@@ -38,6 +38,9 @@ public class TcUser {
     // Addresses used by the User
     String[] address;
 
+    // List of authorized roles
+    String[] authRoles;
+
     // External Profiles
     List<UUID> brands;
     Map<UUID, UUID> brandSettings; // Device/App setting determining which Brand the User is currently id-ing as
