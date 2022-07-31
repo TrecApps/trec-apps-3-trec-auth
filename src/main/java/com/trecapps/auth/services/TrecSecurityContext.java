@@ -58,15 +58,11 @@ public class TrecSecurityContext implements SecurityContextRepository {
             if(!trecAuth.isRegularSession())
                 return;
 
-            if (trecAuth == null) {
-                cook = new Cookie("TRECSESSION", null);
-            } else {
+            LoginToken token = trecAuth.getLoginToken();
 
-                LoginToken token = trecAuth.getLoginToken();
+            cook = new Cookie("TRECSESSION", token == null ?
+                    jwtService.generateToken(trecAuth.getAccount(), request.getHeader("User-Agent"), null) : token.getAccess_token());
 
-                cook = new Cookie("TRECSESSION", token == null ?
-                        jwtService.generateToken(trecAuth.getAccount(), request.getHeader("User-Agent"), null) : token.getAccess_token());
-            }
         }
 
         if(cook.getValue() != null)
@@ -96,6 +92,9 @@ public class TrecSecurityContext implements SecurityContextRepository {
         if(sessionId != null && sessionManager.isValidSession(acc.getId(), app, sessionId)) {
             logger.info("Found Valid Session!");
             tAuth.setSessionId(sessionId);
+            LoginToken token = new LoginToken();
+            token.setAccess_token(auth);
+            tAuth.setLoginToken(token);
             context.setAuthentication(tAuth);
         }
 
