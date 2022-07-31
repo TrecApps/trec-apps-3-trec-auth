@@ -29,7 +29,7 @@ public class TrecAccount implements UserDetails {
     @Transient
     List<String> authorities;
 
-    TrecAccount()
+    public TrecAccount()
     {
         authorities = new ArrayList<>();
     }
