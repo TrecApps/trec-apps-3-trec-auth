@@ -45,7 +45,7 @@ public class TrecSecurityContext implements SecurityContextRepository {
 
     @Override
     public void saveContext(SecurityContext context, HttpServletRequest request, HttpServletResponse response) {
-        Cookie cook;
+        Cookie cook = null;
         if(!(context.getAuthentication() instanceof TrecAuthentication))
         {
             cook = new Cookie("TRECSESSION", null);
@@ -60,12 +60,12 @@ public class TrecSecurityContext implements SecurityContextRepository {
 
             LoginToken token = trecAuth.getLoginToken();
 
-            cook = new Cookie("TRECSESSION", token == null ?
-                    jwtService.generateToken(trecAuth.getAccount(), request.getHeader("User-Agent"), null) : token.getAccess_token());
+//            cook = new Cookie("TRECSESSION", token == null ?
+//                    jwtService.generateToken(trecAuth.getAccount(), request.getHeader("User-Agent"), null) : token.getAccess_token());
 
         }
 
-        if(cook.getValue() != null)
+        if(cook != null && cook.getValue() != null)
             response.addHeader("SetAuth", cook.getValue());
 
     }

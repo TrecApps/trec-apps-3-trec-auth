@@ -1,11 +1,13 @@
 package com.trecapps.auth.services;
 
 import com.auth0.jwt.JWT;
+import com.auth0.jwt.JWTCreator;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.trecapps.auth.models.TcBrands;
+import com.trecapps.auth.models.TokenTime;
 import com.trecapps.auth.models.primary.TrecAccount;
 import com.trecapps.auth.repos.primary.TrecAccountRepo;
 
@@ -26,6 +28,7 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.sql.Date;
 import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 import java.util.Base64;
 import java.util.Calendar;
 import java.util.Optional;
@@ -156,7 +159,7 @@ public class JwtTokenService {
 	 * @param account
 	 * @return
 	 */
-	public String generateToken(TrecAccount account, String userAgent, TcBrands brand)
+	public TokenTime generateToken(TrecAccount account, String userAgent, TcBrands brand, boolean expires)
 	{
 		if(account == null)
 			return null;
@@ -167,21 +170,64 @@ public class JwtTokenService {
 
 		String userId = account.getId();
 		sessionManager.prepNewUser(userId);
-		String sessionId = sessionManager.addSession(app, account.getId(), userAgent);
 
 		Date now = new Date(Calendar.getInstance().getTime().getTime());
 
-		return JWT.create().withIssuer(app)
+		TokenTime ret = sessionManager.addSession(app, account.getId(), userAgent, expires);
+
+		JWTCreator.Builder jwtBuilder = JWT.create().withIssuer(app)
 				.withClaim("ID", account.getId())
 				.withClaim("Username", account.getUsername())
 				.withClaim("Brand", brand == null ? "null" : brand.getId().toString())
-				.withClaim("SessionId", sessionId)
-				.withIssuedAt(now)
-				.sign(Algorithm.RSA512(publicKey, privateKey));
+				.withClaim("SessionId", ret.getSession())
+				.withIssuedAt(now);
+
+		if(ret.getExpiration() != null)
+			jwtBuilder = jwtBuilder.withExpiresAt(ret.getExpiration().toInstant());
+
+		ret.setToken(jwtBuilder.sign(Algorithm.RSA512(publicKey, privateKey)));
+		return ret;
 
 	}
 
-	public String generateRefreshToken(TrecAccount account)
+	public TokenTime generateNewTokenFromRefresh(String refreshToken)
+	{
+		DecodedJWT decodedJwt = null;
+		try
+		{
+			decodedJwt = JWT.require(Algorithm.RSA512(publicKey,privateKey))
+					.build()
+					.verify(refreshToken);
+		}
+		catch(JWTVerificationException e)
+		{
+			e.printStackTrace();
+			return null;
+		}
+
+		String user = decodedJwt.getClaim("ID").asString();
+		String session = decodedJwt.getClaim("Session").asString();
+
+		OffsetDateTime newExp = OffsetDateTime.now().plusMinutes(10);
+		sessionManager.updateSessionExpiration(user, session, newExp);
+
+		String brand = decodedJwt.getClaim("Brand").asString();
+		JWTCreator.Builder jwtBuilder = JWT.create().withIssuer(app)
+				.withClaim("ID", user)
+				.withClaim("Username", decodedJwt.getClaim("Username").asString())
+				.withClaim("Brand", brand)
+				.withClaim("SessionId", session)
+				.withIssuedAt(OffsetDateTime.now().toInstant())
+				.withExpiresAt(newExp.toInstant());
+
+		TokenTime ret = new TokenTime();
+		ret.setSession(session);
+		ret.setExpiration(newExp);
+		ret.setToken(jwtBuilder.sign(Algorithm.RSA512(publicKey, privateKey)));
+		return ret;
+	}
+
+	public String generateRefreshToken(TrecAccount account, String brand, String session)
 	{
 		if(account == null)
 			return null;
@@ -193,6 +239,8 @@ public class JwtTokenService {
 				.withClaim("ID", account.getId())
 				.withClaim("Username", account.getUsername())
 				.withClaim("Purpose", "Refresh")
+				.withClaim("Brand", brand == null ? "null" : brand)
+				.withClaim("Session", session)
 				.withIssuedAt(now)
 				.sign(Algorithm.RSA512(publicKey, privateKey));
 	}
@@ -244,7 +292,7 @@ public class JwtTokenService {
 
 		Optional<TrecAccount> ret = accountService.getAccountById(idLong);
 		
-		return ret.isPresent() ? ret.get() : null;
+		return ret.orElse(null);
 	}
 
 

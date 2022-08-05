@@ -3,11 +3,13 @@ package com.trecapps.auth.services;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.trecapps.auth.models.Session;
 import com.trecapps.auth.models.SessionList;
+import com.trecapps.auth.models.TokenTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -78,13 +80,19 @@ public class SessionManager {
         return ret.toString();
     }
 
-    public String addSession(String app, String userId, String clientInfo){
+    public TokenTime addSession(String app, String userId, String clientInfo, boolean expires){
         try {
             SessionList sessions = userStorageService.retrieveSessions(userId);
 
-            String ret = sessions.addNewSession(app,getDeviceInfo(clientInfo), null);
+            OffsetDateTime exp = expires ?
+                    OffsetDateTime.now().plusMinutes(10) : null;
+
+            String ret = sessions.addNewSession(app,getDeviceInfo(clientInfo), exp);
             userStorageService.saveSessions(sessions, userId);
-            return ret;
+            TokenTime tokenTime = new TokenTime();
+            tokenTime.setExpiration(exp);
+            tokenTime.setSession(ret);
+            return tokenTime;
         } catch (JsonProcessingException e) {
             logger.error("Error reading SessionList!", e);
             return null;
@@ -103,6 +111,26 @@ public class SessionManager {
             userStorageService.saveSessions(newList, userId);
             return true;
         }
+    }
+
+    public boolean updateSessionExpiration(String userId, String session, OffsetDateTime time)
+    {
+        try {
+            SessionList sessions = userStorageService.retrieveSessions(userId);
+
+            for(Session session1 : sessions.getSessions())
+            {
+                if(session.equals(session1.getSessionId()))
+                {
+                    session1.setExpiration(time);
+                    userStorageService.saveSessions(sessions, userId);
+                    return true;
+                }
+            }
+        } catch (JsonProcessingException e) {
+            logger.error("Error reading SessionList!", e);
+        }
+        return false;
     }
 
     public List<Session> getSessionList(String userId)
