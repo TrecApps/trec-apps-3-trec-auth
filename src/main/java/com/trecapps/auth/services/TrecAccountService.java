@@ -5,6 +5,7 @@ import com.trecapps.auth.models.secondary.UserSalt;
 import com.trecapps.auth.repos.primary.TrecAccountRepo;
 import com.trecapps.auth.repos.secondary.UserSaltRepo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -21,6 +22,13 @@ public class TrecAccountService implements UserDetailsService {
 
     @Autowired
     UserSaltRepo saltRepo;
+
+    @Autowired
+    FailedLoginService failedLoginService;
+
+    @Value("${trecauth.failed.count:10}")
+    Integer loginLimit;
+
     final String AlphaNumericString = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
             + "0123456789"
             + "abcdefghijklmnopqrstuvxyz";
@@ -125,6 +133,9 @@ public class TrecAccountService implements UserDetailsService {
 
         Optional<UserSalt> salt = saltRepo.findById(id);
 
+        if(failedLoginService.isLocked(id))
+            return new TrecAccount();
+
         if(salt.isEmpty())
             return null;
 
@@ -134,6 +145,7 @@ public class TrecAccountService implements UserDetailsService {
             return ret;
 
         // To-Do: Process Failed Login Attempt
+        if(failedLoginService.appendFailedLogin(id) >= loginLimit) return new TrecAccount();
 
         return null;
     }
