@@ -6,6 +6,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
+import java.util.UUID;
 
 
 public class TrecAuthentication implements Authentication {
@@ -18,6 +19,18 @@ public class TrecAuthentication implements Authentication {
     LoginToken loginToken;
 
     String sessionId;
+
+    public UUID getBrandId() {
+        return brandId;
+    }
+
+    public void setBrandId(UUID brandId) {
+        this.brandId = brandId;
+    }
+
+    UUID brandId;
+
+
 
     public String getSessionId()
     {

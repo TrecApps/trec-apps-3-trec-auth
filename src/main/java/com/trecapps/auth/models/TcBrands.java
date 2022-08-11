@@ -2,13 +2,14 @@ package com.trecapps.auth.models;
 
 import lombok.Data;
 
+import java.util.Set;
 import java.util.UUID;
 
 @Data
 public class TcBrands {
 
     // Should hold the IDs of the TcUsers that own it
-    String[] owners;
+    Set<String> owners;
 
     // Display name for the Brand
     String name;

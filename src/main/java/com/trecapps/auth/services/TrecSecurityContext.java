@@ -95,6 +95,9 @@ public class TrecSecurityContext implements SecurityContextRepository {
             LoginToken token = new LoginToken();
             token.setAccess_token(auth);
             tAuth.setLoginToken(token);
+
+            tAuth.setBrandId(acc.getBrandId());
+
             context.setAuthentication(tAuth);
         }
 

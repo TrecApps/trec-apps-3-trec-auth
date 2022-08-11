@@ -29,10 +29,8 @@ import java.security.spec.X509EncodedKeySpec;
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.time.OffsetDateTime;
-import java.util.Base64;
-import java.util.Calendar;
-import java.util.Optional;
-import java.util.Scanner;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
 
 @Service
 public class JwtTokenService {
@@ -154,12 +152,17 @@ public class JwtTokenService {
 		return privateKey != null && publicKey != null;
 	}
 
+	public TokenTime generateToken(TrecAccount account, String userAgent, TcBrands brand, boolean expires)
+	{
+		return generateToken(account, userAgent, brand, null, expires);
+	}
+
 	/**
 	 * Use when attempting to log on to User Service directly (through the User Client Project)
 	 * @param account
 	 * @return
 	 */
-	public TokenTime generateToken(TrecAccount account, String userAgent, TcBrands brand, boolean expires)
+	public TokenTime generateToken(TrecAccount account, String userAgent, TcBrands brand, String session, boolean expires)
 	{
 		if(account == null)
 			return null;
@@ -173,8 +176,21 @@ public class JwtTokenService {
 
 		Date now = new Date(Calendar.getInstance().getTime().getTime());
 
-		TokenTime ret = sessionManager.addSession(app, account.getId(), userAgent, expires);
+		TokenTime ret = null;
+		if(session == null)
+			ret = sessionManager.addSession(app, account.getId(), userAgent, expires);
+		else
+		{
+			ret = new TokenTime();
+			ret.setSession(session);
 
+			if(expires)
+			{
+				OffsetDateTime expiration = OffsetDateTime.now().plus(10, ChronoUnit.MINUTES);
+				sessionManager.updateSessionExpiration(account.getId(), session, expiration);
+				ret.setExpiration(expiration);
+			}
+		}
 		JWTCreator.Builder jwtBuilder = JWT.create().withIssuer(app)
 				.withClaim("ID", account.getId())
 				.withClaim("Username", account.getUsername())
@@ -273,27 +289,37 @@ public class JwtTokenService {
 	 * @param token
 	 * @return
 	 */
-	public TrecAccount verifyToken(String token)
-	{
-		if(token == null)
+	public TrecAccount verifyToken(String token) {
+		if (token == null)
 			return null;
 		DecodedJWT decodedJwt = decodeJWT(token);
 
-		if(decodedJwt == null) {
+		if (decodedJwt == null) {
 			return null;
 		}
 		Claim idClaim = decodedJwt.getClaim("ID");
-		
+
 		String idLong = idClaim.asString();
-		
-		if(idLong == null) {
+
+
+		if (idLong == null) {
 			return null;
 		}
 
+		String brandStr = decodedJwt.getClaim("Brand").asString();
+
 		Optional<TrecAccount> ret = accountService.getAccountById(idLong);
-		
-		return ret.orElse(null);
+
+		if(ret.isEmpty())
+			return null;
+		TrecAccount acc = ret.get();
+
+		try {
+			acc.setBrandId(UUID.fromString(brandStr));
+		} catch(Throwable ignored)
+		{
+
+		}
+		return acc;
 	}
-
-
 }
