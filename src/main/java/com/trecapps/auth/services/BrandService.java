@@ -101,6 +101,25 @@ public class BrandService {
         }
     }
 
+    public TcBrands getBrandById(UUID brandId, TrecAccount account)
+    {
+        if(!brandEntryRepo.existsById(brandId))
+            return null;
+        try {
+            TcBrands brand = userStorageService.retrieveBrand(brandId);
+            if(!isOwner(account, brandId))
+            {
+                brand.setOwners(null);
+            }
+            return brand;
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+
+    }
+
     public LoginToken LoginAsBrand(TrecAccount account, UUID brandId, String userAgent, String session, boolean doesExpire)
     {
         if(!isOwner(account, brandId))
