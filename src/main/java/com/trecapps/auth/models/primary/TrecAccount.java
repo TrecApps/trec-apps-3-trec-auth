@@ -1,12 +1,13 @@
 package com.trecapps.auth.models.primary;
 
+import jakarta.persistence.*;
 import lombok.Data;
 import lombok.Getter;
 import org.hibernate.annotations.GenericGenerator;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import javax.persistence.*;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -14,10 +15,12 @@ import java.util.UUID;
 
 @Table
 @Entity
+@javax.persistence.Entity
 @Data
 public class TrecAccount implements UserDetails {
 
     @Id
+    @javax.persistence.Id
     @GeneratedValue(generator="system-uuid")
     @GenericGenerator(name="system-uuid", strategy = "uuid")
     String id;

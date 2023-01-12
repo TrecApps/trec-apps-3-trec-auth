@@ -2,7 +2,7 @@ package com.trecapps.auth.models;
 
 import lombok.Data;
 
-import javax.validation.constraints.Email;
+import jakarta.validation.constraints.Email;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;

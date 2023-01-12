@@ -2,7 +2,7 @@ package com.trecapps.auth.models;
 
 import lombok.*;
 
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
 
 @Setter
