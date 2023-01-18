@@ -6,6 +6,12 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.azure.identity.DefaultAzureCredentialBuilder;
+import com.azure.security.keyvault.secrets.SecretAsyncClient;
+import com.azure.security.keyvault.secrets.SecretClient;
+import com.azure.security.keyvault.secrets.SecretClientBuilder;
+import com.azure.security.keyvault.secrets.models.KeyVaultSecret;
+import com.trecapps.auth.models.KeyPair;
 import com.trecapps.auth.models.TcBrands;
 import com.trecapps.auth.models.TokenTime;
 import com.trecapps.auth.models.primary.TrecAccount;
@@ -43,10 +49,17 @@ public class JwtTokenService {
 
 	@Value("${trecauth.app}")
 	String app;
-	
-	RSAPublicKey publicKey;
-	
-	RSAPrivateKey privateKey;
+
+	@Value("&{trecauth.key-vault.url}")
+	String keyVaultUrl;
+
+	@Value("&{trecauth.key-vault.primary}")
+	String primarySource;
+	@Value("${trecauth.key-vault.secondary}")
+	String secondarySource;
+
+	KeyPair primaryKey;
+	KeyPair secondaryKey;
 	
 	@Autowired
 	TrecAccountService accountService;
@@ -60,21 +73,88 @@ public class JwtTokenService {
 	@Autowired
 	SessionManager sessionManager;
 
+	SecretClient secretClient;
+
+	boolean setKeysWithKeyVault(){
+		if(secretClient == null) {
+			secretClient = new SecretClientBuilder()
+					.vaultUrl(keyVaultUrl)
+					.credential(new DefaultAzureCredentialBuilder().build())
+					.buildClient();
+		}
+
+
+
+		try {
+			// Primary Public Key
+			KeyPair prim = new KeyPair();
+			KeyVaultSecret secret = secretClient.getSecret(String.format("%s-public", primarySource));
+			X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(Base64.getDecoder().decode(secret.getValue()));
+			prim.setPublicKey ((RSAPublicKey)KeyFactory.getInstance("RSA").generatePublic(pubKeySpec));
+
+			// Primary Private Key
+			secret = secretClient.getSecret(String.format("%s-private", primarySource));
+			try (PEMParser parser = new PEMParser(new StringReader(secret.getValue()))) {
+
+				PemObject pemObject = parser.readPemObject();
+				byte[] content = pemObject.getContent();
+				PKCS8EncodedKeySpec privKeySpec = new PKCS8EncodedKeySpec(content);
+				prim.setPrivateKey  ((RSAPrivateKey) KeyFactory.getInstance("RSA").generatePrivate(privKeySpec));
+			}
+
+			// Secondary Public Key
+			KeyPair secPair = new KeyPair();
+			secret = secretClient.getSecret(String.format("%s-public", secondarySource));
+			pubKeySpec = new X509EncodedKeySpec(Base64.getDecoder().decode(secret.getValue()));
+			secPair.setPublicKey ((RSAPublicKey)KeyFactory.getInstance("RSA").generatePublic(pubKeySpec));
+
+			secret = secretClient.getSecret(String.format("%s-private", secondarySource));
+			try (PEMParser parser = new PEMParser(new StringReader(secret.getValue()))) {
+
+				PemObject pemObject = parser.readPemObject();
+				byte[] content = pemObject.getContent();
+				PKCS8EncodedKeySpec privKeySpec = new PKCS8EncodedKeySpec(content);
+				secPair.setPrivateKey  ((RSAPrivateKey) KeyFactory.getInstance("RSA").generatePrivate(privKeySpec));
+			}
+
+			this.primaryKey = prim;
+			this.secondaryKey = secPair;
+
+		}catch (InvalidKeySpecException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (NoSuchAlgorithmException | IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		return primaryKey != null && secondaryKey != null;
+	}
+
 	private DecodedJWT decodeJWT(String token)
 	{
-		if(!setKeys())
+		if(!setKeysWithKeyVault())
 			return null;
 		DecodedJWT ret = null;
 		try
 		{
-			ret = JWT.require(Algorithm.RSA512(publicKey,privateKey))
+			ret = JWT.require(Algorithm.RSA512(primaryKey.getPublicKey(), primaryKey.getPrivateKey()))
 					.build()
 					.verify(token);
 		}
 		catch(JWTVerificationException e)
 		{
-			e.printStackTrace();
-			return null;
+			try
+			{
+				ret = JWT.require(Algorithm.RSA512(secondaryKey.getPublicKey(), secondaryKey.getPrivateKey()))
+						.build()
+						.verify(token);
+			}
+			catch(JWTVerificationException e2)
+			{
+				e2.printStackTrace();
+				return null;
+			}
 		}
 		return ret;
 	}
@@ -100,58 +180,6 @@ public class JwtTokenService {
 
 	private static final long ONE_MINUTE = 60_000;
 
-	private boolean setKeys()
-	{
-		if(publicKey == null)
-		{
-			File publicFile = new File(publicKeyStr);
-
-
-			try {
-				String encKey = userStorageService.retrieveKey(publicKeyStr);
-
-				X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(Base64.getDecoder().decode(encKey));
-				
-				publicKey = (RSAPublicKey)KeyFactory.getInstance("RSA").generatePublic(pubKeySpec);
-				
-			} catch (InvalidKeySpecException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (NoSuchAlgorithmException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-					
-		}
-		
-		if(privateKey == null)
-		{
-			String encKey = userStorageService.retrieveKey(privateKeyStr);
-			try (PEMParser parser = new PEMParser(new StringReader(encKey))) {
-
-				        PemObject pemObject = parser.readPemObject();
-				        byte[] content = pemObject.getContent();
-				        PKCS8EncodedKeySpec privKeySpec = new PKCS8EncodedKeySpec(content);
-				        privateKey =  (RSAPrivateKey) KeyFactory.getInstance("RSA").generatePrivate(privKeySpec);
-			} catch (FileNotFoundException e2) {
-				// TODO Auto-generated catch block
-				e2.printStackTrace();
-			} catch (IOException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			} catch (InvalidKeySpecException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (NoSuchAlgorithmException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-				
-		}
-		
-		return privateKey != null && publicKey != null;
-	}
-
 	public TokenTime generateToken(TrecAccount account, String userAgent, TcBrands brand, boolean expires)
 	{
 		return generateToken(account, userAgent, brand, null, expires);
@@ -167,7 +195,7 @@ public class JwtTokenService {
 		if(account == null)
 			return null;
 		
-		if(!setKeys())
+		if(!setKeysWithKeyVault())
 			return null;
 
 
@@ -201,7 +229,7 @@ public class JwtTokenService {
 		if(ret.getExpiration() != null)
 			jwtBuilder = jwtBuilder.withExpiresAt(ret.getExpiration().toInstant());
 
-		ret.setToken(jwtBuilder.sign(Algorithm.RSA512(publicKey, privateKey)));
+		ret.setToken(jwtBuilder.sign(Algorithm.RSA512(primaryKey.getPublicKey(), primaryKey.getPrivateKey())));
 		return ret;
 
 	}
@@ -211,14 +239,22 @@ public class JwtTokenService {
 		DecodedJWT decodedJwt = null;
 		try
 		{
-			decodedJwt = JWT.require(Algorithm.RSA512(publicKey,privateKey))
+			decodedJwt = JWT.require(Algorithm.RSA512(primaryKey.getPublicKey(), primaryKey.getPrivateKey()))
 					.build()
 					.verify(refreshToken);
 		}
 		catch(JWTVerificationException e)
 		{
-			e.printStackTrace();
-			return null;
+			try
+			{
+				decodedJwt = JWT.require(Algorithm.RSA512(primaryKey.getPublicKey(), primaryKey.getPrivateKey()))
+					.build()
+					.verify(refreshToken);
+			}
+			catch(JWTVerificationException e2)
+			{
+			e2.printStackTrace();
+			return null;}
 		}
 
 		String user = decodedJwt.getClaim("ID").asString();
@@ -239,7 +275,7 @@ public class JwtTokenService {
 		TokenTime ret = new TokenTime();
 		ret.setSession(session);
 		ret.setExpiration(newExp);
-		ret.setToken(jwtBuilder.sign(Algorithm.RSA512(publicKey, privateKey)));
+		ret.setToken(jwtBuilder.sign(Algorithm.RSA512(primaryKey.getPublicKey(), primaryKey.getPrivateKey())));
 		return ret;
 	}
 
@@ -248,7 +284,7 @@ public class JwtTokenService {
 		if(account == null)
 			return null;
 
-		if(!setKeys())
+		if(!setKeysWithKeyVault())
 			return null;
 		Date now = new Date(Calendar.getInstance().getTime().getTime());
 		return JWT.create().withIssuer(app)
@@ -258,25 +294,34 @@ public class JwtTokenService {
 				.withClaim("Brand", brand == null ? "null" : brand)
 				.withClaim("Session", session)
 				.withIssuedAt(now)
-				.sign(Algorithm.RSA512(publicKey, privateKey));
+				.sign(Algorithm.RSA512(primaryKey.getPublicKey(), primaryKey.getPrivateKey()));
 	}
 
 	public String getSessionId(String token)
 	{
-		if(!setKeys() || token== null)
+		if(!setKeysWithKeyVault() || token== null)
 			return null;
 
 		DecodedJWT decodedJwt = null;
 		try
 		{
-			decodedJwt = JWT.require(Algorithm.RSA512(publicKey,privateKey))
+			decodedJwt = JWT.require(Algorithm.RSA512(primaryKey.getPublicKey(), primaryKey.getPrivateKey()))
 					.build()
 					.verify(token);
 		}
 		catch(JWTVerificationException e)
 		{
-			e.printStackTrace();
-			return null;
+			try
+			{
+				decodedJwt = JWT.require(Algorithm.RSA512(primaryKey.getPublicKey(), primaryKey.getPrivateKey()))
+						.build()
+						.verify(token);
+			}
+			catch(JWTVerificationException e2)
+			{
+				e2.printStackTrace();
+				return null;
+			}
 		}
 
 		Claim idClaim = decodedJwt.getClaim("SessionId");
