@@ -191,10 +191,17 @@ public class JwtTokenService {
 				ret.setExpiration(expiration);
 			}
 		}
+
+		String useBrand = "null";
+		if(brand != null)
+		{
+			if(brand.getOwners().contains(account.getId())) useBrand = brand.getId().toString();
+		}
+
 		JWTCreator.Builder jwtBuilder = JWT.create().withIssuer(app)
 				.withClaim("ID", account.getId())
 				.withClaim("Username", account.getUsername())
-				.withClaim("Brand", brand == null ? "null" : brand.getId().toString())
+				.withClaim("Brand", useBrand)
 				.withClaim("SessionId", ret.getSession())
 				.withIssuedAt(now);
 
