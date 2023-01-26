@@ -1,10 +1,13 @@
 package com.trecapps.auth.models.secondary;
 
+import jakarta.persistence.GeneratedValue;
 import lombok.Data;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.GenericGenerator;
+
 import java.util.UUID;
 
 @Table
@@ -15,7 +18,9 @@ public class BrandEntry {
 
     @Id
     @javax.persistence.Id
-    UUID id;
+    @GeneratedValue(generator="system-uuid")
+    @GenericGenerator(name="system-uuid", strategy = "uuid")
+    String id;
 
     String creator;
 

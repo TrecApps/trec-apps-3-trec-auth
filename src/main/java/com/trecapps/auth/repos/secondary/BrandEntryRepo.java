@@ -4,8 +4,6 @@ import com.trecapps.auth.models.secondary.BrandEntry;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.UUID;
-
 @Repository
-public interface BrandEntryRepo extends JpaRepository<BrandEntry, UUID> {
+public interface BrandEntryRepo extends JpaRepository<BrandEntry, String> {
 }

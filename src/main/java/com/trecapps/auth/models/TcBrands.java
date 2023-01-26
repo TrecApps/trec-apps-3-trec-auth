@@ -16,5 +16,5 @@ public class TcBrands {
     String profile;
 
     // ID of the Brand
-    UUID id;
+    String id;
 }

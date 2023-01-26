@@ -38,7 +38,7 @@ public class BrandService {
         try {
             TcUser user = userStorageService.retrieveUser(account.getId());
 
-            Set<UUID> brands = user.getBrands();
+            Set<String> brands = user.getBrands();
 
             if(brands == null)
                 brands = new TreeSet<>();
@@ -70,7 +70,7 @@ public class BrandService {
         }
     }
 
-    public boolean isOwner(TrecAccount account, UUID brand)
+    public boolean isOwner(TrecAccount account, String brand)
     {
         try {
             TcBrands theBrand = userStorageService.retrieveBrand(brand);
@@ -89,7 +89,11 @@ public class BrandService {
             TcUser user = userStorageService.retrieveUser(account.getId());
 
             List<BrandEntry> ret = new ArrayList<>();
-            for(UUID brandId : user.getBrands())
+
+            var brands = user.getBrands();
+            if(brands == null)
+                return ret;
+            for(String brandId : brands)
             {
                 BrandEntry entry = brandEntryRepo.getById(brandId);
                 ret.add(entry);
@@ -101,7 +105,7 @@ public class BrandService {
         }
     }
 
-    public TcBrands getBrandById(UUID brandId, TrecAccount account)
+    public TcBrands getBrandById(String brandId, TrecAccount account)
     {
         if(!brandEntryRepo.existsById(brandId))
             return null;
@@ -120,7 +124,7 @@ public class BrandService {
 
     }
 
-    public LoginToken LoginAsBrand(TrecAccount account, UUID brandId, String userAgent, String session, boolean doesExpire)
+    public LoginToken LoginAsBrand(TrecAccount account, String brandId, String userAgent, String session, boolean doesExpire)
     {
         if(!isOwner(account, brandId))
             return null;
@@ -144,7 +148,7 @@ public class BrandService {
 
     }
 
-    public boolean assignOwner(TrecAccount currentOwner, String newId, UUID brandId)
+    public boolean assignOwner(TrecAccount currentOwner, String newId, String brandId)
     {
         if(!brandEntryRepo.existsById(brandId) || !trecAccountRepo.existsById(newId))
             return false;
@@ -153,7 +157,7 @@ public class BrandService {
         try {
             TcUser newUser = userStorageService.retrieveUser(newId);
 
-            Set<UUID> brands = newUser.getBrands();
+            Set<String> brands = newUser.getBrands();
             if(brands == null)
                 brands = new TreeSet<>();
             if(brands.size() >= MAX_BRAND_COUNT)

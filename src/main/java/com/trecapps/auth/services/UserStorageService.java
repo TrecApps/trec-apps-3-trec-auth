@@ -83,7 +83,7 @@ public class UserStorageService {
         return objectMapper.readValue(data, SessionList.class);
     }
 
-    public TcBrands retrieveBrand(UUID id) throws JsonProcessingException
+    public TcBrands retrieveBrand(String id) throws JsonProcessingException
     {
         BlobContainerClient containerClient = client.getBlobContainerClient("trec-apps-users");
 

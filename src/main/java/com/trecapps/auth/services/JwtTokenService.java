@@ -11,6 +11,7 @@ import com.trecapps.auth.models.TokenTime;
 import com.trecapps.auth.models.primary.TrecAccount;
 import com.trecapps.auth.repos.primary.TrecAccountRepo;
 
+import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemReader;
@@ -33,6 +34,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 @Service
+@Slf4j
 public class JwtTokenService {
 	
 	@Value("${trec.key.public}")
