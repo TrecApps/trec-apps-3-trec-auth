@@ -30,6 +30,7 @@ public class TcUser {
 
     // Aides in phone/Email Verification
     String currentCode;
+    Map<String, String> verificationCodes;
     OffsetDateTime codeExpiration;
 
     // Birthday
