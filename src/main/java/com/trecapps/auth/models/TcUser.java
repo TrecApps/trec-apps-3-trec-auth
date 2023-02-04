@@ -20,7 +20,7 @@ public class TcUser {
     String userProfile;
 
     // Phone Used by the User
-    String mobilePhone;
+    PhoneNumber mobilePhone;
     boolean phoneVerified;
 
     // External Email used by the User
