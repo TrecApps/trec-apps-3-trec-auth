@@ -18,6 +18,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import reactor.netty.http.Cookies;
 
+import java.time.OffsetDateTime;
+
 @Component
 public class TrecSecurityContext implements SecurityContextRepository {
 
@@ -124,6 +126,14 @@ public class TrecSecurityContext implements SecurityContextRepository {
         TrecAuthentication tAuth = new TrecAuthentication(trecAccount);
         tAuth.setSessionId(tt.getSession());
         tAuth.setBrandId(trecAccount.getBrandId());
+        LoginToken tok = new LoginToken();
+        tok.setAccess_token(tt.getToken());
+        tok.setRefresh_token(val);
+        tok.setToken_type("User");
+        OffsetDateTime expires = tt.getExpiration();
+        if(expires != null)
+            tok.setExpires_in(expires.getNano() - OffsetDateTime.now().getNano());
+        tAuth.setLoginToken(tok);
         SecurityContext ret = SecurityContextHolder.createEmptyContext();
         ret.setAuthentication(tAuth);
 
