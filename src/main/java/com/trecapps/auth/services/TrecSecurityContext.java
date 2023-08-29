@@ -92,37 +92,41 @@ public class TrecSecurityContext implements SecurityContextRepository {
     }
 
     SecurityContext getContextForRefresh(HttpServletRequest request){
-        String endpoint = request.getContextPath();
+        String endpoint = request.getRequestURI();
 
         // We only check the cookie when the user is refreshing the session.
         // Otherwise, use the Authorization header as normal
-        if(!endpoint.endsWith(refreshEndpoint))
+        if(!endpoint.endsWith(refreshEndpoint)) {
+            logger.debug("Failed to find {} in {}", refreshEndpoint, endpoint);
             return null;
-
+        }
         Cookie[] cooks = request.getCookies();
         Cookie cook = null;
 
         // Retrieve all cookies available to us. We only deal with cookies that are our own and are secure (or local)
         for (Cookie c: cooks) {
-            if(c.getName().equals(refreshCookie) && c.isHttpOnly() &&
-                    (onLocal || (domain.equals(c.getDomain()) && c.getSecure()))){
+            if(c.getName().equals(refreshCookie)){
                 cook = c;
                 break;
             }
         }
-        if(cook == null)
+        if(cook == null) {
+            logger.debug("Failed to Find Cookie");
             return null;
-
+        }
         String val = cook.getValue();
         TokenTime tt =jwtService.generateNewTokenFromRefresh(val);
-        if(tt == null)
+        if(tt == null) {
+            logger.debug("Failed to generate token from Refresh");
             return null;
-
+        }
         TokenFlags tf = new TokenFlags();
         tf.setIsMfa(false);
         TrecAccount trecAccount = jwtService.verifyToken(tt.getToken(), tf);
-        if(trecAccount == null)return null;
-
+        if(trecAccount == null) {
+            logger.debug("Failed to generate TrecAccount");
+            return null;
+        }
         TrecAuthentication tAuth = new TrecAuthentication(trecAccount);
         tAuth.setSessionId(tt.getSession());
         tAuth.setBrandId(trecAccount.getBrandId());

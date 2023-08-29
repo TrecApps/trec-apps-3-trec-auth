@@ -269,6 +269,8 @@ public class JwtTokenService {
 
 	public TokenTime generateNewTokenFromRefresh(String refreshToken)
 	{
+		if(!setKeys())
+			return null;
 		DecodedJWT decodedJwt = null;
 		try
 		{
