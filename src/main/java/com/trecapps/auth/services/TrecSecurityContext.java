@@ -1,10 +1,7 @@
 package com.trecapps.auth.services;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.trecapps.auth.models.LoginToken;
-import com.trecapps.auth.models.TcUser;
-import com.trecapps.auth.models.TokenFlags;
-import com.trecapps.auth.models.TrecAuthentication;
+import com.trecapps.auth.models.*;
 import com.trecapps.auth.models.primary.TrecAccount;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +16,7 @@ import org.springframework.stereotype.Component;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import reactor.netty.http.Cookies;
 
 @Component
 public class TrecSecurityContext implements SecurityContextRepository {
@@ -32,6 +30,21 @@ public class TrecSecurityContext implements SecurityContextRepository {
 
     @Value("${trecauth.app}")
     String app;
+
+    // This will be the only endpoint where the authorization will be in the cookie
+    @Value("${trecauth.refresh.endpoint:refresh_token}")
+    String refreshEndpoint;
+
+    @Value("${trecauth.refresh.app:TREC_APPS_REFRESH}")
+    String refreshCookie;
+
+    // Cookies should be sent only over HTTPS. However, on local this may not be an option
+    @Value("${trecauth.refresh.on_local:false}")
+    boolean onLocal;
+
+    // if not local, needs to be set
+    @Value("${trecauth.refresh.domain:null}")
+    String domain;
 
     Logger logger = LoggerFactory.getLogger(TrecSecurityContext.class);
 
@@ -76,11 +89,56 @@ public class TrecSecurityContext implements SecurityContextRepository {
         return getContextFromHeader(request) != null;
     }
 
+    SecurityContext getContextForRefresh(HttpServletRequest request){
+        String endpoint = request.getContextPath();
+
+        // We only check the cookie when the user is refreshing the session.
+        // Otherwise, use the Authorization header as normal
+        if(!endpoint.endsWith(refreshEndpoint))
+            return null;
+
+        Cookie[] cooks = request.getCookies();
+        Cookie cook = null;
+
+        // Retrieve all cookies available to us. We only deal with cookies that are our own and are secure (or local)
+        for (Cookie c: cooks) {
+            if(c.getName().equals(refreshCookie) && c.isHttpOnly() &&
+                    (onLocal || (domain.equals(c.getDomain()) && c.getSecure()))){
+                cook = c;
+                break;
+            }
+        }
+        if(cook == null)
+            return null;
+
+        String val = cook.getValue();
+        TokenTime tt =jwtService.generateNewTokenFromRefresh(val);
+        if(tt == null)
+            return null;
+
+        TokenFlags tf = new TokenFlags();
+        tf.setIsMfa(false);
+        TrecAccount trecAccount = jwtService.verifyToken(tt.getToken(), tf);
+        if(trecAccount == null)return null;
+
+        TrecAuthentication tAuth = new TrecAuthentication(trecAccount);
+        tAuth.setSessionId(tt.getSession());
+        tAuth.setBrandId(trecAccount.getBrandId());
+        SecurityContext ret = SecurityContextHolder.createEmptyContext();
+        ret.setAuthentication(tAuth);
+
+        return ret;
+    }
+
     SecurityContext getContextFromHeader(HttpServletRequest request)
     {
+        // First Address Refresh attempt
+        SecurityContext context = getContextForRefresh(request);
+        if(context != null)
+            return context;
         // Get the token and try to generate an Account from it
         String auth = request.getHeader("Authorization");
-        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        context = SecurityContextHolder.createEmptyContext();
 
         TokenFlags tokenFlags = new TokenFlags();
         TrecAccount acc = jwtService.verifyToken(auth, tokenFlags);

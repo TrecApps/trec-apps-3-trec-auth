@@ -6,6 +6,7 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.trecapps.auth.models.Session;
 import com.trecapps.auth.models.TcBrands;
 import com.trecapps.auth.models.TokenFlags;
 import com.trecapps.auth.models.TokenTime;
@@ -284,17 +285,34 @@ public class JwtTokenService {
 		String user = decodedJwt.getClaim("ID").asString();
 		String session = decodedJwt.getClaim("Session").asString();
 
-		OffsetDateTime newExp = OffsetDateTime.now().plusMinutes(10);
-		sessionManager.updateSessionExpiration(user, session, newExp);
+		Session session1 = null;
 
+		for (Session s: sessionManager.getSessionList(user)) {
+			if(s.getSessionId().equals(session))
+			{
+				session1 = s;
+				break;
+			}
+		}
+		// If the session is invalid, don't revalidate it
+		if(session1 == null)
+			return null;
+
+		// Allow support for non-expiring sessions
+		OffsetDateTime newExp = null;
+		if(session1.getExpiration() != null) {
+			newExp = OffsetDateTime.now().plusMinutes(10);
+			sessionManager.updateSessionExpiration(user, session, newExp);
+		}
 		String brand = decodedJwt.getClaim("Brand").asString();
 		JWTCreator.Builder jwtBuilder = JWT.create().withIssuer(app)
 				.withClaim("ID", user)
 				.withClaim("Username", decodedJwt.getClaim("Username").asString())
 				.withClaim("Brand", brand)
 				.withClaim("SessionId", session)
-				.withIssuedAt(OffsetDateTime.now().toInstant())
-				.withExpiresAt(newExp.toInstant());
+				.withIssuedAt(OffsetDateTime.now().toInstant());
+		if(newExp != null)
+				jwtBuilder = jwtBuilder.withExpiresAt(newExp.toInstant());
 
 		TokenTime ret = new TokenTime();
 		ret.setSession(session);
