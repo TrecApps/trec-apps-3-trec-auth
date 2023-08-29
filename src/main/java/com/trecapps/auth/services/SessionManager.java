@@ -47,7 +47,7 @@ public class SessionManager {
         {
             String systemAgent = agent.substring(startParenth + 1, endParenth);
 
-            String segments[] = systemAgent.split("[;]");
+            String[] segments = systemAgent.split("[;]");
 
             // Check for Windows
             if(segments.length > 1 && segments[0].contains("Windows"))

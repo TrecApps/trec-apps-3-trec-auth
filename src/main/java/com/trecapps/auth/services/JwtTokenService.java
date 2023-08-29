@@ -7,6 +7,7 @@ import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.trecapps.auth.models.TcBrands;
+import com.trecapps.auth.models.TokenFlags;
 import com.trecapps.auth.models.TokenTime;
 import com.trecapps.auth.models.primary.TrecAccount;
 import com.trecapps.auth.repos.primary.TrecAccountRepo;
@@ -14,7 +15,6 @@ import com.trecapps.auth.repos.primary.TrecAccountRepo;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.util.io.pem.PemObject;
-import org.bouncycastle.util.io.pem.PemReader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -28,10 +28,12 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.sql.Date;
-import java.sql.Timestamp;
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Service
 @Slf4j
@@ -75,7 +77,7 @@ public class JwtTokenService {
 		}
 		catch(JWTVerificationException e)
 		{
-			e.printStackTrace();
+			//e.printStackTrace();
 			return null;
 		}
 		return ret;
@@ -159,12 +161,17 @@ public class JwtTokenService {
 		return generateToken(account, userAgent, brand, null, expires);
 	}
 
+	public TokenTime generateToken(TrecAccount account, String userAgent, TcBrands brand, String session, boolean expires)
+	{
+		return generateToken(account, userAgent, brand, session, expires, false);
+	}
+
 	/**
 	 * Use when attempting to log on to User Service directly (through the User Client Project)
 	 * @param account
 	 * @return
 	 */
-	public TokenTime generateToken(TrecAccount account, String userAgent, TcBrands brand, String session, boolean expires)
+	public TokenTime generateToken(TrecAccount account, String userAgent, TcBrands brand, String session, boolean expires, boolean useMfa)
 	{
 		if(account == null)
 			return null;
@@ -205,7 +212,8 @@ public class JwtTokenService {
 				.withClaim("Username", account.getUsername())
 				.withClaim("Brand", useBrand)
 				.withClaim("SessionId", ret.getSession())
-				.withIssuedAt(now);
+				.withIssuedAt(now)
+				.withClaim("mfa", useMfa);
 
 		if(ret.getExpiration() != null)
 			jwtBuilder = jwtBuilder.withExpiresAt(ret.getExpiration().toInstant());
@@ -213,6 +221,49 @@ public class JwtTokenService {
 		ret.setToken(jwtBuilder.sign(Algorithm.RSA512(publicKey, privateKey)));
 		return ret;
 
+	}
+
+	public TokenTime addMfa(String token)
+	{
+		if (token == null)
+			return null;
+		DecodedJWT decodedJwt = decodeJWT(token);
+
+		if (decodedJwt == null) {
+			return null;
+		}
+
+		AtomicReference<JWTCreator.Builder> jwtBuilder = new AtomicReference<>(JWT.create());
+		AtomicBoolean mfaFound = new AtomicBoolean(false);
+
+		decodedJwt.getClaims().forEach((String claimName, Claim claim) -> {
+			if("mfa".equals(claimName))
+			{
+				mfaFound.set(true);
+				jwtBuilder.set(jwtBuilder.get().withClaim(claimName, true));
+			}
+			else {
+				java.util.Date date = claim.asDate();
+				Instant instant = claim.asInstant();
+				Boolean bool = claim.asBoolean();
+				if(date != null)
+					jwtBuilder.set(jwtBuilder.get().withClaim(claimName,date));
+				else if(instant != null)
+					jwtBuilder.set(jwtBuilder.get().withClaim(claimName,instant));
+				else if(bool != null)
+					jwtBuilder.set(jwtBuilder.get().withClaim(claimName,bool));
+				else
+					jwtBuilder.set(jwtBuilder.get().withClaim(claimName,claim.asString()));
+			}
+		});
+
+		if(!mfaFound.get())
+		{
+			jwtBuilder.set(jwtBuilder.get().withClaim("mfa", true));
+		}
+		TokenTime ret = new TokenTime();
+		ret.setToken(jwtBuilder.get().sign(Algorithm.RSA512(publicKey, privateKey)));
+		return ret;
 	}
 
 	public TokenTime generateNewTokenFromRefresh(String refreshToken)
@@ -298,7 +349,7 @@ public class JwtTokenService {
 	 * @param token
 	 * @return
 	 */
-	public TrecAccount verifyToken(String token) {
+	public TrecAccount verifyToken(String token, TokenFlags tokenFlags) {
 		if (token == null)
 			return null;
 		DecodedJWT decodedJwt = decodeJWT(token);
@@ -322,6 +373,10 @@ public class JwtTokenService {
 		if(ret.isEmpty())
 			return null;
 		TrecAccount acc = ret.get();
+
+		Claim mfaClaim = decodedJwt.getClaim("mfa");
+		if(mfaClaim != null)
+			tokenFlags.setIsMfa(mfaClaim.asBoolean());
 
 		try {
 			acc.setBrandId(UUID.fromString(brandStr));

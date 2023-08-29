@@ -3,6 +3,7 @@ package com.trecapps.auth.services;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.trecapps.auth.models.LoginToken;
 import com.trecapps.auth.models.TcUser;
+import com.trecapps.auth.models.TokenFlags;
 import com.trecapps.auth.models.TrecAuthentication;
 import com.trecapps.auth.models.primary.TrecAccount;
 import org.slf4j.Logger;
@@ -81,7 +82,8 @@ public class TrecSecurityContext implements SecurityContextRepository {
         String auth = request.getHeader("Authorization");
         SecurityContext context = SecurityContextHolder.createEmptyContext();
 
-        TrecAccount acc = jwtService.verifyToken(auth);
+        TokenFlags tokenFlags = new TokenFlags();
+        TrecAccount acc = jwtService.verifyToken(auth, tokenFlags);
         if(acc == null)
             return context;
 
@@ -108,6 +110,9 @@ public class TrecSecurityContext implements SecurityContextRepository {
                 acc.addAuthority("EMAIL_VERIFIED");
             if(tcUser.isPhoneVerified())
                 acc.addAuthority("PHONE_VERIFIED");
+
+            if(tokenFlags.getIsMfa())
+                acc.addAuthority("MFA_PROVIDED");
 
             for(String role : tcUser.getAuthRoles())
                 acc.addAuthority(role);
