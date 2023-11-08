@@ -4,10 +4,7 @@ import lombok.Data;
 
 import jakarta.validation.constraints.Email;
 import java.time.OffsetDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @Data
 public class TcUser {
@@ -51,4 +48,12 @@ public class TcUser {
 
     // Credibility rating (used by services like Falsehoods to assess how credible this user is)
     long credibilityRating;
+
+    Map<String, String> profilePics = new HashMap<>();
+
+    public Optional<String> GetMainProfilePic(){
+        if(profilePics.containsKey("Main"))
+            return Optional.of(profilePics.get("Main"));
+        return Optional.empty();
+    }
 }
