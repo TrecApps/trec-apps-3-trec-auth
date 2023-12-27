@@ -11,6 +11,8 @@ public class TcUser {
 
 
     // Core Info
+
+    Integer partition; // Used for applying a Profile to the TcUser id on Azure Cosmos DB - Gremlin Service
     String id;
     String profilePic;
     String displayName;

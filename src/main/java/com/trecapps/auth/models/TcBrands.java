@@ -7,6 +7,7 @@ import java.util.UUID;
 
 @Data
 public class TcBrands {
+    Integer partition; // Used for applying a Profile to the TcUser id on Azure Cosmos DB - Gremlin Service
 
     // Should hold the IDs of the TcUsers that own it
     Set<String> owners;
