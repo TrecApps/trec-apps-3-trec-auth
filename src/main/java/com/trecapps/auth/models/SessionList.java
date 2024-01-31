@@ -74,7 +74,7 @@ public class SessionList {
             if(session.sessionId.equals(id))
             {
                 logger.info("Found Session {}, comparing to target Session {}", session, id);
-                return app.equals(session.appId) && (session.expiration == null ? true : notExpired(session.expiration));
+                return (app == null || app.equals(session.appId)) && (session.expiration == null || notExpired(session.expiration));
             }
         }
         return false;

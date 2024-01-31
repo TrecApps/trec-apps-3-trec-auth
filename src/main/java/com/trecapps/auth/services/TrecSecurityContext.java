@@ -47,13 +47,12 @@ public class TrecSecurityContext implements SecurityContextRepository {
     @Override
     public void saveContext(SecurityContext context, HttpServletRequest request, HttpServletResponse response) {
         Cookie cook = null;
-        if(!(context.getAuthentication() instanceof TrecAuthentication))
+        if(!(context.getAuthentication() instanceof TrecAuthentication trecAuth))
         {
             cook = new Cookie("TRECSESSION", null);
         }
         else
         {
-            TrecAuthentication trecAuth = (TrecAuthentication) context.getAuthentication();
 
             // Cookie will have been set by the endpoint!
             if(!trecAuth.isRegularSession())

@@ -7,6 +7,7 @@ import com.trecapps.auth.models.TokenTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
@@ -18,6 +19,10 @@ public class SessionManager {
 
     @Autowired
     UserStorageService userStorageService;
+
+    // Whether we care what app the session belongs to
+    @Value("${trecauth.app.agnostic:false}")
+    boolean appAgnostic;
 
     Logger logger = LoggerFactory.getLogger(SessionManager.class);
 
@@ -168,7 +173,7 @@ public class SessionManager {
         try
         {
             SessionList sessions = userStorageService.retrieveSessions(userId);
-            return sessions.isValidSession(sessionId, app);
+            return sessions.isValidSession(sessionId, appAgnostic ? null : app);
         }catch(Exception e)
         {
             logger.error("Error reading SessionList!", e);
