@@ -138,6 +138,44 @@ public class SessionManager {
         return false;
     }
 
+    public boolean setBrand(String userId, String session, String brand)
+    {
+        try {
+            SessionList sessions = userStorageService.retrieveSessions(userId);
+
+            for(Session session1 : sessions.getSessions())
+            {
+                if(session.equals(session1.getSessionId()))
+                {
+                    session1.setBrandId(brand);
+                    userStorageService.saveSessions(sessions, userId);
+                    return true;
+                }
+            }
+        } catch (JsonProcessingException e) {
+            logger.error("Error reading SessionList!", e);
+        }
+        return false;
+    }
+
+    public String getBrand(String userId, String session){
+        try {
+            SessionList sessions = userStorageService.retrieveSessions(userId);
+
+            for(Session session1 : sessions.getSessions())
+            {
+                if(session.equals(session1.getSessionId()))
+                {
+                    return session1.getBrandId();
+
+                }
+            }
+        } catch (JsonProcessingException e) {
+            logger.error("Error reading SessionList!", e);
+        }
+        return null;
+    }
+
     public List<Session> getSessionList(String userId)
     {
         try {

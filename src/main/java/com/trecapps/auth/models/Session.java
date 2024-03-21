@@ -18,6 +18,8 @@ public class Session {
 
     String deviceInfo;
 
+    String brandId;
+
     OffsetDateTime expiration;
 
 

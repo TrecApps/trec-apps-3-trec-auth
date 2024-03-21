@@ -1,10 +1,7 @@
 package com.trecapps.auth.services;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.trecapps.auth.models.LoginToken;
-import com.trecapps.auth.models.TcBrands;
-import com.trecapps.auth.models.TcUser;
-import com.trecapps.auth.models.TokenTime;
+import com.trecapps.auth.models.*;
 import com.trecapps.auth.models.primary.TrecAccount;
 import com.trecapps.auth.models.secondary.BrandEntry;
 import com.trecapps.auth.repos.primary.TrecAccountRepo;
@@ -27,6 +24,9 @@ public class BrandService {
 
     @Autowired
     JwtTokenService jwtTokenService;
+
+    @Autowired
+    SessionManager sessionManager;
 
     @Autowired
     TrecAccountRepo trecAccountRepo;
@@ -124,18 +124,18 @@ public class BrandService {
 
     }
 
-    public LoginToken LoginAsBrand(TrecAccount account, String brandId, String userAgent, String session, boolean doesExpire)
+    public LoginToken LoginAsBrand(TrecAuthentication account, String brandId, String userAgent, String session, boolean doesExpire)
     {
-        if(!isOwner(account, brandId))
+        if(!isOwner(account.getAccount(), brandId))
             return null;
         try {
             TcBrands brand = userStorageService.retrieveBrand(brandId);
-            TokenTime time = jwtTokenService.generateToken(account, userAgent, brand, session, doesExpire);
-            String refreshToken = jwtTokenService.generateRefreshToken(account, brandId.toString(), session);
+            TokenTime time = jwtTokenService.generateToken(account.getAccount(), userAgent, brand, session, doesExpire);
+
+            sessionManager.setBrand(account.getAccount().getId(), session, brandId);
 
             LoginToken ret = new LoginToken();
             ret.setAccess_token(time.getToken());
-            ret.setRefresh_token(refreshToken);
             OffsetDateTime exp = time.getExpiration();
             if(exp != null)
                 ret.setExpires_in(exp.getNano() - OffsetDateTime.now().getNano());

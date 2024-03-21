@@ -1,5 +1,6 @@
 package com.trecapps.auth.services;
 
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.trecapps.auth.models.LoginToken;
 import com.trecapps.auth.models.TcUser;
@@ -33,13 +34,22 @@ public class TrecSecurityContext implements SecurityContextRepository {
     @Value("${trecauth.app}")
     String app;
 
+    @Value("${trecauth.refresh.cookie-name:#{NULL}}")
+    String cookieName;
+
+    @Value("${trecauth.refresh.app:#{NULL}}")
+    String cookieApp;
+
     Logger logger = LoggerFactory.getLogger(TrecSecurityContext.class);
 
     @Override
     public SecurityContext loadContext(HttpRequestResponseHolder requestResponseHolder) {
 
-
         HttpServletRequest req = requestResponseHolder.getRequest();
+
+        if(cookieApp != null && req.getRequestURI().endsWith("/refresh_token"))
+            return getContextFromCookie(req);
+
         return getContextFromHeader(req);
 
     }
@@ -71,9 +81,52 @@ public class TrecSecurityContext implements SecurityContextRepository {
     }
 
     @Override
-    public boolean containsContext(HttpServletRequest request) {
-        return getContextFromHeader(request) != null;
+    public boolean containsContext(HttpServletRequest req) {
+
+        SecurityContext ret = null;
+        if(cookieApp != null && req.getRequestURI().endsWith("/refresh_token"))
+            ret = getContextFromCookie(req);
+        else
+            ret = getContextFromHeader(req);
+
+        return ret != null;
     }
+
+    SecurityContext getContextFromCookie(HttpServletRequest request){
+        Cookie[] cookies = request.getCookies();
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        if(cookies == null) {
+            return context;
+        }
+        for(Cookie c: cookies)
+        {
+            String name = c.getName();
+            if(name.equals(cookieName))
+            {
+                String data = c.getValue();
+
+                DecodedJWT decode = jwtService.decodeToken(data);
+                if(decode == null) {
+                    logger.info("Null Decode token detected!");
+                    return context;
+                }
+                TrecAccount acc = jwtService.verifyToken(decode, new TokenFlags());
+                if(acc == null) {
+                    logger.info("Null Account from Cookie detected!");
+                    return context;
+                }
+                TrecAuthentication tAuth = new TrecAuthentication(acc);
+                context.setAuthentication(tAuth);
+                logger.info("Set Authentication from Cookie");
+                return context;
+            }
+        }
+
+        logger.info("Empty Context from Cookie!");
+
+        return context;
+    }
+
 
     SecurityContext getContextFromHeader(HttpServletRequest request)
     {
@@ -82,7 +135,10 @@ public class TrecSecurityContext implements SecurityContextRepository {
         SecurityContext context = SecurityContextHolder.createEmptyContext();
 
         TokenFlags tokenFlags = new TokenFlags();
-        TrecAccount acc = jwtService.verifyToken(auth, tokenFlags);
+        DecodedJWT decode = jwtService.decodeToken(auth);
+        if(decode == null)
+            return context;
+        TrecAccount acc = jwtService.verifyToken(decode, tokenFlags);
         if(acc == null)
             return context;
 

@@ -60,7 +60,7 @@ public class SessionList {
             newId = generateRandomString();
             if(!currentIds.contains(newId))
             {
-                sessions.add(new Session(newId,app, userInfo, expiration));
+                sessions.add(new Session(newId,app, userInfo, null, expiration));
                 return newId;
             }
         }

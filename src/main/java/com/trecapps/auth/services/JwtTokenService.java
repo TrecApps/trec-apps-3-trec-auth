@@ -303,7 +303,7 @@ public class JwtTokenService {
 		return ret;
 	}
 
-	public String generateRefreshToken(TrecAccount account, String brand, String session)
+	public String generateRefreshToken(TrecAccount account)
 	{
 		if(account == null)
 			return null;
@@ -311,13 +311,14 @@ public class JwtTokenService {
 		if(!setKeys())
 			return null;
 		Date now = new Date(Calendar.getInstance().getTime().getTime());
-		return JWT.create().withIssuer(app)
+
+		AtomicReference<JWTCreator.Builder> jwtBuilder = new AtomicReference<>(JWT.create().withIssuer(app)
 				.withClaim("ID", account.getId())
 				.withClaim("Username", account.getUsername())
 				.withClaim("Purpose", "Refresh")
-				.withClaim("Brand", brand == null ? "null" : brand)
-				.withClaim("Session", session)
-				.withIssuedAt(now)
+				.withIssuedAt(now));
+
+		return jwtBuilder.get()
 				.sign(Algorithm.RSA512(publicKey, privateKey));
 	}
 
@@ -344,15 +345,19 @@ public class JwtTokenService {
 		return idClaim.asString();
 	}
 
+	public DecodedJWT decodeToken(String token){
+		if (token == null)
+			return null;
+		return decodeJWT(token);
+	}
+
 	/***
 	 * Verifies that a token refers to a specific User Account
 	 * @param token
 	 * @return
 	 */
-	public TrecAccount verifyToken(String token, TokenFlags tokenFlags) {
-		if (token == null)
-			return null;
-		DecodedJWT decodedJwt = decodeJWT(token);
+	public TrecAccount verifyToken(DecodedJWT decodedJwt, TokenFlags tokenFlags) {
+
 
 		if (decodedJwt == null) {
 			return null;
@@ -385,5 +390,17 @@ public class JwtTokenService {
 
 		}
 		return acc;
+	}
+
+	public Map<String, String> claims(DecodedJWT decodedJwt){
+		Map<String, String> ret = new HashMap<>();
+		Map<String, Claim> claimMap = decodedJwt.getClaims();
+
+		claimMap.forEach((String n, Claim c) -> {
+			if(n.startsWith("app_")){
+				ret.put(n, c.asString());
+			}
+		});
+		return ret;
 	}
 }
