@@ -17,6 +17,13 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 import java.util.List;
 
+/**
+ * Encrypts and decrupts marked fields of the specified object using the RSA Algorithm
+ *
+ * Params:
+ *  publicKeyPath - name of the public Key in the Key Holding Resource
+ *  privateKeyPath - name of the private Key in the Key Holding Resource
+ */
 public class RsaFieldEncryptor implements IFieldEncryptor{
 
     static Class<EncryptedField> encryptedFieldClass = EncryptedField.class;
