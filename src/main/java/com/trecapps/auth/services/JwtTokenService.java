@@ -6,6 +6,7 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.trecapps.auth.keyholders.IJwtKeyHolder;
 import com.trecapps.auth.models.TcBrands;
 import com.trecapps.auth.models.TokenFlags;
 import com.trecapps.auth.models.TokenTime;
@@ -39,11 +40,6 @@ import java.util.concurrent.atomic.AtomicReference;
 @Slf4j
 public class JwtTokenService {
 	
-	@Value("${trec.key.public}")
-	String publicKeyStr;
-	
-	@Value("${trec.key.private}")
-	String privateKeyStr;
 
 	@Value("${trecauth.app}")
 	String app;
@@ -63,6 +59,9 @@ public class JwtTokenService {
 
 	@Autowired
 	SessionManager sessionManager;
+
+	@Autowired
+	IJwtKeyHolder jwtKeyHolder;
 
 	private DecodedJWT decodeJWT(String token)
 	{
@@ -108,11 +107,8 @@ public class JwtTokenService {
 	{
 		if(publicKey == null)
 		{
-			File publicFile = new File(publicKeyStr);
-
-
 			try {
-				String encKey = userStorageService.retrieveKey(publicKeyStr);
+				String encKey = jwtKeyHolder.getPublicKey();
 
 				X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(Base64.getDecoder().decode(encKey));
 				
@@ -130,7 +126,7 @@ public class JwtTokenService {
 		
 		if(privateKey == null)
 		{
-			String encKey = userStorageService.retrieveKey(privateKeyStr);
+			String encKey = jwtKeyHolder.getPrivateKey();
 			try (PEMParser parser = new PEMParser(new StringReader(encKey))) {
 
 				        PemObject pemObject = parser.readPemObject();

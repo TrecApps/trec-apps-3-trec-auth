@@ -63,6 +63,7 @@ dependencies {
     // Use JWT for token generation and verification
     implementation 'com.auth0:java-jwt:+'
     implementation 'org.bouncycastle:bcpkix-jdk15on:1.66'
+    implementation "com.azure.spring:spring-cloud-azure-starter-keyvault:5.11.0"
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
