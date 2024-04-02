@@ -1,6 +1,5 @@
 package com.trecapps.auth.encryptors;
 
-import com.azure.security.keyvault.secrets.SecretClient;
 import com.trecapps.auth.keyholders.IEncryptorKeyHolder;
 import lombok.SneakyThrows;
 import org.bouncycastle.openssl.PEMParser;
@@ -8,7 +7,6 @@ import org.bouncycastle.util.io.pem.PemObject;
 
 import javax.crypto.Cipher;
 import java.io.StringReader;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyFactory;
@@ -16,8 +14,6 @@ import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 
@@ -60,7 +56,7 @@ public class RsaFieldEncryptor implements IFieldEncryptor{
     }
 
     @SneakyThrows
-    private String EncryptField(String value){
+    private String encryptField(String value){
         byte[] result = rsaCipherEncrypt.doFinal(value.getBytes(StandardCharsets.UTF_8));
         return encoder.encodeToString(result);
     }
@@ -75,12 +71,44 @@ public class RsaFieldEncryptor implements IFieldEncryptor{
     @Override
     public <A> A encrypt(A obj) {
         List<EncryptableFields> fieldsList = getEncryptableFields(obj.getClass().getFields());
-        return null;
+
+        Class objClass = obj.getClass();
+
+        fieldsList.forEach((EncryptableFields encField) -> {
+            Field field = null;
+            try {
+                field = objClass.getDeclaredField(encField.field);
+
+                field.setAccessible(true);
+                field.set(obj, encryptField(field.get(obj).toString()));
+            } catch (NoSuchFieldException | IllegalAccessException e) {
+                throw new RuntimeException(e);
+            }
+
+        });
+
+        return obj;
     }
 
     @Override
     public <A> A decrypt(A obj) {
         List<EncryptableFields> fieldsList = getEncryptableFields(obj.getClass().getFields());
-        return null;
+
+        Class objClass = obj.getClass();
+
+        fieldsList.forEach((EncryptableFields encField) -> {
+            Field field = null;
+            try {
+                field = objClass.getDeclaredField(encField.field);
+
+                field.setAccessible(true);
+                field.set(obj, decryptField(field.get(obj).toString()));
+            } catch (NoSuchFieldException | IllegalAccessException e) {
+                throw new RuntimeException(e);
+            }
+
+        });
+
+        return obj;
     }
 }
