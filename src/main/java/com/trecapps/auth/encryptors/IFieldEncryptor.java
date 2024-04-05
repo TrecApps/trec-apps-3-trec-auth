@@ -11,6 +11,9 @@ import java.util.List;
 
 public interface IFieldEncryptor {
 
+    String FRONT_WRAP = "_ENC_(";
+    String BACK_WRAP = ")";
+
     <A> A encrypt(A obj);
     <A> A decrypt(A obj);
 
@@ -30,5 +33,21 @@ public interface IFieldEncryptor {
         }
 
         return fieldList;
+    }
+
+    default boolean isFieldEncrypted(String f) {
+        return f != null && (
+                f.startsWith(FRONT_WRAP) && f.endsWith(BACK_WRAP)
+                );
+    }
+
+    default String wrapField(String f){
+        return String.format("%s%s%s", FRONT_WRAP, f, BACK_WRAP);
+    }
+
+    default String unwrapField(String f){
+        if(!isFieldEncrypted(f)) return f;
+
+        return f.substring(FRONT_WRAP.length(), f.length() - 1);
     }
 }

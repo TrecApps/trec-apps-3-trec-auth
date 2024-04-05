@@ -1,5 +1,6 @@
 package com.trecapps.auth.models;
 
+import com.trecapps.auth.encryptors.EncryptedField;
 import lombok.Data;
 
 import jakarta.validation.constraints.Email;
@@ -19,11 +20,13 @@ public class TcUser {
     String userProfile;
 
     // Phone Used by the User
+    @EncryptedField
     PhoneNumber mobilePhone;
     boolean phoneVerified;
 
     // External Email used by the User
     @Email
+    @EncryptedField
     String email;
     boolean emailVerified;
 
@@ -37,10 +40,10 @@ public class TcUser {
     String birthdaySetting;
 
     // Addresses used by the User
-    String[] address;
+    List<String> address;
 
     // List of authorized roles
-    String[] authRoles;
+    List<String> authRoles;
 
     // External Profiles
     Set<String> brands;

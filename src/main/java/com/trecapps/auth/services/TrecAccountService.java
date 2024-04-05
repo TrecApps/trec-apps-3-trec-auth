@@ -1,5 +1,6 @@
 package com.trecapps.auth.services;
 
+import com.trecapps.auth.encryptors.IFieldEncryptor;
 import com.trecapps.auth.models.primary.TrecAccount;
 import com.trecapps.auth.models.secondary.UserSalt;
 import com.trecapps.auth.repos.primary.TrecAccountRepo;
@@ -25,6 +26,9 @@ public class TrecAccountService implements UserDetailsService {
 
     @Autowired
     FailedLoginService failedLoginService;
+
+    @Autowired
+    IFieldEncryptor encryptor;
 
     @Value("${trecauth.failed.count:10}")
     Integer loginLimit;
@@ -77,10 +81,12 @@ public class TrecAccountService implements UserDetailsService {
             account.setPasswordHash(null);
             account = trecRepo.save(account);
 
-            UserSalt userSalt = new UserSalt(account.getId(), BCrypt.gensalt());
-            userSalt = saltRepo.save(userSalt);
+            String plainSalt = BCrypt.gensalt();
 
-            account.setPasswordHash(BCrypt.hashpw(curPassword, userSalt.getSalt()));
+            UserSalt userSalt = new UserSalt(account.getId(), plainSalt);
+            userSalt = saltRepo.save(encryptor.encrypt(userSalt));
+
+            account.setPasswordHash(BCrypt.hashpw(curPassword, plainSalt));
             return trecRepo.save(account);
 
         }
@@ -106,7 +112,7 @@ public class TrecAccountService implements UserDetailsService {
         if(salt.isEmpty())
             return false;
 
-        UserSalt actSalt = salt.get();
+        UserSalt actSalt = encryptor.decrypt(salt.get());
 
         if(trecAccount.getPassword().equals(BCrypt.hashpw(oldPassword, actSalt.getSalt())))
         {
@@ -116,7 +122,7 @@ public class TrecAccountService implements UserDetailsService {
             trecAccount = trecRepo.save(trecAccount);
 
             actSalt.setSalt(newSalt);
-            actSalt = saltRepo.save(actSalt);
+            actSalt = saltRepo.save(encryptor.encrypt(actSalt));
 
             return true;
         }

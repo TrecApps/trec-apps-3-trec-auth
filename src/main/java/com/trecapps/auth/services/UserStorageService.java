@@ -9,6 +9,7 @@ import com.azure.storage.blob.BlobServiceClientBuilder;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.trecapps.auth.encryptors.IFieldEncryptor;
 import com.trecapps.auth.models.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,12 +34,15 @@ public class UserStorageService {
 
     String app;
 
+    IFieldEncryptor encryptor;
+
 
     @Autowired
     UserStorageService(@Value("${trecauth.storage.account-name}") String name,
                        @Value("${trecauth.storage.account-key}") String key,
                        @Value("${trecauth.storage.blob-endpoint}") String endpoint,
                        @Value("${trecauth.app}") String app,
+                       IFieldEncryptor encryptor,
                        Jackson2ObjectMapperBuilder objectMapperBuilder)
     {
         AzureNamedKeyCredential credential = new AzureNamedKeyCredential(name, key);
@@ -46,6 +50,7 @@ public class UserStorageService {
         objectMapper = objectMapperBuilder.createXmlMapper(false).build();
         objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
         this.app = app;
+        this.encryptor = encryptor;
     }
 
     public String retrieveKey(String keyId)
@@ -68,7 +73,7 @@ public class UserStorageService {
 
         String data = new String(bData.toBytes(), StandardCharsets.UTF_8);
 
-        return objectMapper.readValue(data, TcUser.class);
+        return encryptor.decrypt(objectMapper.readValue(data, TcUser.class));
     }
 
     public SessionList retrieveSessions(String id) throws JsonProcessingException {
@@ -80,7 +85,7 @@ public class UserStorageService {
 
         String data = new String(bData.toBytes(), StandardCharsets.UTF_8);
 
-        return objectMapper.readValue(data, SessionList.class);
+        return encryptor.decrypt(objectMapper.readValue(data, SessionList.class));
     }
 
     public TcBrands retrieveBrand(String id) throws JsonProcessingException
@@ -93,7 +98,7 @@ public class UserStorageService {
 
         String data = new String(bData.toBytes(), StandardCharsets.UTF_8);
 
-        return objectMapper.readValue(data, TcBrands.class);
+        return encryptor.decrypt(objectMapper.readValue(data, TcBrands.class));
     }
 
     public AppLocker retrieveAppLocker(String id) throws JsonProcessingException
@@ -116,11 +121,13 @@ public class UserStorageService {
 
         String data = new String(bData.toBytes(), StandardCharsets.UTF_8);
 
-        return objectMapper.readValue(data, AppLocker.class);
+        return encryptor.decrypt(objectMapper.readValue(data, AppLocker.class));
     }
 
     public void saveLogins(AppLocker locker, String id)
     {
+        locker = encryptor.encrypt(locker);
+
         BlobContainerClient containerClient = client.getBlobContainerClient("trec-apps-users");
 
         BlobClient client = containerClient.getBlobClient("logins-" + id + ".json");
@@ -130,6 +137,7 @@ public class UserStorageService {
 
     public void saveUser(TcUser user)
     {
+        user = encryptor.encrypt(user);
         BlobContainerClient containerClient = client.getBlobContainerClient("trec-apps-users");
 
         BlobClient client = containerClient.getBlobClient("user-" + user.getId());
@@ -139,6 +147,7 @@ public class UserStorageService {
 
     public void saveBrand(TcBrands brand)
     {
+        brand = encryptor.encrypt(brand);
         BlobContainerClient containerClient = client.getBlobContainerClient("trec-apps-users");
 
         BlobClient client = containerClient.getBlobClient("brand-" + brand.getId());
@@ -148,6 +157,7 @@ public class UserStorageService {
 
     public void saveSessions(SessionList brand, String id)
     {
+        brand = encryptor.encrypt(brand);
         BlobContainerClient containerClient = client.getBlobContainerClient("trec-apps-users");
 
         BlobClient client = containerClient.getBlobClient("sessions-" + id);

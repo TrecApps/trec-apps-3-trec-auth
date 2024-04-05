@@ -12,9 +12,7 @@ public class PhoneTest {
     @Test
     void testToString()
     {
-        PhoneNumber phoneNumber = new PhoneNumber();
-
-        phoneNumber.setNumber(555_555_1234L);
+        PhoneNumber phoneNumber = new PhoneNumber(555_555_1234L);
 
         Assertions.assertEquals("+15555551234", phoneNumber.toString());
     }

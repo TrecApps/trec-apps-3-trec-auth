@@ -1,5 +1,6 @@
 package com.trecapps.auth.models.secondary;
 
+import com.trecapps.auth.encryptors.EncryptedField;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -19,5 +20,7 @@ public class UserSalt {
     @Id
     @javax.persistence.Id
     String id;
+
+    @EncryptedField
     String salt;
 }

@@ -65,11 +65,17 @@ public class RsaFieldEncryptor implements IFieldEncryptor{
     @SneakyThrows
     private String encryptField(String value){
         byte[] result = rsaCipherEncrypt.doFinal(value.getBytes(StandardCharsets.UTF_8));
-        return encoder.encodeToString(result);
+        return wrapField(encoder.encodeToString(result));
     }
 
     @SneakyThrows
     private String decryptField(String value){
+        // If not Encrypted yet, this will only screw the process up
+        if(!isFieldEncrypted(value)) return value;
+
+        // If it is encrypted, remove the markers
+        value = unwrapField(value);
+
         byte[] encryptedBytes = decoder.decode(value);
         byte[] decryptedBytes = rsaCipherDecrypt.doFinal(encryptedBytes);
         return new String(decryptedBytes, StandardCharsets.UTF_8);
@@ -87,7 +93,18 @@ public class RsaFieldEncryptor implements IFieldEncryptor{
                 field = objClass.getDeclaredField(encField.field);
 
                 field.setAccessible(true);
-                field.set(obj, encryptField(field.get(obj).toString()));
+                Object fieldValue = field.get(obj);
+
+                if(fieldValue instanceof String)
+                    field.set(obj, encryptField(fieldValue.toString()));
+                else if(fieldValue instanceof List collectionValue){
+                    for(int c = 0; c < collectionValue.size(); c++)
+                    {
+                        collectionValue.set(c, encrypt(collectionValue.get(c)));
+                    }
+                }
+                else
+                    field.set(obj, encrypt(fieldValue));
             } catch (NoSuchFieldException | IllegalAccessException e) {
                 throw new RuntimeException(e);
             }
@@ -109,7 +126,18 @@ public class RsaFieldEncryptor implements IFieldEncryptor{
                 field = objClass.getDeclaredField(encField.field);
 
                 field.setAccessible(true);
-                field.set(obj, decryptField(field.get(obj).toString()));
+                Object fieldValue = field.get(obj);
+
+                if(fieldValue instanceof String)
+                    field.set(obj, decryptField(fieldValue.toString()));
+                else if(fieldValue instanceof List collectionValue){
+                    for(int c = 0; c < collectionValue.size(); c++)
+                    {
+                        collectionValue.set(c, decrypt(collectionValue.get(c)));
+                    }
+                }
+                else
+                    field.set(obj, decrypt(fieldValue));
             } catch (NoSuchFieldException | IllegalAccessException e) {
                 throw new RuntimeException(e);
             }
