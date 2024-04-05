@@ -26,6 +26,7 @@ import java.util.UUID;
 
 public class AzureBlobUserStorageService implements IUserStorageService{
     BlobServiceClient client;
+    BlobContainerClient containerClient;
 
     ObjectMapper objectMapper;
 
@@ -35,10 +36,11 @@ public class AzureBlobUserStorageService implements IUserStorageService{
 
 
     @Autowired
-    AzureBlobUserStorageService(@Value("${trecauth.storage.account-name}") String name,
-                       @Value("${trecauth.storage.account-key}") String key,
-                       @Value("${trecauth.storage.blob-endpoint}") String endpoint,
-                       @Value("${trecauth.app}") String app,
+    AzureBlobUserStorageService(String name,
+                       String key,
+                       String endpoint,
+                       String containerName,
+                       String app,
                        Jackson2ObjectMapperBuilder objectMapperBuilder)
     {
         AzureNamedKeyCredential credential = new AzureNamedKeyCredential(name, key);
@@ -46,12 +48,14 @@ public class AzureBlobUserStorageService implements IUserStorageService{
         objectMapper = objectMapperBuilder.createXmlMapper(false).build();
         objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
         this.app = app;
+
+        containerClient = client.getBlobContainerClient(containerName);
     }
 
     @Override
     public String retrieveKey(String keyId)
     {
-        BlobContainerClient containerClient = client.getBlobContainerClient("trec-apps-users");
+
 
         BlobClient client = containerClient.getBlobClient(keyId);
 
@@ -62,7 +66,6 @@ public class AzureBlobUserStorageService implements IUserStorageService{
 
     @Override
     public TcUser retrieveUser(String id) throws JsonProcessingException {
-        BlobContainerClient containerClient = client.getBlobContainerClient("trec-apps-users");
 
         BlobClient client = containerClient.getBlobClient("user-" + id);
 
@@ -75,8 +78,6 @@ public class AzureBlobUserStorageService implements IUserStorageService{
 
     @Override
     public SessionList retrieveSessions(String id) throws JsonProcessingException {
-        BlobContainerClient containerClient = client.getBlobContainerClient("trec-apps-users");
-
         BlobClient client = containerClient.getBlobClient("sessions-" + id);
 
         BinaryData bData = client.downloadContent();
@@ -88,8 +89,6 @@ public class AzureBlobUserStorageService implements IUserStorageService{
 
     public TcBrands retrieveBrand(String id) throws JsonProcessingException
     {
-        BlobContainerClient containerClient = client.getBlobContainerClient("trec-apps-users");
-
         BlobClient client = containerClient.getBlobClient("brand-" + id);
 
         BinaryData bData = client.downloadContent();
@@ -101,9 +100,7 @@ public class AzureBlobUserStorageService implements IUserStorageService{
 
     public AppLocker retrieveAppLocker(String id) throws JsonProcessingException
     {
-        BlobContainerClient containerClient = client.getBlobContainerClient("trec-apps-users");
-
-        BlobClient client = containerClient.getBlobClient("logins-" + id + ".json");
+         BlobClient client = containerClient.getBlobClient("logins-" + id + ".json");
 
         if(!client.exists())
         {
@@ -124,8 +121,6 @@ public class AzureBlobUserStorageService implements IUserStorageService{
 
     public void saveLogins(AppLocker locker, String id)
     {
-        BlobContainerClient containerClient = client.getBlobContainerClient("trec-apps-users");
-
         BlobClient client = containerClient.getBlobClient("logins-" + id + ".json");
 
         client.upload(BinaryData.fromObject(locker),true);
@@ -133,8 +128,6 @@ public class AzureBlobUserStorageService implements IUserStorageService{
 
     public void saveUser(TcUser user)
     {
-        BlobContainerClient containerClient = client.getBlobContainerClient("trec-apps-users");
-
         BlobClient client = containerClient.getBlobClient("user-" + user.getId());
 
         client.upload(BinaryData.fromObject(user),true);
@@ -142,8 +135,6 @@ public class AzureBlobUserStorageService implements IUserStorageService{
 
     public void saveBrand(TcBrands brand)
     {
-        BlobContainerClient containerClient = client.getBlobContainerClient("trec-apps-users");
-
         BlobClient client = containerClient.getBlobClient("brand-" + brand.getId());
 
         client.upload(BinaryData.fromObject(brand), true);
@@ -151,8 +142,6 @@ public class AzureBlobUserStorageService implements IUserStorageService{
 
     public void saveSessions(SessionList brand, String id)
     {
-        BlobContainerClient containerClient = client.getBlobContainerClient("trec-apps-users");
-
         BlobClient client = containerClient.getBlobClient("sessions-" + id);
 
         client.upload(BinaryData.fromObject(brand), true);
