@@ -29,7 +29,7 @@ public class TrecSecurityContext implements SecurityContextRepository {
     @Autowired SessionManager sessionManager;
 
     @Autowired
-    UserStorageService userStorageService;
+    IUserStorageService userStorageService;
 
     @Value("${trecauth.app}")
     String app;

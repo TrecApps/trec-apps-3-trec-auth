@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.trecapps.auth.models.*;
 import com.trecapps.auth.services.JwtTokenService;
 import com.trecapps.auth.services.SessionManager;
-import com.trecapps.auth.services.UserStorageService;
+import com.trecapps.auth.services.IUserStorageService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -39,7 +39,7 @@ public class CookieController {
     JwtTokenService tokenService;
 
     @Autowired
-    UserStorageService userStorageService;
+    IUserStorageService userStorageService;
 
     @Value("${trecauth.refresh.app}")
     String cookieAppName;

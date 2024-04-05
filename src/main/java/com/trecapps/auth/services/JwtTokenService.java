@@ -59,7 +59,7 @@ public class JwtTokenService {
 	TrecAccountRepo accountRepo;
 
 	@Autowired
-	UserStorageService userStorageService;
+	IUserStorageService userStorageService;
 
 	@Autowired
 	SessionManager sessionManager;

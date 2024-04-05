@@ -23,19 +23,19 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-@Service
-public class UserStorageService {
+
+public class AzureBlobUserStorageService implements IUserStorageService{
     BlobServiceClient client;
 
     ObjectMapper objectMapper;
 
-    Logger logger = LoggerFactory.getLogger(UserStorageService.class);
+    Logger logger = LoggerFactory.getLogger(AzureBlobUserStorageService.class);
 
     String app;
 
 
     @Autowired
-    UserStorageService(@Value("${trecauth.storage.account-name}") String name,
+    AzureBlobUserStorageService(@Value("${trecauth.storage.account-name}") String name,
                        @Value("${trecauth.storage.account-key}") String key,
                        @Value("${trecauth.storage.blob-endpoint}") String endpoint,
                        @Value("${trecauth.app}") String app,
@@ -48,6 +48,7 @@ public class UserStorageService {
         this.app = app;
     }
 
+    @Override
     public String retrieveKey(String keyId)
     {
         BlobContainerClient containerClient = client.getBlobContainerClient("trec-apps-users");
@@ -59,6 +60,7 @@ public class UserStorageService {
         return new String(bData.toBytes(), StandardCharsets.UTF_8);
     }
 
+    @Override
     public TcUser retrieveUser(String id) throws JsonProcessingException {
         BlobContainerClient containerClient = client.getBlobContainerClient("trec-apps-users");
 
@@ -71,6 +73,7 @@ public class UserStorageService {
         return objectMapper.readValue(data, TcUser.class);
     }
 
+    @Override
     public SessionList retrieveSessions(String id) throws JsonProcessingException {
         BlobContainerClient containerClient = client.getBlobContainerClient("trec-apps-users");
 

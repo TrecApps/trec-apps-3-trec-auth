@@ -18,7 +18,7 @@ import java.util.List;
 public class SessionManager {
 
     @Autowired
-    UserStorageService userStorageService;
+    IUserStorageService userStorageService;
 
     // Whether we care what app the session belongs to
     @Value("${trecauth.app.agnostic:false}")

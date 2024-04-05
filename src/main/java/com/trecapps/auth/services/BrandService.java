@@ -17,7 +17,7 @@ import java.util.*;
 public class BrandService {
 
     @Autowired
-    UserStorageService userStorageService;
+    IUserStorageService userStorageService;
 
     @Autowired
     BrandEntryRepo brandEntryRepo;

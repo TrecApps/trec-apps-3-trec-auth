@@ -17,7 +17,7 @@ import java.util.Map;
 public class FailedLoginService {
 
     @Autowired
-    UserStorageService userStorageService;
+    IUserStorageService userStorageService;
 
     @Value("${trecauth.failed.count:10}")
     Integer loginLimit;
