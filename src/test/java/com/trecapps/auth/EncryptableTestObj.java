@@ -10,4 +10,7 @@ public class EncryptableTestObj {
 
     @EncryptedField
     String encryptedField;
+
+    @EncryptedField
+    EncryptableTestObj childObject;
 }

@@ -49,7 +49,9 @@ public class AesFieldEncryptor implements IFieldEncryptor{
             String aesSalt,
             String aesIvBytes)
     {
-        String[] bytesStr = aesIvBytes.split(",");
+        String ivBytesStr = keyHolder.getSecret(aesIvBytes);
+
+        String[] bytesStr = ivBytesStr.split(",");
         byte[] ivBytes = new byte[bytesStr.length];
         for (int c = 0; c < bytesStr.length; c++) {
             ivBytes[c] = Byte.parseByte(bytesStr[c]);
@@ -87,9 +89,12 @@ public class AesFieldEncryptor implements IFieldEncryptor{
 
     @Override
     public <A> A encrypt(A obj) {
-        List<EncryptableFields> fieldsList = getEncryptableFields(obj.getClass().getFields());
-
         Class objClass = obj.getClass();
+        Field[] fields = obj.getClass().getDeclaredFields();
+
+        List<EncryptableFields> fieldsList = getEncryptableFields(fields);
+
+
 
         fieldsList.forEach((EncryptableFields encField) -> {
             Field field = null;
@@ -108,7 +113,7 @@ public class AesFieldEncryptor implements IFieldEncryptor{
                         collectionValue.set(c, encrypt(collectionValue.get(c)));
                     }
                 }
-                else
+                else if(fieldValue != null)
                     field.set(obj, encrypt(fieldValue));
             } catch (NoSuchFieldException | IllegalAccessException e) {
                 throw new RuntimeException(e);
@@ -121,9 +126,9 @@ public class AesFieldEncryptor implements IFieldEncryptor{
 
     @Override
     public <A> A decrypt(A obj) {
-        List<EncryptableFields> fieldsList = getEncryptableFields(obj.getClass().getFields());
-
         Class objClass = obj.getClass();
+        List<EncryptableFields> fieldsList = getEncryptableFields(objClass.getDeclaredFields());
+
 
         fieldsList.forEach((EncryptableFields encField) -> {
             Field field = null;
@@ -141,7 +146,7 @@ public class AesFieldEncryptor implements IFieldEncryptor{
                         collectionValue.set(c, decrypt(collectionValue.get(c)));
                     }
                 }
-                else
+                else if(fieldValue != null)
                     field.set(obj, decrypt(fieldValue));
             } catch (NoSuchFieldException | IllegalAccessException e) {
                 throw new RuntimeException(e);

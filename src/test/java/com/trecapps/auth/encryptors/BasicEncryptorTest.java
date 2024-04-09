@@ -1,5 +1,6 @@
-package com.trecapps.auth;
+package com.trecapps.auth.encryptors;
 
+import com.trecapps.auth.EncryptableTestObj;
 import com.trecapps.auth.encryptors.BasicFieldEncryptor;
 import com.trecapps.auth.encryptors.EncryptableFields;
 import org.junit.jupiter.api.Assertions;
@@ -72,8 +73,10 @@ public class BasicEncryptorTest {
 
 
         List<EncryptableFields> encFields = encryptor.getEncryptableFields(fields);
+        List<String> encFieldNames = encFields.stream().map((EncryptableFields ef) -> ef.getField()).toList();
 
-        Assertions.assertEquals(1, encFields.size());
-        Assertions.assertEquals("encryptedField", encFields.get(0).getField());
+        Assertions.assertEquals(2, encFields.size());
+        Assertions.assertTrue(encFieldNames.contains("encryptedField"));
+        Assertions.assertTrue(encFieldNames.contains("childObject"));
     }
 }

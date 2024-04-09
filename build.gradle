@@ -76,6 +76,10 @@ dependencies {
     testImplementation 'org.mockito:mockito-junit-jupiter:5.1.1'
 }
 
+build {
+    finalizedBy test
+}
+
 test {
     useJUnitPlatform()
     finalizedBy jacocoTestReport // report is always generated after tests run

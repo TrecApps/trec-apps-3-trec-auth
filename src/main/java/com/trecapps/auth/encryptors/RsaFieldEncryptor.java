@@ -38,13 +38,16 @@ public class RsaFieldEncryptor implements IFieldEncryptor{
     Base64.Decoder decoder;
 
     @SneakyThrows
-    RsaFieldEncryptor(IEncryptorKeyHolder keyHolder, String publicKeyPath, String privateKeyPath){
+    RsaFieldEncryptor(
+            IEncryptorKeyHolder keyHolder,
+            String publicKeyPath,
+            String privateKeyPath){
         String pubKeyStr = keyHolder.getSecret(publicKeyPath);
         X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(Base64.getDecoder().decode(pubKeyStr));
         publicKey = (RSAPublicKey) KeyFactory.getInstance("RSA").generatePublic(pubKeySpec);
 
         String privKeyStr = keyHolder.getSecret(privateKeyPath);
-        try (PEMParser parser = new PEMParser(new StringReader(privKeyStr))) {
+        try (PEMParser parser = new PEMParser(new StringReader(privKeyStr.replace("|", "\r\n")))) {
 
             PemObject pemObject = parser.readPemObject();
             byte[] content = pemObject.getContent();
@@ -83,9 +86,9 @@ public class RsaFieldEncryptor implements IFieldEncryptor{
 
     @Override
     public <A> A encrypt(A obj) {
-        List<EncryptableFields> fieldsList = getEncryptableFields(obj.getClass().getFields());
-
         Class objClass = obj.getClass();
+        List<EncryptableFields> fieldsList = getEncryptableFields(objClass.getDeclaredFields());
+
 
         fieldsList.forEach((EncryptableFields encField) -> {
             Field field = null;
@@ -103,7 +106,7 @@ public class RsaFieldEncryptor implements IFieldEncryptor{
                         collectionValue.set(c, encrypt(collectionValue.get(c)));
                     }
                 }
-                else
+                else if(fieldValue != null)
                     field.set(obj, encrypt(fieldValue));
             } catch (NoSuchFieldException | IllegalAccessException e) {
                 throw new RuntimeException(e);
@@ -116,9 +119,8 @@ public class RsaFieldEncryptor implements IFieldEncryptor{
 
     @Override
     public <A> A decrypt(A obj) {
-        List<EncryptableFields> fieldsList = getEncryptableFields(obj.getClass().getFields());
-
         Class objClass = obj.getClass();
+        List<EncryptableFields> fieldsList = getEncryptableFields(objClass.getDeclaredFields());
 
         fieldsList.forEach((EncryptableFields encField) -> {
             Field field = null;
@@ -136,7 +138,7 @@ public class RsaFieldEncryptor implements IFieldEncryptor{
                         collectionValue.set(c, decrypt(collectionValue.get(c)));
                     }
                 }
-                else
+                else if(fieldValue != null)
                     field.set(obj, decrypt(fieldValue));
             } catch (NoSuchFieldException | IllegalAccessException e) {
                 throw new RuntimeException(e);
