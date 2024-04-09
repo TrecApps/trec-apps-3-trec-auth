@@ -1,6 +1,7 @@
 package com.trecapps.auth.models;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.trecapps.auth.encryptors.EncryptedField;
 import lombok.Data;
 
@@ -12,12 +13,13 @@ public class PhoneNumber {
     private PhoneCountryCode countryCode = PhoneCountryCode.US;
 
     @JsonCreator
-    public PhoneNumber(long number){
+    public PhoneNumber(
+            @JsonProperty("number") long number){
         setNumber(number);
     }
 
     @JsonCreator
-    public PhoneNumber(String number){
+    public PhoneNumber(@JsonProperty("number") String number){
         this.number = String.valueOf(Long.parseLong(number));
     }
 

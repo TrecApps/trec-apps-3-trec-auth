@@ -13,7 +13,7 @@ group 'com.trecapps.auth'
 version buildVersion
 
 ext {
-    springbootVersion = '3.0.0'
+    springbootVersion = '3.2.4'
 }
 
 repositories {
