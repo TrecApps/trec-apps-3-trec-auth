@@ -55,6 +55,6 @@ public class AKVJwtKeyHolder implements IJwtKeyHolder {
         {
             privateKey = keyVaultClient.getSecret(privateKeyPath).getValue();
         }
-        return privateKey;
+        return privateKey.replace("|", "\r\n");
     }
 }
