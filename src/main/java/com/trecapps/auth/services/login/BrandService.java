@@ -1,4 +1,4 @@
-package com.trecapps.auth.services;
+package com.trecapps.auth.services.login;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.trecapps.auth.models.*;
@@ -6,14 +6,18 @@ import com.trecapps.auth.models.primary.TrecAccount;
 import com.trecapps.auth.models.secondary.BrandEntry;
 import com.trecapps.auth.repos.primary.TrecAccountRepo;
 import com.trecapps.auth.repos.secondary.BrandEntryRepo;
+import com.trecapps.auth.services.core.JwtTokenService;
+import com.trecapps.auth.services.core.SessionManager;
+import com.trecapps.auth.services.core.UserStorageService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.User;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
 import java.util.*;
 
 @Service
+@ConditionalOnProperty(prefix = "trecauth", name = "login", havingValue = "true")
 public class BrandService {
 
     @Autowired

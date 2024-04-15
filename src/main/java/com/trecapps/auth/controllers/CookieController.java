@@ -2,15 +2,13 @@ package com.trecapps.auth.controllers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.trecapps.auth.models.*;
-import com.trecapps.auth.services.JwtTokenService;
-import com.trecapps.auth.services.SessionManager;
-import com.trecapps.auth.services.UserStorageService;
-import jakarta.servlet.http.Cookie;
+import com.trecapps.auth.services.core.JwtTokenService;
+import com.trecapps.auth.services.core.SessionManager;
+import com.trecapps.auth.services.core.UserStorageService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +20,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/refresh_token")

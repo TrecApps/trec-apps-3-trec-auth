@@ -1,4 +1,4 @@
-package com.trecapps.auth.services;
+package com.trecapps.auth.services.web;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -7,6 +7,9 @@ import com.trecapps.auth.models.TcUser;
 import com.trecapps.auth.models.TokenFlags;
 import com.trecapps.auth.models.TrecAuthentication;
 import com.trecapps.auth.models.primary.TrecAccount;
+import com.trecapps.auth.services.core.SessionManager;
+import com.trecapps.auth.services.core.JwtTokenService;
+import com.trecapps.auth.services.core.UserStorageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +29,8 @@ public class TrecSecurityContext implements SecurityContextRepository {
 
     @Autowired
     JwtTokenService jwtService;
-    @Autowired SessionManager sessionManager;
+    @Autowired
+    SessionManager sessionManager;
 
     @Autowired
     UserStorageService userStorageService;

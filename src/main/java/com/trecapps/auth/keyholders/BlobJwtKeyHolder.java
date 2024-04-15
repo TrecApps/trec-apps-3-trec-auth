@@ -1,7 +1,6 @@
 package com.trecapps.auth.keyholders;
 
-import com.trecapps.auth.services.UserStorageService;
-import org.springframework.beans.factory.annotation.Value;
+import com.trecapps.auth.services.core.UserStorageService;
 
 /**
  * Looks for Keys in the Storage Account of the User Service

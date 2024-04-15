@@ -1,10 +1,11 @@
-package com.trecapps.auth.services;
+package com.trecapps.auth.services.web;
 
 import com.trecapps.auth.encryptors.IFieldEncryptor;
 import com.trecapps.auth.models.primary.TrecAccount;
 import com.trecapps.auth.models.secondary.UserSalt;
 import com.trecapps.auth.repos.primary.TrecAccountRepo;
 import com.trecapps.auth.repos.secondary.UserSaltRepo;
+import com.trecapps.auth.services.core.FailedLoginService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;

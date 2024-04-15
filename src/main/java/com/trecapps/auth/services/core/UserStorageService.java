@@ -1,4 +1,4 @@
-package com.trecapps.auth.services;
+package com.trecapps.auth.services.core;
 
 import com.azure.core.credential.AzureNamedKeyCredential;
 import com.azure.core.util.BinaryData;
@@ -22,7 +22,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
+import java.util.Optional;
 
 @Service
 public class UserStorageService {
@@ -74,6 +74,17 @@ public class UserStorageService {
         String data = new String(bData.toBytes(), StandardCharsets.UTF_8);
 
         return encryptor.decrypt(objectMapper.readValue(data, TcUser.class));
+    }
+
+    Optional<TcUser> getAccountById(String id){
+        BlobContainerClient containerClient = client.getBlobContainerClient("trec-apps-users");
+
+        BlobClient client = containerClient.getBlobClient("user-" + id);
+        if(!client.exists())
+            return Optional.empty();
+        BinaryData bData = client.downloadContent();
+
+        return Optional.of(encryptor.decrypt(bData.toObject(TcUser.class)));
     }
 
     public SessionList retrieveSessions(String id) throws JsonProcessingException {

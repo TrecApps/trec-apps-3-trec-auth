@@ -1,4 +1,4 @@
-package com.trecapps.auth.services;
+package com.trecapps.auth.services.core;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTCreator;
@@ -8,6 +8,7 @@ import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.trecapps.auth.keyholders.IJwtKeyHolder;
 import com.trecapps.auth.models.TcBrands;
+import com.trecapps.auth.models.TcUser;
 import com.trecapps.auth.models.TokenFlags;
 import com.trecapps.auth.models.TokenTime;
 import com.trecapps.auth.models.primary.TrecAccount;
@@ -47,10 +48,7 @@ public class JwtTokenService {
 	RSAPublicKey publicKey;
 	
 	RSAPrivateKey privateKey;
-	
-	@Autowired
-	TrecAccountService accountService;
-	
+
 	@Autowired
 	TrecAccountRepo accountRepo;
 
@@ -369,11 +367,11 @@ public class JwtTokenService {
 
 		String brandStr = decodedJwt.getClaim("Brand").asString();
 
-		Optional<TrecAccount> ret = accountService.getAccountById(idLong);
+		Optional<TcUser> ret = userStorageService.getAccountById(idLong);
 
 		if(ret.isEmpty())
 			return null;
-		TrecAccount acc = ret.get();
+		TrecAccount acc = ret.get().getTrecAccount();
 
 		Claim mfaClaim = decodedJwt.getClaim("mfa");
 		if(mfaClaim != null)

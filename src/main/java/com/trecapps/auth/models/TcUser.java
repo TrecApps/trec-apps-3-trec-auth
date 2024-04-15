@@ -1,6 +1,7 @@
 package com.trecapps.auth.models;
 
 import com.trecapps.auth.encryptors.EncryptedField;
+import com.trecapps.auth.models.primary.TrecAccount;
 import jakarta.persistence.Transient;
 import lombok.Data;
 
@@ -69,6 +70,16 @@ public class TcUser implements UserDetails {
     ///
     /// UserDetails Support
     ///
+
+    public TrecAccount getTrecAccount()
+    {
+        TrecAccount ret = new TrecAccount();
+        ret.setUsername(userProfile);
+        ret.setId(id);
+        setAuthorities();
+        ret.setAuthorities(authorities);
+        return ret;
+    }
 
     @Transient
     List<String> authorities;
