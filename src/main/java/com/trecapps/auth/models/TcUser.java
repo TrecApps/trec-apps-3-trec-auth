@@ -1,14 +1,18 @@
 package com.trecapps.auth.models;
 
 import com.trecapps.auth.encryptors.EncryptedField;
+import jakarta.persistence.Transient;
 import lombok.Data;
 
 import jakarta.validation.constraints.Email;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
 import java.time.OffsetDateTime;
 import java.util.*;
 
 @Data
-public class TcUser {
+public class TcUser implements UserDetails {
 
 
     // Core Info
@@ -60,5 +64,65 @@ public class TcUser {
         if(profilePics.containsKey("Main"))
             return Optional.of(profilePics.get("Main"));
         return Optional.empty();
+    }
+
+    ///
+    /// UserDetails Support
+    ///
+
+    @Transient
+    List<String> authorities;
+
+    private void setAuthorities() {
+        if(authorities == null)
+            authorities = new ArrayList<>(this.authRoles);
+    }
+
+    public void addAuthority(String auth)
+    {
+        setAuthorities();
+        authorities.add(auth);
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        setAuthorities();
+        return authorities.stream()
+                .map((String authStr) -> {
+                    return new GrantedAuthority() {
+                        @Override
+                        public String getAuthority() {return authStr; }
+                    };
+                }).toList();
+    }
+
+    @Override
+    public String getPassword() {
+        return "";
+    }
+
+    @Override
+    public String getUsername() {
+        return this.userProfile;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true;
     }
 }
