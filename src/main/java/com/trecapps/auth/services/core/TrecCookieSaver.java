@@ -24,8 +24,8 @@ public class TrecCookieSaver {
         app = app1;
     }
 
-
-    protected void prepLoginTokens(TrecAuthentication authentication, String client)  {
+    protected LoginToken getLoginTokens(TrecAuthentication authentication, String client)
+    {
         TokenTime time = null;
 
         List<Session> sessionList = sessionManager.getSessionList(authentication.getAccount().getId());
@@ -49,7 +49,7 @@ public class TrecCookieSaver {
         if(login == null){
 
             if(time == null)
-                return;
+                return null;
 
             login = new LoginToken();
             authentication.setLoginToken(login);
@@ -58,8 +58,19 @@ public class TrecCookieSaver {
         login.setAccess_token(time.getToken());
 
         login.setRefresh_token(tokenService.generateRefreshToken(authentication.getAccount()));
+        return login;
+    }
 
-        authentication.setLoginToken(login);
+    protected void prepLoginTokens(TrecAuthentication authentication, String client)  {
+
+        LoginToken token = authentication.getLoginToken();
+        if(token == null)
+        {
+            token = getLoginTokens(authentication, client);
+            authentication.setLoginToken(token);
+        }
+
+
     }
 
     TcBrands getBrand(Session s, String userId){
