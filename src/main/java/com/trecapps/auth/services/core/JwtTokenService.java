@@ -147,14 +147,14 @@ public class JwtTokenService {
 		return privateKey != null && publicKey != null;
 	}
 
-	public TokenTime generateToken(TrecAccount account, String userAgent, TcBrands brand, boolean expires)
+	public TokenTime generateToken(TrecAccount account, String userAgent, TcBrands brand, boolean expires, String app1)
 	{
-		return generateToken(account, userAgent, brand, null, expires);
+		return generateToken(account, userAgent, brand, null, expires, app1);
 	}
 
-	public TokenTime generateToken(TrecAccount account, String userAgent, TcBrands brand, String session, boolean expires)
+	public TokenTime generateToken(TrecAccount account, String userAgent, TcBrands brand, String session, boolean expires, String app1)
 	{
-		return generateToken(account, userAgent, brand, session, expires, false);
+		return generateToken(account, userAgent, brand, session, expires, false, app1);
 	}
 
 	/**
@@ -162,7 +162,7 @@ public class JwtTokenService {
 	 * @param account
 	 * @return
 	 */
-	public TokenTime generateToken(TrecAccount account, String userAgent, TcBrands brand, String session, boolean expires, boolean useMfa)
+	public TokenTime generateToken(TrecAccount account, String userAgent, TcBrands brand, String session, boolean expires, boolean useMfa, String app1)
 	{
 		if(account == null)
 			return null;
@@ -178,7 +178,7 @@ public class JwtTokenService {
 
 		TokenTime ret = null;
 		if(session == null)
-			ret = sessionManager.addSession(app, account.getId(), userAgent, expires);
+			ret = sessionManager.addSession(app1, account.getId(), userAgent, expires);
 		else
 		{
 			ret = new TokenTime();
@@ -198,7 +198,7 @@ public class JwtTokenService {
 			if(brand.getOwners().contains(account.getId())) useBrand = brand.getId().toString();
 		}
 
-		JWTCreator.Builder jwtBuilder = JWT.create().withIssuer(app)
+		JWTCreator.Builder jwtBuilder = JWT.create().withIssuer(app1)
 				.withClaim("ID", account.getId())
 				.withClaim("Username", account.getUsername())
 				.withClaim("Brand", useBrand)
