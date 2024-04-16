@@ -25,7 +25,7 @@ import java.util.Map;
         entityManagerFactoryRef = "secondaryEntityManagerFactory",
         transactionManagerRef = "secondaryTransactionManager",
         basePackages = {"com.trecapps.auth.repos.secondary"})
-
+@ConditionalOnProperty(prefix = "trecauth", name = "login", havingValue = "true")
 public class SecondaryDataSourceConfiguration {
     @Bean(name = "secondaryDataSourceProperties")
     @ConfigurationProperties("trecauth.datasource-secondary")

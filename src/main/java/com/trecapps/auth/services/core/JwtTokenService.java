@@ -47,9 +47,6 @@ public class JwtTokenService {
 	RSAPrivateKey privateKey;
 
 	@Autowired
-	TrecAccountRepo accountRepo;
-
-	@Autowired
 	UserStorageService userStorageService;
 
 	@Autowired

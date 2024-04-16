@@ -28,6 +28,7 @@ import java.util.Map;
 		entityManagerFactoryRef = "primaryEntityManagerFactory",
         transactionManagerRef = "primaryTransactionManager",
         basePackages = {"com.trecapps.auth.repos.primary"})
+@ConditionalOnProperty(prefix = "trecauth", name = "login", havingValue = "true")
 public class PrimaryDataSourceConfiguration
 {
 	@Primary
