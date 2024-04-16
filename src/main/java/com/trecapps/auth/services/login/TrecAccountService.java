@@ -1,4 +1,4 @@
-package com.trecapps.auth.services.web;
+package com.trecapps.auth.services.login;
 
 import com.trecapps.auth.encryptors.IFieldEncryptor;
 import com.trecapps.auth.models.primary.TrecAccount;
@@ -8,6 +8,7 @@ import com.trecapps.auth.repos.secondary.UserSaltRepo;
 import com.trecapps.auth.services.core.FailedLoginService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
 import java.util.Optional;
 
 @Service
+@ConditionalOnProperty(prefix = "trecauth", name = "login", havingValue = "true")
 public class TrecAccountService implements UserDetailsService {
 
     @Autowired

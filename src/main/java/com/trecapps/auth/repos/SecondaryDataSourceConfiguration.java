@@ -2,6 +2,7 @@ package com.trecapps.auth.repos;
 
 import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.orm.jpa.EntityManagerFactoryBuilder;
@@ -24,20 +25,25 @@ import java.util.Map;
         entityManagerFactoryRef = "secondaryEntityManagerFactory",
         transactionManagerRef = "secondaryTransactionManager",
         basePackages = {"com.trecapps.auth.repos.secondary"})
+
 public class SecondaryDataSourceConfiguration {
     @Bean(name = "secondaryDataSourceProperties")
     @ConfigurationProperties("trecauth.datasource-secondary")
+
+    @ConditionalOnProperty(prefix = "trecauth", name = "login", havingValue = "true")
     public DataSourceProperties secondaryDataSourceProperties() {
         return new DataSourceProperties();
     }
 
     @Bean(name = "secondaryDataSource")
     @ConfigurationProperties("trecauth.datasource-secondary.configuration")
+    @ConditionalOnProperty(prefix = "trecauth", name = "login", havingValue = "true")
     public DataSource secondaryDataSource(@Qualifier("secondaryDataSourceProperties") DataSourceProperties secondaryDataSourceProperties) {
         return secondaryDataSourceProperties.initializeDataSourceBuilder().type(HikariDataSource.class).build();
     }
 
     @Bean(name = "secondaryEntityManagerFactory")
+    @ConditionalOnProperty(prefix = "trecauth", name = "login", havingValue = "true")
     public LocalContainerEntityManagerFactoryBean secondaryEntityManagerFactory(
             EntityManagerFactoryBuilder secondaryEntityManagerFactoryBuilder, @Qualifier("secondaryDataSource") DataSource secondaryDataSource) {
     	Map<String, String> primaryJpaProperties = new HashMap<>();
@@ -55,6 +61,7 @@ public class SecondaryDataSourceConfiguration {
     }
 
     @Bean(name = "secondaryTransactionManager")
+    @ConditionalOnProperty(prefix = "trecauth", name = "login", havingValue = "true")
     public PlatformTransactionManager secondaryTransactionManager(
             @Qualifier("secondaryEntityManagerFactory") EntityManagerFactory secondaryEntityManagerFactory) {
 
