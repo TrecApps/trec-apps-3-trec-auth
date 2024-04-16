@@ -25,7 +25,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 @Component
-public class TrecSecurityContext implements SecurityContextRepository {
+public class TrecSecurityContextServlet implements SecurityContextRepository {
 
     @Autowired
     JwtTokenService jwtService;
@@ -44,7 +44,7 @@ public class TrecSecurityContext implements SecurityContextRepository {
     @Value("${trecauth.refresh.app:#{NULL}}")
     String cookieApp;
 
-    Logger logger = LoggerFactory.getLogger(TrecSecurityContext.class);
+    Logger logger = LoggerFactory.getLogger(TrecSecurityContextServlet.class);
 
     @Override
     public SecurityContext loadContext(HttpRequestResponseHolder requestResponseHolder) {
@@ -114,13 +114,12 @@ public class TrecSecurityContext implements SecurityContextRepository {
                     logger.info("Null Decode token detected!");
                     return context;
                 }
-                TrecAccount acc = jwtService.verifyToken(decode, new TokenFlags());
+                TrecAuthentication acc = jwtService.verifyToken(decode, new TokenFlags());
                 if(acc == null) {
                     logger.info("Null Account from Cookie detected!");
                     return context;
                 }
-                TrecAuthentication tAuth = new TrecAuthentication(acc);
-                context.setAuthentication(tAuth);
+                context.setAuthentication(acc);
                 logger.info("Set Authentication from Cookie");
                 return context;
             }
@@ -142,40 +141,39 @@ public class TrecSecurityContext implements SecurityContextRepository {
         DecodedJWT decode = jwtService.decodeToken(auth);
         if(decode == null)
             return context;
-        TrecAccount acc = jwtService.verifyToken(decode, tokenFlags);
+        TrecAuthentication acc = jwtService.verifyToken(decode, tokenFlags);
         if(acc == null)
             return context;
 
         // Now that we have our account, get Session Information
-        TrecAuthentication tAuth = new TrecAuthentication(acc);
         String sessionId = jwtService.getSessionId(auth);
         // Only authenticate if both the user, app, and session can be verified
-        if(sessionId != null && sessionManager.isValidSession(acc.getId(), app, sessionId)) {
+        if(sessionId != null && sessionManager.isValidSession(acc.getUser().getId(), app, sessionId)) {
             logger.info("Found Valid Session!");
-            tAuth.setSessionId(sessionId);
+            acc.setSessionId(sessionId);
             LoginToken token = new LoginToken();
             token.setAccess_token(auth);
-            tAuth.setLoginToken(token);
+            acc.setLoginToken(token);
 
-            tAuth.setBrandId(acc.getBrandId());
+            acc.setBrandId(acc.getBrandId());
 
-            context.setAuthentication(tAuth);
+            context.setAuthentication(acc);
         }
 
         try {
-            TcUser tcUser = userStorageService.retrieveUser(acc.getId());
+            TcUser tcUser = acc.getUser();
 
             if(tcUser.isEmailVerified())
-                acc.addAuthority("EMAIL_VERIFIED");
+                tcUser.addAuthority("EMAIL_VERIFIED");
             if(tcUser.isPhoneVerified())
-                acc.addAuthority("PHONE_VERIFIED");
+                tcUser.addAuthority("PHONE_VERIFIED");
 
             if(tokenFlags.getIsMfa())
-                acc.addAuthority("MFA_PROVIDED");
+                tcUser.addAuthority("MFA_PROVIDED");
 
             for(String role : tcUser.getAuthRoles())
-                acc.addAuthority(role);
-        } catch (NullPointerException | JsonProcessingException e) {
+                tcUser.addAuthority(role);
+        } catch (NullPointerException e) {
             e.printStackTrace();
         }
 

@@ -7,10 +7,7 @@ import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.trecapps.auth.keyholders.IJwtKeyHolder;
-import com.trecapps.auth.models.TcBrands;
-import com.trecapps.auth.models.TcUser;
-import com.trecapps.auth.models.TokenFlags;
-import com.trecapps.auth.models.TokenTime;
+import com.trecapps.auth.models.*;
 import com.trecapps.auth.models.primary.TrecAccount;
 import com.trecapps.auth.repos.primary.TrecAccountRepo;
 
@@ -350,7 +347,7 @@ public class JwtTokenService {
 	 * @param token
 	 * @return
 	 */
-	public TrecAccount verifyToken(DecodedJWT decodedJwt, TokenFlags tokenFlags) {
+	public TrecAuthentication verifyToken(DecodedJWT decodedJwt, TokenFlags tokenFlags) {
 
 
 		if (decodedJwt == null) {
@@ -371,19 +368,21 @@ public class JwtTokenService {
 
 		if(ret.isEmpty())
 			return null;
-		TrecAccount acc = ret.get().getTrecAccount();
+		TcUser acc = ret.get();
 
 		Claim mfaClaim = decodedJwt.getClaim("mfa");
 		if(mfaClaim != null)
 			tokenFlags.setIsMfa(mfaClaim.asBoolean());
 
+		TrecAuthentication trecAuthentication = new TrecAuthentication(acc);
+
 		try {
-			acc.setBrandId(UUID.fromString(brandStr));
+			trecAuthentication.setBrandId(UUID.fromString(brandStr));
 		} catch(Throwable ignored)
 		{
 
 		}
-		return acc;
+		return trecAuthentication;
 	}
 
 	public Map<String, String> claims(DecodedJWT decodedJwt){

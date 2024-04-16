@@ -76,7 +76,7 @@ public class UserStorageService {
         return encryptor.decrypt(objectMapper.readValue(data, TcUser.class));
     }
 
-    Optional<TcUser> getAccountById(String id){
+    public Optional<TcUser> getAccountById(String id){
         BlobContainerClient containerClient = client.getBlobContainerClient("trec-apps-users");
 
         BlobClient client = containerClient.getBlobClient("user-" + id);

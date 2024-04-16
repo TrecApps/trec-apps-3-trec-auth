@@ -15,7 +15,8 @@ import java.util.UUID;
 
 public class TrecAuthentication implements Authentication {
 
-    TrecAccount account;
+    @Getter
+    TcUser user;
     boolean isTrusted;
 
     boolean regularSession;
@@ -51,9 +52,9 @@ public class TrecAuthentication implements Authentication {
         sessionId = sessionId1;
     }
 
-    public TrecAuthentication(TrecAccount account)
+    public TrecAuthentication(TcUser user)
     {
-        this.account = account;
+        this.user = user;
         isTrusted = true;
         regularSession = true;
     }
@@ -72,32 +73,32 @@ public class TrecAuthentication implements Authentication {
 
     public TrecAccount getAccount()
     {
-        return account;
+        return user.getTrecAccount();
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return account.getAuthorities();
+        return user.getAuthorities();
     }
 
     @Override
     public Object getCredentials() {
-        return account.getPassword();
+        return user.getPassword();
     }
 
     @Override
     public Object getDetails() {
-        return account;
+        return user;
     }
 
     @Override
     public Object getPrincipal() {
-        return account.getUsername();
+        return user.getUsername();
     }
 
     @Override
     public boolean isAuthenticated() {
-        return account.isAccountNonExpired() && account.isAccountNonLocked() && isTrusted;
+        return user.isAccountNonExpired() && user.isAccountNonLocked() && isTrusted;
     }
 
     @Override
@@ -107,7 +108,7 @@ public class TrecAuthentication implements Authentication {
 
     @Override
     public String getName() {
-        return account.getUsername();
+        return user.getUsername();
     }
 
 
