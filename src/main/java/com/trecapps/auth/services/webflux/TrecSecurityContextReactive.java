@@ -8,6 +8,8 @@ import com.trecapps.auth.models.TokenFlags;
 import com.trecapps.auth.models.TrecAuthentication;
 import com.trecapps.auth.services.core.JwtTokenService;
 import com.trecapps.auth.services.core.SessionManager;
+import com.trecapps.auth.services.core.TrecCookieSaver;
+import com.trecapps.auth.services.core.UserStorageService;
 import com.trecapps.auth.services.web.TrecSecurityContextServlet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +17,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpCookie;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
+import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
@@ -27,28 +31,60 @@ import reactor.core.publisher.Mono;
 import reactor.netty.http.server.HttpServerRequest;
 
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 @Component
-public class TrecSecurityContectReactive implements ServerSecurityContextRepository {
+public class TrecSecurityContextReactive extends TrecCookieSaver implements ServerSecurityContextRepository {
 
-    Logger logger = LoggerFactory.getLogger(TrecSecurityContectReactive.class);
+    Logger logger = LoggerFactory.getLogger(TrecSecurityContextReactive.class);
 
-    @Autowired
-    JwtTokenService jwtService;
-    @Autowired
-    SessionManager sessionManager;
-
-    @Value("${trecauth.app}")
-    String app;
     @Value("${trecauth.refresh.app:#{NULL}}")
     String cookieApp;
     @Value("${trecauth.refresh.cookie-name:#{NULL}}")
     String cookieName;
 
+    String domain;
+
+    @Autowired
+    public TrecSecurityContextReactive(
+            JwtTokenService tokenService,
+            SessionManager sessionManager,
+            UserStorageService userStorageService1,
+            @Value("${trecauth.app}") String app,
+            @Value("${trecauth.refresh.domain:#{NULL}}") String domain
+    )
+    {
+        super(sessionManager,tokenService, userStorageService1, app);
+        this.domain = domain;
+    }
+
     @Override
     public Mono<Void> save(ServerWebExchange exchange, SecurityContext context) {
 
-        return null;
+        Authentication auth = context.getAuthentication();
+        if(!(auth instanceof TrecAuthentication trecAuthentication))
+            return Mono.empty();
+
+        this.prepLoginTokens(trecAuthentication, exchange
+                .getRequest()
+                .getHeaders()
+                .getFirst("User-Agent"));
+
+
+        ServerHttpResponse response = exchange.getResponse();
+        ResponseCookie.ResponseCookieBuilder cookieBuilder = ResponseCookie.from(cookieName)
+            .secure(true)
+            .path("/")
+            .httpOnly(true)
+            .maxAge(TimeUnit.DAYS.toSeconds(7))
+            .value(trecAuthentication.getLoginToken().getRefresh_token());
+
+        if(domain != null)
+            cookieBuilder = cookieBuilder.domain(domain);
+
+        response.addCookie(cookieBuilder.build());
+
+        return Mono.empty();
     }
 
     @Override
@@ -62,7 +98,7 @@ public class TrecSecurityContectReactive implements ServerSecurityContextReposit
 
     void handleSecurityDecoding(DecodedJWT decode, SecurityContext context)
     {
-        TrecAuthentication acc = jwtService.verifyToken(decode, new TokenFlags());
+        TrecAuthentication acc = tokenService.verifyToken(decode, new TokenFlags());
         if(acc == null)
         {
             logger.info("Null Account from Cookie detected!");
@@ -81,7 +117,7 @@ public class TrecSecurityContectReactive implements ServerSecurityContextReposit
                     HttpCookie cookie = cookies.getFirst(cookieName);
                     if(cookie != null)
                     {
-                        DecodedJWT decode = jwtService.decodeToken(cookie.getValue());
+                        DecodedJWT decode = tokenService.decodeToken(cookie.getValue());
                         if(decode == null) {
                             logger.info("Null Decode token detected!");
                         }
@@ -100,15 +136,15 @@ public class TrecSecurityContectReactive implements ServerSecurityContextReposit
                 .doOnNext((SecurityContext context) -> {
                     HttpHeaders headers = request.getHeaders();
                     String auth = headers.getFirst("Authorization");
-                    DecodedJWT decode = jwtService.decodeToken(auth);
+                    DecodedJWT decode = tokenService.decodeToken(auth);
                     if(decode == null) {
                         logger.info("Null Decode token detected!");
                     }
                     else
                     {
                         TokenFlags tokenFlags = new TokenFlags();
-                        String sessionId = jwtService.getSessionId(auth);
-                        TrecAuthentication acc = jwtService.verifyToken(decode, tokenFlags);
+                        String sessionId = tokenService.getSessionId(auth);
+                        TrecAuthentication acc = tokenService.verifyToken(decode, tokenFlags);
 
 
                         if(sessionId != null && sessionManager.isValidSession(acc.getUser().getId(), app, sessionId)) {

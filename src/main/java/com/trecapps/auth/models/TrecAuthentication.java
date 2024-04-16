@@ -25,6 +25,10 @@ public class TrecAuthentication implements Authentication {
 
     String sessionId;
 
+    @Getter
+    @Setter
+    boolean useCookie;
+
 //    @Setter
 //    @Getter
 //    Map<String, String> claims = new HashMap<>();
