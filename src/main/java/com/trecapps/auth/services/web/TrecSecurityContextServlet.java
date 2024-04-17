@@ -31,16 +31,9 @@ import java.util.concurrent.TimeUnit;
 @Component
 public class TrecSecurityContextServlet extends TrecCookieSaver implements SecurityContextRepository  {
 
-    @Autowired
-    SessionManager sessionManager;
-
-    @Autowired
-    UserStorageService userStorageService;
-
-    @Value("${trecauth.refresh.cookie-name:#{NULL}}")
     String cookieName;
 
-    @Value("${trecauth.refresh.app:#{NULL}}")
+
     String cookieApp;
 
     String domain;
@@ -63,6 +56,7 @@ public class TrecSecurityContextServlet extends TrecCookieSaver implements Secur
         super(sessionManager, jwtService, userStorageService, app);
         this.domain = domain;
         this.cookieName = cookieName;
+        this.cookieApp = cookieApp;
 
     }
 

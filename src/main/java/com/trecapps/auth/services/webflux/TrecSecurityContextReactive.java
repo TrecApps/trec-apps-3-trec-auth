@@ -38,9 +38,8 @@ public class TrecSecurityContextReactive extends TrecCookieSaver implements Serv
 
     Logger logger = LoggerFactory.getLogger(TrecSecurityContextReactive.class);
 
-    @Value("${trecauth.refresh.app:#{NULL}}")
     String cookieApp;
-    @Value("${trecauth.refresh.cookie-name:#{NULL}}")
+
     String cookieName;
 
     String domain;
@@ -51,11 +50,15 @@ public class TrecSecurityContextReactive extends TrecCookieSaver implements Serv
             SessionManager sessionManager,
             UserStorageService userStorageService1,
             @Value("${trecauth.app}") String app,
-            @Value("${trecauth.refresh.domain:#{NULL}}") String domain
+            @Value("${trecauth.refresh.domain:#{NULL}}") String domain,
+            @Value("${trecauth.refresh.app:#{NULL}}") String cookieApp,
+            @Value("${trecauth.refresh.cookie-name:#{NULL}}") String cookieName
     )
     {
         super(sessionManager,tokenService, userStorageService1, app);
         this.domain = domain;
+        this.cookieApp = cookieApp;
+        this.cookieName = cookieName;
     }
 
     @Override
