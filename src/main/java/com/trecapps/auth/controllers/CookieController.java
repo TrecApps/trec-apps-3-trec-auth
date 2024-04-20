@@ -6,6 +6,7 @@ import com.trecapps.auth.services.core.JwtTokenService;
 import com.trecapps.auth.services.core.SessionManager;
 import com.trecapps.auth.services.core.TrecCookieSaver;
 import com.trecapps.auth.services.core.UserStorageService;
+import com.trecapps.auth.services.web.TrecSecurityContextServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,13 +29,17 @@ import java.util.List;
 @ConditionalOnProperty(prefix = "trecauth", name="use-cookie", havingValue = "true")
 public class CookieController extends TrecCookieSaver {
 
+    //TrecSecurityContextServlet securityContextServlet;
+
     @Autowired
     protected CookieController(
             SessionManager sessionManager1,
             JwtTokenService tokenService1,
             UserStorageService userStorageService1,
+            //TrecSecurityContextServlet securityContextServlet1,
             @Value("${trecauth.app}") String app1) {
         super(sessionManager1, tokenService1, userStorageService1, app1);
+        //this.securityContextServlet = securityContextServlet1;
     }
 
     @GetMapping

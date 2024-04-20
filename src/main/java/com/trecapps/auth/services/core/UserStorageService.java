@@ -99,6 +99,15 @@ public class UserStorageService {
         return encryptor.decrypt(objectMapper.readValue(data, SessionList.class));
     }
 
+    public Optional<TcBrands> getBrandById(String id) {
+        BlobContainerClient containerClient = client.getBlobContainerClient("trec-apps-users");
+        BlobClient client = containerClient.getBlobClient("brand-" + id);
+        if(!client.exists())
+            return Optional.empty();
+        BinaryData bData = client.downloadContent();
+        return Optional.of(encryptor.decrypt(bData.toObject(TcBrands.class)));
+    }
+
     public TcBrands retrieveBrand(String id) throws JsonProcessingException
     {
         BlobContainerClient containerClient = client.getBlobContainerClient("trec-apps-users");

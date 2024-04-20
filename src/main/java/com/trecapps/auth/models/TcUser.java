@@ -48,7 +48,7 @@ public class TcUser implements UserDetails {
     List<String> address;
 
     // List of authorized roles
-    List<String> authRoles;
+    List<String> authRoles = new ArrayList<>();
 
     // External Profiles
     Set<String> brands;
