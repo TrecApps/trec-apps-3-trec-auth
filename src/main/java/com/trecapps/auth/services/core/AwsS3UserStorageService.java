@@ -12,6 +12,7 @@ import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.trecapps.auth.encryptors.IFieldEncryptor;
 import com.trecapps.auth.models.*;
 import lombok.SneakyThrows;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
@@ -21,6 +22,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 public class AwsS3UserStorageService implements IUserStorageService{
 
@@ -30,12 +32,15 @@ public class AwsS3UserStorageService implements IUserStorageService{
 
     String s3BucketName;
 
+    IFieldEncryptor encryptor;
+
     AwsS3UserStorageService(String clientName,
                             String clientSecret,
                             String s3Endpoint,
                             String s3Region,
                             String s3BucketName,
                             String app,
+                            IFieldEncryptor encryptor1,
                             Jackson2ObjectMapperBuilder objectMapperBuilder){
         client = AmazonS3Client
                 .builder()
@@ -46,6 +51,7 @@ public class AwsS3UserStorageService implements IUserStorageService{
         objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
         this.app = app;
         this.s3BucketName = s3BucketName;
+        this.encryptor = encryptor1;
     }
 
     @SneakyThrows(IOException.class)
@@ -59,10 +65,24 @@ public class AwsS3UserStorageService implements IUserStorageService{
     @SneakyThrows(IOException.class)
     @Override
     public TcUser retrieveUser(String id) throws JsonProcessingException {
+        if(!client.doesObjectExist(s3BucketName,"user-" + id))
+            return null;
         S3Object object = client.getObject(s3BucketName, "user-" + id);
         S3ObjectInputStream stream = object.getObjectContent();
         String data = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
-        return objectMapper.readValue(data, TcUser.class);
+        return encryptor.decrypt(objectMapper.readValue(data, TcUser.class));
+    }
+
+    @SneakyThrows
+    @Override
+    public Optional<TcUser> getAccountById(String id) {
+        if(!client.doesObjectExist(s3BucketName,"user-" + id))
+            return Optional.empty();
+        S3Object object = client.getObject(s3BucketName, "user-" + id);
+
+        S3ObjectInputStream stream = object.getObjectContent();
+        String data = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
+        return Optional.of(encryptor.decrypt(objectMapper.readValue(data, TcUser.class)));
     }
 
     @SneakyThrows(IOException.class)
@@ -71,16 +91,29 @@ public class AwsS3UserStorageService implements IUserStorageService{
         S3Object object = client.getObject(s3BucketName, "sessions-" + id);
         S3ObjectInputStream stream = object.getObjectContent();
         String data = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
-        return objectMapper.readValue(data, SessionList.class);
+        return encryptor.decrypt(objectMapper.readValue(data, SessionList.class));
+    }
+
+    @SneakyThrows
+    @Override
+    public Optional<TcBrands> getBrandById(String id) {
+        if(client.doesObjectExist(s3BucketName, "brand-" + id))
+            return Optional.empty();
+        S3Object object = client.getObject(s3BucketName, "brand-" + id);
+        S3ObjectInputStream stream = object.getObjectContent();
+        String data = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
+        return Optional.of(encryptor.decrypt(objectMapper.readValue(data, TcBrands.class)));
     }
 
     @SneakyThrows(IOException.class)
     @Override
     public TcBrands retrieveBrand(String id) throws JsonProcessingException {
+        if(client.doesObjectExist(s3BucketName, "brand-" + id))
+            return null;
         S3Object object = client.getObject(s3BucketName, "brand-" + id);
         S3ObjectInputStream stream = object.getObjectContent();
         String data = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
-        return objectMapper.readValue(data, TcBrands.class);
+        return encryptor.decrypt(objectMapper.readValue(data, TcBrands.class));
     }
 
     @SneakyThrows(IOException.class)
@@ -108,25 +141,37 @@ public class AwsS3UserStorageService implements IUserStorageService{
     @SneakyThrows
     @Override
     public void saveLogins(AppLocker locker, String id) {
-        PutObjectRequest putRequest = new PutObjectRequest(s3BucketName, "logins-" + id + ".json", objectMapper.writeValueAsString(locker));
+        PutObjectRequest putRequest = new PutObjectRequest(
+                s3BucketName,
+                "logins-" + id + ".json",
+                encryptor.encrypt(objectMapper.writeValueAsString(locker)));
         client.putObject(putRequest);
     }
     @SneakyThrows
     @Override
     public void saveUser(TcUser user) {
-        PutObjectRequest putRequest = new PutObjectRequest(s3BucketName, "user-" + user.getId(), objectMapper.writeValueAsString(user));
+        PutObjectRequest putRequest = new PutObjectRequest(
+                s3BucketName,
+                "user-" + user.getId(),
+                encryptor.encrypt(objectMapper.writeValueAsString(user)));
         client.putObject(putRequest);
     }
     @SneakyThrows
     @Override
     public void saveBrand(TcBrands brand) {
-        PutObjectRequest putRequest = new PutObjectRequest(s3BucketName, "brand-" + brand.getId(), objectMapper.writeValueAsString(brand));
+        PutObjectRequest putRequest = new PutObjectRequest(
+                s3BucketName,
+                "brand-" + brand.getId(),
+                encryptor.encrypt(objectMapper.writeValueAsString(brand)));
         client.putObject(putRequest);
     }
     @SneakyThrows
     @Override
     public void saveSessions(SessionList brand, String id) {
-        PutObjectRequest putRequest = new PutObjectRequest(s3BucketName, "sessions-" + id, objectMapper.writeValueAsString(brand));
+        PutObjectRequest putRequest = new PutObjectRequest(
+                s3BucketName,
+                "sessions-" + id,
+                encryptor.encrypt(objectMapper.writeValueAsString(brand)));
         client.putObject(putRequest);
     }
 }

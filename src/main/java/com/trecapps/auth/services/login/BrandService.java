@@ -8,7 +8,7 @@ import com.trecapps.auth.repos.primary.TrecAccountRepo;
 import com.trecapps.auth.repos.secondary.BrandEntryRepo;
 import com.trecapps.auth.services.core.JwtTokenService;
 import com.trecapps.auth.services.core.SessionManager;
-import com.trecapps.auth.services.core.UserStorageService;
+import com.trecapps.auth.services.core.IUserStorageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;

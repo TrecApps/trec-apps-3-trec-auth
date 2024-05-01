@@ -1,5 +1,6 @@
 package com.trecapps.auth.services.core;
 
+import com.trecapps.auth.encryptors.IFieldEncryptor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -17,9 +18,10 @@ public class UserStorageConfig {
             @Value("${trecauth.storage.blob-endpoint}") String endpoint,
             @Value("${trecauth.storage.blob-container:trec-apps-users}") String containerName,
             @Value("${trecauth.app}") String app,
+            IFieldEncryptor fieldEncryptor,
             Jackson2ObjectMapperBuilder objectMapperBuilder
     ) {
-        return new AzureBlobUserStorageService(name, key, endpoint, containerName, app, objectMapperBuilder);
+        return new AzureBlobUserStorageService(name, key, endpoint, containerName, app, fieldEncryptor, objectMapperBuilder);
     }
 
     @Bean
@@ -31,8 +33,9 @@ public class UserStorageConfig {
             @Value("${trecauth.storage.s3-region}") String region,
             @Value("${trecauth.storage.s3-bucket}") String bucket,
             @Value("${trecauth.app}") String app,
+            IFieldEncryptor fieldEncryptor,
             Jackson2ObjectMapperBuilder objectMapperBuilder)
     {
-        return new AwsS3UserStorageService(name, key, endpoint, region, bucket, app, objectMapperBuilder);
+        return new AwsS3UserStorageService(name, key, endpoint, region, bucket, app, fieldEncryptor, objectMapperBuilder);
     }
 }

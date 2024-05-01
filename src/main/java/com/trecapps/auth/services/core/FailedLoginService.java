@@ -3,7 +3,6 @@ package com.trecapps.auth.services.core;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.trecapps.auth.models.AppLocker;
 import com.trecapps.auth.models.FailedLoginList;
-import com.trecapps.auth.services.core.UserStorageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;

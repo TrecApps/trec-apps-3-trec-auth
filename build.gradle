@@ -59,13 +59,9 @@ dependencies {
     implementation "org.springframework.boot:spring-boot-starter-security:$springbootVersion"
     implementation "org.springframework.boot:spring-boot-starter-data-jpa:$springbootVersion"
 
-<<<<<<< HEAD
     implementation 'com.azure:azure-storage-blob:+'             // Use Azure for Storage
     implementation 'com.amazonaws:aws-java-sdk-s3:1.12.694'     // Use AWS for storage
-=======
-    implementation 'com.azure:azure-storage-blob:+'         // Use Azure for storage
-    //implementation 'com.amazonaws:aws-java-sdk-s3:1.12.694' // Use AWS for Storage
->>>>>>> feature/webflux
+
 
 
     implementation "io.projectreactor.netty:reactor-netty-core:+"

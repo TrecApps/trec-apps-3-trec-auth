@@ -14,9 +14,7 @@ import com.trecapps.auth.models.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
-import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -44,7 +42,7 @@ public class AzureBlobUserStorageService implements IUserStorageService{
                        String endpoint,
                        String containerName,
                        String app,
-
+                       IFieldEncryptor encryptor1,
                        Jackson2ObjectMapperBuilder objectMapperBuilder)
     {
         AzureNamedKeyCredential credential = new AzureNamedKeyCredential(name, key);
@@ -52,7 +50,7 @@ public class AzureBlobUserStorageService implements IUserStorageService{
         objectMapper = objectMapperBuilder.createXmlMapper(false).build();
         objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
         this.app = app;
-
+        this.encryptor = encryptor1;
         containerClient = client.getBlobContainerClient(containerName);
     }
 
@@ -80,8 +78,8 @@ public class AzureBlobUserStorageService implements IUserStorageService{
         return encryptor.decrypt(objectMapper.readValue(data, TcUser.class));
     }
 
+    @Override
     public Optional<TcUser> getAccountById(String id){
-        BlobContainerClient containerClient = client.getBlobContainerClient("trec-apps-users");
 
         BlobClient client = containerClient.getBlobClient("user-" + id);
         if(!client.exists())
@@ -102,8 +100,8 @@ public class AzureBlobUserStorageService implements IUserStorageService{
         return encryptor.decrypt(objectMapper.readValue(data, SessionList.class));
     }
 
+    @Override
     public Optional<TcBrands> getBrandById(String id) {
-        BlobContainerClient containerClient = client.getBlobContainerClient("trec-apps-users");
         BlobClient client = containerClient.getBlobClient("brand-" + id);
         if(!client.exists())
             return Optional.empty();
@@ -111,6 +109,7 @@ public class AzureBlobUserStorageService implements IUserStorageService{
         return Optional.of(encryptor.decrypt(bData.toObject(TcBrands.class)));
     }
 
+    @Override
     public TcBrands retrieveBrand(String id) throws JsonProcessingException
     {
         BlobClient client = containerClient.getBlobClient("brand-" + id);
@@ -122,6 +121,7 @@ public class AzureBlobUserStorageService implements IUserStorageService{
         return encryptor.decrypt(objectMapper.readValue(data, TcBrands.class));
     }
 
+    @Override
     public AppLocker retrieveAppLocker(String id) throws JsonProcessingException
     {
          BlobClient client = containerClient.getBlobClient("logins-" + id + ".json");
@@ -143,31 +143,35 @@ public class AzureBlobUserStorageService implements IUserStorageService{
         return encryptor.decrypt(objectMapper.readValue(data, AppLocker.class));
     }
 
+    @Override
     public void saveLogins(AppLocker locker, String id)
     {
         BlobClient client = containerClient.getBlobClient("logins-" + id + ".json");
 
-        client.upload(BinaryData.fromObject(locker),true);
+        client.upload(BinaryData.fromObject(encryptor.encrypt(locker)),true);
     }
 
+    @Override
     public void saveUser(TcUser user)
     {
         BlobClient client = containerClient.getBlobClient("user-" + user.getId());
 
-        client.upload(BinaryData.fromObject(user),true);
+        client.upload(BinaryData.fromObject(encryptor.encrypt(user)),true);
     }
 
+    @Override
     public void saveBrand(TcBrands brand)
     {
         BlobClient client = containerClient.getBlobClient("brand-" + brand.getId());
 
-        client.upload(BinaryData.fromObject(brand), true);
+        client.upload(BinaryData.fromObject(encryptor.encrypt(brand)), true);
     }
 
+    @Override
     public void saveSessions(SessionList brand, String id)
     {
         BlobClient client = containerClient.getBlobClient("sessions-" + id);
 
-        client.upload(BinaryData.fromObject(brand), true);
+        client.upload(BinaryData.fromObject(encryptor.encrypt(brand)), true);
     }
 }

@@ -1,6 +1,6 @@
 package com.trecapps.auth.keyholders;
 
-import com.trecapps.auth.services.core.UserStorageService;
+import com.trecapps.auth.services.core.IUserStorageService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -12,7 +12,7 @@ public class KeyHolderBeanFactory {
     @Bean
     @ConditionalOnProperty(prefix = "trecauth.jwt.key-storage", name="strategy", havingValue = "blob")
     IJwtKeyHolder getBlobJwtKeyHolder(
-            UserStorageService userStorageService,
+            IUserStorageService userStorageService,
             @Value("${trec.key.public}") String publicKeyStr,
             @Value("${trec.key.private}") String privateKeyStr
     ) {

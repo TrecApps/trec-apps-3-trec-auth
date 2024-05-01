@@ -1,6 +1,7 @@
 package com.trecapps.auth.keyholders;
 
-import com.trecapps.auth.services.core.UserStorageService;
+
+import com.trecapps.auth.services.core.IUserStorageService;
 
 /**
  * Looks for Keys in the Storage Account of the User Service
@@ -13,7 +14,7 @@ public class BlobJwtKeyHolder implements IJwtKeyHolder{
     String privateKey;
 
     public BlobJwtKeyHolder(
-            UserStorageService userStorageService,
+            IUserStorageService userStorageService,
             String publicKeyStr,
             String privateKeyStr
     ){
