@@ -1,13 +1,19 @@
 package com.trecapps.auth.models;
 
+import com.trecapps.auth.encryptors.EncryptedField;
+import com.trecapps.auth.models.primary.TrecAccount;
+import jakarta.persistence.Transient;
 import lombok.Data;
 
 import jakarta.validation.constraints.Email;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
 import java.time.OffsetDateTime;
 import java.util.*;
 
 @Data
-public class TcUser {
+public class TcUser implements UserDetails {
 
 
     // Core Info
@@ -19,11 +25,13 @@ public class TcUser {
     String userProfile;
 
     // Phone Used by the User
+    @EncryptedField
     PhoneNumber mobilePhone;
     boolean phoneVerified;
 
     // External Email used by the User
     @Email
+    @EncryptedField
     String email;
     boolean emailVerified;
 
@@ -37,10 +45,10 @@ public class TcUser {
     String birthdaySetting;
 
     // Addresses used by the User
-    String[] address;
+    List<String> address;
 
     // List of authorized roles
-    String[] authRoles;
+    List<String> authRoles = new ArrayList<>();
 
     // External Profiles
     Set<String> brands;
@@ -57,5 +65,75 @@ public class TcUser {
         if(profilePics.containsKey("Main"))
             return Optional.of(profilePics.get("Main"));
         return Optional.empty();
+    }
+
+    ///
+    /// UserDetails Support
+    ///
+
+    public TrecAccount getTrecAccount()
+    {
+        TrecAccount ret = new TrecAccount();
+        ret.setUsername(userProfile);
+        ret.setId(id);
+        setAuthorities();
+        ret.setAuthorities(authorities);
+        return ret;
+    }
+
+    @Transient
+    List<String> authorities;
+
+    private void setAuthorities() {
+        if(authorities == null)
+            authorities = new ArrayList<>(this.authRoles);
+    }
+
+    public void addAuthority(String auth)
+    {
+        setAuthorities();
+        authorities.add(auth);
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        setAuthorities();
+        return authorities.stream()
+                .map((String authStr) -> {
+                    return new GrantedAuthority() {
+                        @Override
+                        public String getAuthority() {return authStr; }
+                    };
+                }).toList();
+    }
+
+    @Override
+    public String getPassword() {
+        return "";
+    }
+
+    @Override
+    public String getUsername() {
+        return this.userProfile;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true;
     }
 }

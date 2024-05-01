@@ -1,4 +1,4 @@
-package com.trecapps.auth.services;
+package com.trecapps.auth.services.core;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.trecapps.auth.models.Session;

@@ -1,5 +1,7 @@
 package com.trecapps.auth.models;
 
+import com.trecapps.auth.encryptors.EncryptedField;
+
 public enum PhoneCountryCode {
 
     // To-Do: Add More Country Codes
@@ -7,10 +9,10 @@ public enum PhoneCountryCode {
 
 
     PhoneCountryCode(int code){
-        this.code = code;
+        this.code = String.valueOf(code);
     }
 
-    int code;
+    String code;
 
-    public int getCode(){return code;};
+    public int getCode(){return Integer.parseInt(code);};
 }

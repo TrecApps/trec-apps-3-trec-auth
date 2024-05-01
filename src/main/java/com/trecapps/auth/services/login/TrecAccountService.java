@@ -1,11 +1,14 @@
-package com.trecapps.auth.services;
+package com.trecapps.auth.services.login;
 
+import com.trecapps.auth.encryptors.IFieldEncryptor;
 import com.trecapps.auth.models.primary.TrecAccount;
 import com.trecapps.auth.models.secondary.UserSalt;
 import com.trecapps.auth.repos.primary.TrecAccountRepo;
 import com.trecapps.auth.repos.secondary.UserSaltRepo;
+import com.trecapps.auth.services.core.FailedLoginService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -15,6 +18,7 @@ import org.springframework.stereotype.Service;
 import java.util.Optional;
 
 @Service
+@ConditionalOnProperty(prefix = "trecauth", name = "login", havingValue = "true")
 public class TrecAccountService implements UserDetailsService {
 
     @Autowired
@@ -25,6 +29,9 @@ public class TrecAccountService implements UserDetailsService {
 
     @Autowired
     FailedLoginService failedLoginService;
+
+    @Autowired
+    IFieldEncryptor encryptor;
 
     @Value("${trecauth.failed.count:10}")
     Integer loginLimit;
@@ -77,10 +84,12 @@ public class TrecAccountService implements UserDetailsService {
             account.setPasswordHash(null);
             account = trecRepo.save(account);
 
-            UserSalt userSalt = new UserSalt(account.getId(), BCrypt.gensalt());
-            userSalt = saltRepo.save(userSalt);
+            String plainSalt = BCrypt.gensalt();
 
-            account.setPasswordHash(BCrypt.hashpw(curPassword, userSalt.getSalt()));
+            UserSalt userSalt = new UserSalt(account.getId(), plainSalt);
+            userSalt = saltRepo.save(encryptor.encrypt(userSalt));
+
+            account.setPasswordHash(BCrypt.hashpw(curPassword, plainSalt));
             return trecRepo.save(account);
 
         }
@@ -106,7 +115,7 @@ public class TrecAccountService implements UserDetailsService {
         if(salt.isEmpty())
             return false;
 
-        UserSalt actSalt = salt.get();
+        UserSalt actSalt = encryptor.decrypt(salt.get());
 
         if(trecAccount.getPassword().equals(BCrypt.hashpw(oldPassword, actSalt.getSalt())))
         {
@@ -116,7 +125,7 @@ public class TrecAccountService implements UserDetailsService {
             trecAccount = trecRepo.save(trecAccount);
 
             actSalt.setSalt(newSalt);
-            actSalt = saltRepo.save(actSalt);
+            actSalt = saltRepo.save(encryptor.encrypt(actSalt));
 
             return true;
         }

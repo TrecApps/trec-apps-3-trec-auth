@@ -1,4 +1,4 @@
-package com.trecapps.auth.services;
+package com.trecapps.auth.services.core;
 
 import com.azure.core.credential.AzureNamedKeyCredential;
 import com.azure.core.util.BinaryData;
@@ -9,6 +9,7 @@ import com.azure.storage.blob.BlobServiceClientBuilder;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.trecapps.auth.encryptors.IFieldEncryptor;
 import com.trecapps.auth.models.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +22,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
+import java.util.Optional;
 
 
 public class AzureBlobUserStorageService implements IUserStorageService{
@@ -34,6 +35,8 @@ public class AzureBlobUserStorageService implements IUserStorageService{
 
     String app;
 
+    IFieldEncryptor encryptor;
+
 
     @Autowired
     AzureBlobUserStorageService(String name,
@@ -41,6 +44,7 @@ public class AzureBlobUserStorageService implements IUserStorageService{
                        String endpoint,
                        String containerName,
                        String app,
+
                        Jackson2ObjectMapperBuilder objectMapperBuilder)
     {
         AzureNamedKeyCredential credential = new AzureNamedKeyCredential(name, key);
@@ -73,7 +77,18 @@ public class AzureBlobUserStorageService implements IUserStorageService{
 
         String data = new String(bData.toBytes(), StandardCharsets.UTF_8);
 
-        return objectMapper.readValue(data, TcUser.class);
+        return encryptor.decrypt(objectMapper.readValue(data, TcUser.class));
+    }
+
+    public Optional<TcUser> getAccountById(String id){
+        BlobContainerClient containerClient = client.getBlobContainerClient("trec-apps-users");
+
+        BlobClient client = containerClient.getBlobClient("user-" + id);
+        if(!client.exists())
+            return Optional.empty();
+        BinaryData bData = client.downloadContent();
+
+        return Optional.of(encryptor.decrypt(bData.toObject(TcUser.class)));
     }
 
     @Override
@@ -84,7 +99,16 @@ public class AzureBlobUserStorageService implements IUserStorageService{
 
         String data = new String(bData.toBytes(), StandardCharsets.UTF_8);
 
-        return objectMapper.readValue(data, SessionList.class);
+        return encryptor.decrypt(objectMapper.readValue(data, SessionList.class));
+    }
+
+    public Optional<TcBrands> getBrandById(String id) {
+        BlobContainerClient containerClient = client.getBlobContainerClient("trec-apps-users");
+        BlobClient client = containerClient.getBlobClient("brand-" + id);
+        if(!client.exists())
+            return Optional.empty();
+        BinaryData bData = client.downloadContent();
+        return Optional.of(encryptor.decrypt(bData.toObject(TcBrands.class)));
     }
 
     public TcBrands retrieveBrand(String id) throws JsonProcessingException
@@ -95,7 +119,7 @@ public class AzureBlobUserStorageService implements IUserStorageService{
 
         String data = new String(bData.toBytes(), StandardCharsets.UTF_8);
 
-        return objectMapper.readValue(data, TcBrands.class);
+        return encryptor.decrypt(objectMapper.readValue(data, TcBrands.class));
     }
 
     public AppLocker retrieveAppLocker(String id) throws JsonProcessingException
@@ -116,7 +140,7 @@ public class AzureBlobUserStorageService implements IUserStorageService{
 
         String data = new String(bData.toBytes(), StandardCharsets.UTF_8);
 
-        return objectMapper.readValue(data, AppLocker.class);
+        return encryptor.decrypt(objectMapper.readValue(data, AppLocker.class));
     }
 
     public void saveLogins(AppLocker locker, String id)

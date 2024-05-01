@@ -1,4 +1,4 @@
-package com.trecapps.auth.services;
+package com.trecapps.auth.services.core;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTCreator;
@@ -6,9 +6,8 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.trecapps.auth.models.TcBrands;
-import com.trecapps.auth.models.TokenFlags;
-import com.trecapps.auth.models.TokenTime;
+import com.trecapps.auth.keyholders.IJwtKeyHolder;
+import com.trecapps.auth.models.*;
 import com.trecapps.auth.models.primary.TrecAccount;
 import com.trecapps.auth.repos.primary.TrecAccountRepo;
 
@@ -39,11 +38,6 @@ import java.util.concurrent.atomic.AtomicReference;
 @Slf4j
 public class JwtTokenService {
 	
-	@Value("${trec.key.public}")
-	String publicKeyStr;
-	
-	@Value("${trec.key.private}")
-	String privateKeyStr;
 
 	@Value("${trecauth.app}")
 	String app;
@@ -51,18 +45,15 @@ public class JwtTokenService {
 	RSAPublicKey publicKey;
 	
 	RSAPrivateKey privateKey;
-	
-	@Autowired
-	TrecAccountService accountService;
-	
-	@Autowired
-	TrecAccountRepo accountRepo;
 
 	@Autowired
 	IUserStorageService userStorageService;
 
 	@Autowired
 	SessionManager sessionManager;
+
+	@Autowired
+	IJwtKeyHolder jwtKeyHolder;
 
 	private DecodedJWT decodeJWT(String token)
 	{
@@ -108,11 +99,8 @@ public class JwtTokenService {
 	{
 		if(publicKey == null)
 		{
-			File publicFile = new File(publicKeyStr);
-
-
 			try {
-				String encKey = userStorageService.retrieveKey(publicKeyStr);
+				String encKey = jwtKeyHolder.getPublicKey();
 
 				X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(Base64.getDecoder().decode(encKey));
 				
@@ -130,7 +118,7 @@ public class JwtTokenService {
 		
 		if(privateKey == null)
 		{
-			String encKey = userStorageService.retrieveKey(privateKeyStr);
+			String encKey = jwtKeyHolder.getPrivateKey();
 			try (PEMParser parser = new PEMParser(new StringReader(encKey))) {
 
 				        PemObject pemObject = parser.readPemObject();
@@ -156,14 +144,14 @@ public class JwtTokenService {
 		return privateKey != null && publicKey != null;
 	}
 
-	public TokenTime generateToken(TrecAccount account, String userAgent, TcBrands brand, boolean expires)
+	public TokenTime generateToken(TrecAccount account, String userAgent, TcBrands brand, boolean expires, String app1)
 	{
-		return generateToken(account, userAgent, brand, null, expires);
+		return generateToken(account, userAgent, brand, null, expires, app1);
 	}
 
-	public TokenTime generateToken(TrecAccount account, String userAgent, TcBrands brand, String session, boolean expires)
+	public TokenTime generateToken(TrecAccount account, String userAgent, TcBrands brand, String session, boolean expires, String app1)
 	{
-		return generateToken(account, userAgent, brand, session, expires, false);
+		return generateToken(account, userAgent, brand, session, expires, false, app1);
 	}
 
 	/**
@@ -171,7 +159,7 @@ public class JwtTokenService {
 	 * @param account
 	 * @return
 	 */
-	public TokenTime generateToken(TrecAccount account, String userAgent, TcBrands brand, String session, boolean expires, boolean useMfa)
+	public TokenTime generateToken(TrecAccount account, String userAgent, TcBrands brand, String session, boolean expires, boolean useMfa, String app1)
 	{
 		if(account == null)
 			return null;
@@ -187,7 +175,7 @@ public class JwtTokenService {
 
 		TokenTime ret = null;
 		if(session == null)
-			ret = sessionManager.addSession(app, account.getId(), userAgent, expires);
+			ret = sessionManager.addSession(app1, account.getId(), userAgent, expires);
 		else
 		{
 			ret = new TokenTime();
@@ -207,7 +195,7 @@ public class JwtTokenService {
 			if(brand.getOwners().contains(account.getId())) useBrand = brand.getId().toString();
 		}
 
-		JWTCreator.Builder jwtBuilder = JWT.create().withIssuer(app)
+		JWTCreator.Builder jwtBuilder = JWT.create().withIssuer(app1)
 				.withClaim("ID", account.getId())
 				.withClaim("Username", account.getUsername())
 				.withClaim("Brand", useBrand)
@@ -356,7 +344,7 @@ public class JwtTokenService {
 	 * @param token
 	 * @return
 	 */
-	public TrecAccount verifyToken(DecodedJWT decodedJwt, TokenFlags tokenFlags) {
+	public TrecAuthentication verifyToken(DecodedJWT decodedJwt, TokenFlags tokenFlags) {
 
 
 		if (decodedJwt == null) {
@@ -373,23 +361,25 @@ public class JwtTokenService {
 
 		String brandStr = decodedJwt.getClaim("Brand").asString();
 
-		Optional<TrecAccount> ret = accountService.getAccountById(idLong);
+		Optional<TcUser> ret = userStorageService.getAccountById(idLong);
 
 		if(ret.isEmpty())
 			return null;
-		TrecAccount acc = ret.get();
+		TcUser acc = ret.get();
 
 		Claim mfaClaim = decodedJwt.getClaim("mfa");
 		if(mfaClaim != null)
 			tokenFlags.setIsMfa(mfaClaim.asBoolean());
 
+		TrecAuthentication trecAuthentication = new TrecAuthentication(acc);
+
 		try {
-			acc.setBrandId(UUID.fromString(brandStr));
+			trecAuthentication.setBrandId(UUID.fromString(brandStr));
 		} catch(Throwable ignored)
 		{
 
 		}
-		return acc;
+		return trecAuthentication;
 	}
 
 	public Map<String, String> claims(DecodedJWT decodedJwt){

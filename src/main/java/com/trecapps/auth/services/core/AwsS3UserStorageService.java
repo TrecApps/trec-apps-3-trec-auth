@@ -1,4 +1,4 @@
-package com.trecapps.auth.services;
+package com.trecapps.auth.services.core;
 
 
 import com.amazonaws.auth.AWSStaticCredentialsProvider;

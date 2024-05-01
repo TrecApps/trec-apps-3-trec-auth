@@ -1,8 +1,9 @@
-package com.trecapps.auth.services;
+package com.trecapps.auth.services.core;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.trecapps.auth.models.AppLocker;
 import com.trecapps.auth.models.FailedLoginList;
+import com.trecapps.auth.services.core.UserStorageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -28,7 +29,7 @@ public class FailedLoginService {
     @Value("${trecauth.app}")
     String app;
 
-    int appendFailedLogin(String id)
+    public int appendFailedLogin(String id)
     {
         try {
             AppLocker locker = userStorageService.retrieveAppLocker(id);
@@ -68,7 +69,7 @@ public class FailedLoginService {
         }
     }
 
-    boolean isLocked(String id)
+    public boolean isLocked(String id)
     {
         try{
             AppLocker locker = userStorageService.retrieveAppLocker(id);
