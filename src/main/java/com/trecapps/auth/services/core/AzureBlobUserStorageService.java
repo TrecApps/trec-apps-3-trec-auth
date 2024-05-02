@@ -2,6 +2,7 @@ package com.trecapps.auth.services.core;
 
 import com.azure.core.credential.AzureNamedKeyCredential;
 import com.azure.core.util.BinaryData;
+import com.azure.identity.DefaultAzureCredentialBuilder;
 import com.azure.storage.blob.BlobClient;
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClient;
@@ -36,7 +37,6 @@ public class AzureBlobUserStorageService implements IUserStorageService{
     IFieldEncryptor encryptor;
 
 
-    @Autowired
     AzureBlobUserStorageService(String name,
                        String key,
                        String endpoint,
@@ -47,6 +47,21 @@ public class AzureBlobUserStorageService implements IUserStorageService{
     {
         AzureNamedKeyCredential credential = new AzureNamedKeyCredential(name, key);
         client = new BlobServiceClientBuilder().credential(credential).endpoint(endpoint).buildClient();
+        objectMapper = objectMapperBuilder.createXmlMapper(false).build();
+        objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+        this.app = app;
+        this.encryptor = encryptor1;
+        containerClient = client.getBlobContainerClient(containerName);
+    }
+
+    AzureBlobUserStorageService(
+            String endpoint,
+            String containerName,
+            String app,
+            IFieldEncryptor encryptor1,
+            Jackson2ObjectMapperBuilder objectMapperBuilder
+    ){
+        client = new BlobServiceClientBuilder().credential(new DefaultAzureCredentialBuilder().build()).endpoint(endpoint).buildClient();
         objectMapper = objectMapperBuilder.createXmlMapper(false).build();
         objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
         this.app = app;

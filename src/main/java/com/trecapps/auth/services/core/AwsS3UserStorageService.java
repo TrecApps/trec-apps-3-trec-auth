@@ -36,7 +36,6 @@ public class AwsS3UserStorageService implements IUserStorageService{
 
     AwsS3UserStorageService(String clientName,
                             String clientSecret,
-                            String s3Endpoint,
                             String s3Region,
                             String s3BucketName,
                             String app,
@@ -44,9 +43,30 @@ public class AwsS3UserStorageService implements IUserStorageService{
                             Jackson2ObjectMapperBuilder objectMapperBuilder){
         client = AmazonS3Client
                 .builder()
-                .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(clientName, clientSecret))).
-        withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(s3Endpoint,s3Region)).build();
+                .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(clientName, clientSecret)))
+                .withRegion(s3Region).build();
 
+        setUp(s3BucketName, app, encryptor1, objectMapperBuilder);
+    }
+
+    AwsS3UserStorageService(
+                            String s3Region,
+                            String s3BucketName,
+                            String app,
+                            IFieldEncryptor encryptor1,
+                            Jackson2ObjectMapperBuilder objectMapperBuilder){
+        client = AmazonS3Client
+                .builder()
+                .withRegion(s3Region).build();
+
+        setUp(s3BucketName, app, encryptor1, objectMapperBuilder);
+    }
+
+    void setUp(String s3BucketName,
+               String app,
+               IFieldEncryptor encryptor1,
+               Jackson2ObjectMapperBuilder objectMapperBuilder)
+    {
         objectMapper = objectMapperBuilder.createXmlMapper(false).build();
         objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
         this.app = app;
