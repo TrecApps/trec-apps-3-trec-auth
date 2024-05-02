@@ -16,7 +16,7 @@ public class KeyHolderBeanFactory {
             @Value("${trec.key.public}") String publicKeyStr,
             @Value("${trec.key.private}") String privateKeyStr
     ) {
-        return new BlobJwtKeyHolder(userStorageService, publicKeyStr, privateKeyStr);
+        return new StorageJwtKeyHolder(userStorageService, publicKeyStr, privateKeyStr);
     }
 
     @Bean
@@ -30,5 +30,19 @@ public class KeyHolderBeanFactory {
             @Value("${trec.jwt.clientSecret}") String clientSecret
     ){
         return new AKVJwtKeyHolder(vaultName, publicKeyStr, privateKeyStr, tenantId, clientId, clientSecret);
+    }
+
+    @Bean
+    @ConditionalOnProperty(prefix = "trecauth.jwt.key-storage", name="strategy", havingValue = "AWSSM")
+    IJwtKeyHolder getAwsSecretsManagerJwtKeyHolder(
+            @Value("${trec.jwt.endpoint}") String endpoint,
+            @Value("${trec.key.public}") String publicKeyStr,
+            @Value("${trec.key.private}") String privateKeyStr,
+            @Value("${trec.jwt.region}") String region,
+            @Value("${trec.jwt.clientId}") String clientId,
+            @Value("${trec.jwt.clientSecret}") String clientSecret
+    )
+    {
+        return new AWSSMJwtKeyHolder(publicKeyStr, privateKeyStr, endpoint, region, clientId, clientSecret);
     }
 }

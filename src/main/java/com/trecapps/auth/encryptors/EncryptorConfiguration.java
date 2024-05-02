@@ -1,7 +1,9 @@
 package com.trecapps.auth.encryptors;
 
 import com.azure.spring.cloud.autoconfigure.implementation.condition.ConditionalOnMissingProperty;
+import com.google.errorprone.annotations.CompileTimeConstant;
 import com.trecapps.auth.keyholders.AKVEncryptorKeyHolder;
+import com.trecapps.auth.keyholders.AWSSMEncryptorKeyHolder;
 import com.trecapps.auth.keyholders.IEncryptorKeyHolder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -18,41 +20,47 @@ public class EncryptorConfiguration {
         return new BasicFieldEncryptor();
     }
 
-    private IEncryptorKeyHolder getEncryptorKeyHolder(
-            String vaultName,
-            String tenantId,
-            String clientId,
-            String clientSecret
+    @Bean
+    @ConditionalOnProperty(prefix="trecauth.key-holder", name="type", havingValue = "azure-key-vault")
+    private IEncryptorKeyHolder getAzureEncryptorKeyHolder(
+            @Value("${trecauth.keyvault.name}") String vaultName,
+            @Value("${trecauth.keyvault.tenantId}") String tenantId,
+            @Value("${trecauth.keyvault.clientId}") String clientId,
+            @Value("${trecauth.keyvault.clientSecret}") String clientSecret
     ) {
         return new AKVEncryptorKeyHolder(vaultName, tenantId, clientId, clientSecret);
     }
 
     @Bean
+    @ConditionalOnProperty(prefix="trecauth.key-holder", name="type", havingValue = "aws-secrets-manager")
+    IEncryptorKeyHolder getAWSEncrytorKeyHolder(
+        @Value("${trecauth.secrets-manager.region}") String region,
+        @Value("${trecauth.secrets-manager.endpoint}") String endpoint,
+        @Value("${trecauth.secrets-manager.clientName}") String clientName,
+        @Value("${trecauth.secrets-manager.clientSecret}") String clientSecret
+    ){
+        return new AWSSMEncryptorKeyHolder(endpoint, region, clientName, clientSecret);
+    }
+
+
+    @Bean
     @ConditionalOnProperty(prefix = "trecauth.encryption", name="strategy", havingValue = "RSA")
     IFieldEncryptor getRsaEncryptor(
-            @Value("${trecauth.keyvault.name}") String vaultName,
-            @Value("${trecauth.keyvault.tenantId}") String tenantId,
-            @Value("${trecauth.keyvault.clientId}") String clientId,
-            @Value("${trecauth.keyvault.clientSecret}") String clientSecret,
-            @Value("${trecauth.keyvault.rsa.public-name}") String publicKey,
-            @Value("${trecauth.keyvault.rsa.public-name}") String privateKey
+            IEncryptorKeyHolder keyHolder,
+            @Value("${trecauth.encryptor.rsa.public-name}") String publicKey,
+            @Value("${trecauth.encryptor.rsa.public-name}") String privateKey
     ){
-        IEncryptorKeyHolder keyHolder = getEncryptorKeyHolder(vaultName, tenantId, clientId, clientSecret);
         return new RsaFieldEncryptor(keyHolder, publicKey, privateKey);
     }
 
     @Bean
     @ConditionalOnProperty(prefix = "trecauth.encryption", name="strategy", havingValue = "AES")
     IFieldEncryptor getAesEncryptor(
-            @Value("${trecauth.keyvault.name}") String vaultName,
-            @Value("${trecauth.keyvault.tenantId}") String tenantId,
-            @Value("${trecauth.keyvault.clientId}") String clientId,
-            @Value("${trecauth.keyvault.clientSecret}") String clientSecret,
-            @Value("${trecauth.keyvault.aes.password}") String password,
-            @Value("${trecauth.keyvault.aes.salt}") String salt,
-            @Value("${trecauth.keyvault.aes.iv}") String iv
+            IEncryptorKeyHolder keyHolder,
+            @Value("${trecauth.encryptor.aes.password}") String password,
+            @Value("${trecauth.encryptor.aes.salt}") String salt,
+            @Value("${trecauth.encryptor.aes.iv}") String iv
     ){
-        IEncryptorKeyHolder keyHolder = getEncryptorKeyHolder(vaultName, tenantId, clientId, clientSecret);
         return new AesFieldEncryptor(keyHolder, password, salt, iv);
     }
 

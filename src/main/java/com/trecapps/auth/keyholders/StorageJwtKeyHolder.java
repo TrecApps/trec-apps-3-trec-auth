@@ -8,12 +8,12 @@ import com.trecapps.auth.services.core.IUserStorageService;
  *
  * Note: NOT Recommended for Production apps, the ___ is preferred
  */
-public class BlobJwtKeyHolder implements IJwtKeyHolder{
+public class StorageJwtKeyHolder implements IJwtKeyHolder{
 
     String publicKey;
     String privateKey;
 
-    public BlobJwtKeyHolder(
+    public StorageJwtKeyHolder(
             IUserStorageService userStorageService,
             String publicKeyStr,
             String privateKeyStr
