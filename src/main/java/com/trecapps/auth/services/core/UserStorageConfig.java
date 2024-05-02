@@ -38,4 +38,16 @@ public class UserStorageConfig {
     {
         return new AwsS3UserStorageService(name, key, endpoint, region, bucket, app, fieldEncryptor, objectMapperBuilder);
     }
+
+    @Bean
+    @ConditionalOnProperty(prefix = "trecauth.storage", name = "strategy", havingValue = "Google-Cloud-Storage")
+    IUserStorageService getGoogleUserService(
+            @Value("${trecauth.storage.project-id}") String projectId,
+            @Value("${trecauth.storage.bucket}")String bucketName,
+            @Value("${trecauth.app}") String app,
+            IFieldEncryptor fieldEncryptor,
+            Jackson2ObjectMapperBuilder objectMapperBuilder
+    ){
+        return new GoogleCloudUserStorageService(projectId, bucketName, app, fieldEncryptor, objectMapperBuilder);
+    }
 }

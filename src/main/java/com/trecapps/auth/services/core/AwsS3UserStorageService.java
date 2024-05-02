@@ -144,7 +144,7 @@ public class AwsS3UserStorageService implements IUserStorageService{
         PutObjectRequest putRequest = new PutObjectRequest(
                 s3BucketName,
                 "logins-" + id + ".json",
-                encryptor.encrypt(objectMapper.writeValueAsString(locker)));
+                objectMapper.writeValueAsString(encryptor.encrypt(locker)));
         client.putObject(putRequest);
     }
     @SneakyThrows
@@ -153,7 +153,7 @@ public class AwsS3UserStorageService implements IUserStorageService{
         PutObjectRequest putRequest = new PutObjectRequest(
                 s3BucketName,
                 "user-" + user.getId(),
-                encryptor.encrypt(objectMapper.writeValueAsString(user)));
+                objectMapper.writeValueAsString(encryptor.encrypt(user)));
         client.putObject(putRequest);
     }
     @SneakyThrows
@@ -162,7 +162,7 @@ public class AwsS3UserStorageService implements IUserStorageService{
         PutObjectRequest putRequest = new PutObjectRequest(
                 s3BucketName,
                 "brand-" + brand.getId(),
-                encryptor.encrypt(objectMapper.writeValueAsString(brand)));
+                objectMapper.writeValueAsString(encryptor.encrypt(brand)));
         client.putObject(putRequest);
     }
     @SneakyThrows
@@ -171,7 +171,7 @@ public class AwsS3UserStorageService implements IUserStorageService{
         PutObjectRequest putRequest = new PutObjectRequest(
                 s3BucketName,
                 "sessions-" + id,
-                encryptor.encrypt(objectMapper.writeValueAsString(brand)));
+                objectMapper.writeValueAsString(encryptor.encrypt(brand)));
         client.putObject(putRequest);
     }
 }
