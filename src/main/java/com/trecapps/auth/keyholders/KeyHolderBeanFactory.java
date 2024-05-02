@@ -45,4 +45,14 @@ public class KeyHolderBeanFactory {
     {
         return new AWSSMJwtKeyHolder(publicKeyStr, privateKeyStr, endpoint, region, clientId, clientSecret);
     }
+
+    @Bean
+    @ConditionalOnProperty(prefix = "trecauth.jwt.key-storage", name="strategy", havingValue = "GCPSM")
+    IJwtKeyHolder getGcpSecretManagerJwtKeyHolder(
+            @Value("${trec.jwt.project}") String project,
+            @Value("${trec.key.public}") String publicKeyStr,
+            @Value("${trec.key.private}") String privateKeyStr
+    ) {
+        return new GCPSMJwtKeyHolder(project, publicKeyStr, privateKeyStr);
+    }
 }

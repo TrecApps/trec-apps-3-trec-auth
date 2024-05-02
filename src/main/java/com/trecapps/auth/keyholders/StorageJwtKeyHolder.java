@@ -6,7 +6,7 @@ import com.trecapps.auth.services.core.IUserStorageService;
 /**
  * Looks for Keys in the Storage Account of the User Service
  *
- * Note: NOT Recommended for Production apps, the ___ is preferred
+ * Note: NOT Recommended for Production apps, the other beans are preferred
  */
 public class StorageJwtKeyHolder implements IJwtKeyHolder{
 

@@ -4,6 +4,7 @@ import com.azure.spring.cloud.autoconfigure.implementation.condition.Conditional
 import com.google.errorprone.annotations.CompileTimeConstant;
 import com.trecapps.auth.keyholders.AKVEncryptorKeyHolder;
 import com.trecapps.auth.keyholders.AWSSMEncryptorKeyHolder;
+import com.trecapps.auth.keyholders.GCPSMEncryptorKeyHolder;
 import com.trecapps.auth.keyholders.IEncryptorKeyHolder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -33,13 +34,21 @@ public class EncryptorConfiguration {
 
     @Bean
     @ConditionalOnProperty(prefix="trecauth.key-holder", name="type", havingValue = "aws-secrets-manager")
-    IEncryptorKeyHolder getAWSEncrytorKeyHolder(
+    IEncryptorKeyHolder getAWSEncryptorKeyHolder(
         @Value("${trecauth.secrets-manager.region}") String region,
         @Value("${trecauth.secrets-manager.endpoint}") String endpoint,
         @Value("${trecauth.secrets-manager.clientName}") String clientName,
         @Value("${trecauth.secrets-manager.clientSecret}") String clientSecret
     ){
         return new AWSSMEncryptorKeyHolder(endpoint, region, clientName, clientSecret);
+    }
+
+    @Bean
+    @ConditionalOnProperty(prefix="trecauth.key-holder", name="type", havingValue = "gcp-secret-manager")
+    IEncryptorKeyHolder getGCPEncryptorKeyHolder(
+            @Value("${trecauth.secret-manager.project}")String project
+    ){
+        return new GCPSMEncryptorKeyHolder(project);
     }
 
 
