@@ -1,15 +1,11 @@
 package com.trecapps.auth.controllers;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.trecapps.auth.models.*;
 
 import com.trecapps.auth.services.core.JwtTokenService;
 import com.trecapps.auth.services.core.SessionManager;
 import com.trecapps.auth.services.core.TrecCookieSaver;
 import com.trecapps.auth.services.core.IUserStorageService;
-import com.trecapps.auth.services.web.TrecSecurityContextServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -23,14 +19,10 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/refresh_token")
 @ConditionalOnProperty(prefix = "trecauth", name="use-cookie", havingValue = "true")
 public class CookieController extends TrecCookieSaver {
-
-    //TrecSecurityContextServlet securityContextServlet;
 
     @Autowired
 
@@ -38,10 +30,8 @@ public class CookieController extends TrecCookieSaver {
             SessionManager sessionManager1,
             JwtTokenService tokenService1,
             IUserStorageService userStorageService1,
-            //TrecSecurityContextServlet securityContextServlet1,
             @Value("${trecauth.app}") String app1) {
         super(sessionManager1, tokenService1, userStorageService1, app1);
-        //this.securityContextServlet = securityContextServlet1;
     }
 
     @GetMapping
@@ -49,10 +39,9 @@ public class CookieController extends TrecCookieSaver {
         SecurityContext context = SecurityContextHolder.getContext();
         Authentication authentication = context == null ? null : context.getAuthentication();
 
-        if(authentication instanceof TrecAuthentication){
-            TrecAuthentication tAuth = (TrecAuthentication) authentication;
+        if(authentication instanceof TrecAuthentication tAuth){
 
-            ((TrecAuthentication) authentication).setUseCookie(true);
+            tAuth.setUseCookie(true);
 
             this.prepLoginTokens(tAuth, userClient);
 
