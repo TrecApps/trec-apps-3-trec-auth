@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.Getter;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.id.UUIDGenerator;
 import org.hibernate.id.uuid.UuidGenerator;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -22,8 +23,7 @@ public class TrecAccount implements UserDetails {
 
     @Id
     @javax.persistence.Id
-    @GeneratedValue(generator="system-uuid")
-    @GenericGenerator(name="system-uuid", type = UuidGenerator.class)
+    @GeneratedValue(strategy = GenerationType.UUID)
     String id;
 
     @Column(unique = true)
