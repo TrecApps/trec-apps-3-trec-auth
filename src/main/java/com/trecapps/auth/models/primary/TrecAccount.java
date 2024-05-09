@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.Getter;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.id.uuid.UuidGenerator;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -22,7 +23,7 @@ public class TrecAccount implements UserDetails {
     @Id
     @javax.persistence.Id
     @GeneratedValue(generator="system-uuid")
-    @GenericGenerator(name="system-uuid", strategy = "uuid")
+    @GenericGenerator(name="system-uuid", type = UuidGenerator.class)
     String id;
 
     @Column(unique = true)
@@ -51,15 +52,15 @@ public class TrecAccount implements UserDetails {
 
         List<GrantedAuthority> ret = new ArrayList<>();
         if(authorities != null)
-        for(String authority: authorities)
-        {
-            ret.add(new GrantedAuthority() {
-                @Override
-                public String getAuthority() {
+            for(String authority: authorities)
+            {
+                ret.add(new GrantedAuthority() {
+                    @Override
+                    public String getAuthority() {
                     return authority;
                 }
-            });
-        }
+                });
+            }
         return ret;
     }
 
