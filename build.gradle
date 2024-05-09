@@ -44,7 +44,7 @@ dependencies {
     implementation 'org.hibernate:hibernate-entitymanager:5.6.14.Final'
     implementation 'jakarta.validation:jakarta.validation-api:3.0.2'
 
-    implementation 'mysql:mysql-connector-java:+' // mySQL
+    implementation 'com.mysql:mysql-connector-j:8.4.0' // mySQL
 
     implementation 'jakarta.persistence:jakarta.persistence-api:3.1.0'
     implementation 'jakarta.servlet:jakarta.servlet-api:6.0.0'
@@ -54,7 +54,7 @@ dependencies {
     implementation 'org.javassist:javassist:3.23.1-GA'
 
     // This dependency is used by the application.
-    implementation 'com.google.guava:guava:28.0-jre'
+    implementation 'com.google.guava:guava:33.2.0-jre'
 
     implementation "org.springframework.boot:spring-boot-starter-security:$springbootVersion"
     implementation "org.springframework.boot:spring-boot-starter-data-jpa:$springbootVersion"
@@ -71,7 +71,7 @@ dependencies {
 
     // Use JWT for token generation and verification
     implementation 'com.auth0:java-jwt:+'
-    implementation 'org.bouncycastle:bcpkix-jdk15on:1.66'
+    implementation 'org.bouncycastle:bcpkix-jdk18on:1.78.1'
     implementation "com.azure.spring:spring-cloud-azure-starter-keyvault:5.11.0" // Getting secret info from Azure Key Vault
     implementation 'com.amazonaws:aws-java-sdk-secretsmanager:1.11.355'         // Getting Secret info from AWS Secrets Manager
     implementation 'com.google.cloud:google-cloud-secretmanager:2.42.0'         // Getting Secret info from GCP Secret Manager

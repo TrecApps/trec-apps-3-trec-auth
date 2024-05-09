@@ -14,7 +14,7 @@ public class UserStorageConfig {
 
     @Bean
     @ConditionalOnProperty(prefix = "trecauth.storage", name = "strategy", havingValue = "Azure-key")
-    IUserStorageService getAzureUserService(
+    IUserStorageService getAzureUserServiceKey(
             @Value("${trecauth.storage.account-name}") String name,
             @Value("${trecauth.storage.account-key}") String key,
             @Value("${trecauth.storage.blob-endpoint}") String endpoint,
@@ -28,7 +28,7 @@ public class UserStorageConfig {
 
     @Bean
     @ConditionalOnProperty(prefix = "trecauth.storage", name = "strategy", havingValue = "Azure-pwl")
-    IUserStorageService getAzureUserService(
+    IUserStorageService getAzureUserServicePwl(
             @Value("${trecauth.storage.blob-endpoint}") String endpoint,
             @Value("${trecauth.storage.blob-container:trec-apps-users}") String containerName,
             @Value("${trecauth.app}") String app,
@@ -40,7 +40,7 @@ public class UserStorageConfig {
 
     @Bean
     @ConditionalOnProperty(prefix = "trecauth.storage", name = "strategy", havingValue = "AWS-S3-key")
-    IUserStorageService getAwsUserService(
+    IUserStorageService getAwsUserServiceKey(
             @Value("${trecauth.storage.account-name}") String name,
             @Value("${trecauth.storage.account-key}") String key,
             @Value("${trecauth.storage.s3-region}") String region,
@@ -54,7 +54,7 @@ public class UserStorageConfig {
 
     @Bean
     @ConditionalOnProperty(prefix = "trecauth.storage", name = "strategy", havingValue = "AWS-S3-pwl")
-    IUserStorageService getAwsUserService(
+    IUserStorageService getAwsUserServicePwl(
             @Value("${trecauth.storage.s3-region}") String region,
             @Value("${trecauth.storage.s3-bucket}") String bucket,
             @Value("${trecauth.app}") String app,

@@ -23,7 +23,7 @@ public class EncryptorConfiguration {
 
     @Bean
     @ConditionalOnProperty(prefix="trecauth.key-holder", name="type", havingValue = "azure-key-vault")
-    private IEncryptorKeyHolder getAzureEncryptorKeyHolder(
+    IEncryptorKeyHolder getAzureEncryptorKeyHolder(
             @Value("${trecauth.keyvault.name}") String vaultName,
             @Value("${trecauth.keyvault.tenantId}") String tenantId,
             @Value("${trecauth.keyvault.clientId}") String clientId,
