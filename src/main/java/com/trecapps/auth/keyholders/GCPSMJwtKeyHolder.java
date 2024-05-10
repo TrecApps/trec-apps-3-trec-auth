@@ -4,13 +4,9 @@ import com.google.cloud.secretmanager.v1.ProjectName;
 import com.google.cloud.secretmanager.v1.SecretManagerServiceClient;
 import lombok.SneakyThrows;
 
-public class GCPSMJwtKeyHolder extends GCPSMEncryptorKeyHolder implements IJwtKeyHolder{
+public class GCPSMJwtKeyHolder extends IJwtKeyHolder{
 
-    String publicKeyPath;
-    String privateKeyPath;
-
-    String publicKey;
-    String privateKey;
+    GCPSMEncryptorKeyHolder gcpKeyHolder;
 
     @SneakyThrows
     GCPSMJwtKeyHolder(
@@ -18,24 +14,26 @@ public class GCPSMJwtKeyHolder extends GCPSMEncryptorKeyHolder implements IJwtKe
             String publicKeyPath,
             String privateKeyPath)
     {
-        super(projectId);
-        client = SecretManagerServiceClient.create();
-        projectName = ProjectName.of(projectId);
+        super(publicKeyPath, privateKeyPath);
+        gcpKeyHolder = new GCPSMEncryptorKeyHolder(projectId);
+    }
+
+    @SneakyThrows
+    GCPSMJwtKeyHolder(
+            String projectId,
+            String publicKeyPath,
+            String privateKeyPath,
+            String publicKeyStrNotify,
+            String privateKeyStrNotify)
+    {
+        super(publicKeyPath, privateKeyPath, publicKeyStrNotify, privateKeyStrNotify);
+        gcpKeyHolder = new GCPSMEncryptorKeyHolder(projectId);
     }
 
     @Override
-    public String getPublicKey() {
-        if(publicKey == null){
-            publicKey = getSecret(publicKeyPath);
-        }
-        return publicKey;
-    }
-
-    @Override
-    public String getPrivateKey() {
-        if(privateKey == null){
-            privateKey = getSecret(privateKeyPath);
-        }
-        return privateKey;
+    protected String getKey(KeyPathHolder holder) {
+        if(!holder.isKeySet())
+            holder.setKey(gcpKeyHolder.getSecret(holder.getKeyPath()));
+        return holder.getKey();
     }
 }

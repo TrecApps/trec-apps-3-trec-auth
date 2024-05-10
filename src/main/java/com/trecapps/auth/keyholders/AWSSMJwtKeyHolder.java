@@ -7,14 +7,21 @@ import com.amazonaws.services.secretsmanager.AWSSecretsManager;
 import com.amazonaws.services.secretsmanager.AWSSecretsManagerClientBuilder;
 import com.amazonaws.services.secretsmanager.model.GetSecretValueRequest;
 
-public class AWSSMJwtKeyHolder implements IJwtKeyHolder{
+public class AWSSMJwtKeyHolder extends IJwtKeyHolder{
 
     AWSSecretsManager client;
-    String publicKeyPath;
-    String privateKeyPath;
 
-    String publicKey;
-    String privateKey;
+    private void prepResource(String endpoint,
+                              String region,
+                              String clientName,
+                              String clientSecret)
+    {
+        AwsClientBuilder.EndpointConfiguration  config  =  new  AwsClientBuilder.EndpointConfiguration(endpoint, region);
+        AWSSecretsManagerClientBuilder clientBuilder  =  AWSSecretsManagerClientBuilder.standard();
+        clientBuilder.setCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(clientName, clientSecret)));
+        clientBuilder.setEndpointConfiguration(config);
+        client = clientBuilder.build();
+    }
 
     AWSSMJwtKeyHolder(
             String publicKeyStr,
@@ -24,31 +31,30 @@ public class AWSSMJwtKeyHolder implements IJwtKeyHolder{
             String clientName,
             String clientSecret
     ){
-        AwsClientBuilder.EndpointConfiguration  config  =  new  AwsClientBuilder.EndpointConfiguration(endpoint, region);
-        AWSSecretsManagerClientBuilder clientBuilder  =  AWSSecretsManagerClientBuilder.standard();
-        clientBuilder.setCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(clientName, clientSecret)));
-        clientBuilder.setEndpointConfiguration(config);
-        client = clientBuilder.build();
-
-        this.privateKeyPath = privateKeyStr;
-        this.publicKeyPath = publicKeyStr;
+        super(publicKeyStr, privateKeyStr);
+        prepResource(endpoint, region, clientName, clientSecret);
     }
 
-    @Override
-    public String getPublicKey() {
-        if(publicKey == null)
-        {
-            publicKey = client.getSecretValue(new GetSecretValueRequest().withSecretId(publicKeyPath)).getSecretString();
-        }
-        return publicKey;
+    AWSSMJwtKeyHolder(
+            String publicKeyStr,
+            String privateKeyStr,
+            String publicKeyStrNotify,
+            String privateKeyStrNotify,
+            String endpoint,
+            String region,
+            String clientName,
+            String clientSecret
+    ){
+        super(publicKeyStr, privateKeyStr, publicKeyStrNotify, privateKeyStrNotify);
+        prepResource(endpoint, region, clientName, clientSecret);
     }
 
+
+
     @Override
-    public String getPrivateKey() {
-        if(privateKey == null)
-        {
-            privateKey = client.getSecretValue(new GetSecretValueRequest().withSecretId(privateKeyPath)).getSecretString();
-        }
-        return privateKey.replace("|", "\r\n");
+    protected String getKey(KeyPathHolder holder) {
+        if(!holder.isKeySet())
+            holder.setKey(client.getSecretValue(new GetSecretValueRequest().withSecretId(holder.getKeyPath())).getSecretString());
+        return holder.getKey();
     }
 }

@@ -8,27 +8,37 @@ import com.trecapps.auth.services.core.IUserStorageService;
  *
  * Note: NOT Recommended for Production apps, the other beans are preferred
  */
-public class StorageJwtKeyHolder implements IJwtKeyHolder{
+public class StorageJwtKeyHolder extends IJwtKeyHolder{
 
-    String publicKey;
-    String privateKey;
+    IUserStorageService userStorageService;
 
     public StorageJwtKeyHolder(
             IUserStorageService userStorageService,
             String publicKeyStr,
             String privateKeyStr
     ){
-        this.publicKey = userStorageService.retrieveKey(publicKeyStr);
-        this.privateKey = userStorageService.retrieveKey(privateKeyStr);
+        super(publicKeyStr, privateKeyStr);
+        this.userStorageService = userStorageService;
     }
 
-    @Override
-    public String getPublicKey() {
-        return publicKey;
+    public StorageJwtKeyHolder(
+            IUserStorageService userStorageService,
+            String publicKeyStr,
+            String privateKeyStr,
+            String publicKeyStrNotify,
+            String privateKeyStrNotify
+    ){
+        super(publicKeyStr, privateKeyStr, publicKeyStrNotify, privateKeyStrNotify);
+        this.userStorageService = userStorageService;
     }
 
+
     @Override
-    public String getPrivateKey() {
-        return privateKey;
+    protected String getKey(KeyPathHolder holder) {
+        if(!holder.isKeySet())
+        {
+            holder.setKey(userStorageService.retrieveKey(holder.getKeyPath()));
+        }
+        return holder.getKey();
     }
 }
