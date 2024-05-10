@@ -41,12 +41,12 @@ public abstract class IJwtKeyHolder {
 
     protected abstract String getKey(KeyPathHolder holder);
 
-    String getPublicKey(RsaKeyPair pair){
+    public String getPublicKey(RsaKeyPair pair){
         KeyPathHolder holder = pair.equals(RsaKeyPair.BASIC_AUTH) ? basicPublic : notifyPublic;
 
         return getKey(holder);
     }
-    String getPrivateKey(RsaKeyPair pair){
+    public String getPrivateKey(RsaKeyPair pair){
         KeyPathHolder holder = pair.equals(RsaKeyPair.BASIC_AUTH) ? basicPrivate : notifyPrivate;
 
         return getKey(holder);
