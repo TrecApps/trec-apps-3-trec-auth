@@ -38,22 +38,31 @@ import java.util.concurrent.atomic.AtomicReference;
 @Slf4j
 public class JwtTokenService {
 	
-
-	@Value("${trecauth.app}")
 	String app;
 	
 	RSAPublicKey publicKey;
 	
 	RSAPrivateKey privateKey;
 
-	@Autowired
 	IUserStorageService userStorageService;
 
-	@Autowired
 	SessionManager sessionManager;
 
-	@Autowired
 	IJwtKeyHolder jwtKeyHolder;
+
+	@Autowired
+	JwtTokenService(
+			IUserStorageService userStorageService,
+			SessionManager sessionManager,
+			IJwtKeyHolder jwtKeyHolder,
+			@Value("${trecauth.app}") String app
+	) {
+		this.userStorageService = userStorageService;
+		this.sessionManager = sessionManager;
+		this.jwtKeyHolder = jwtKeyHolder;
+		this.app = app;
+		setKeys();
+	}
 
 	private DecodedJWT decodeJWT(String token)
 	{
