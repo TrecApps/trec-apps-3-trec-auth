@@ -54,7 +54,7 @@ public class AWSSMJwtKeyHolder extends IJwtKeyHolder{
     @Override
     protected String getKey(KeyPathHolder holder) {
         if(!holder.isKeySet())
-            holder.setKey(client.getSecretValue(new GetSecretValueRequest().withSecretId(holder.getKeyPath())).getSecretString());
+            holder.setKey(client.getSecretValue(new GetSecretValueRequest().withSecretId(holder.getKeyPath())).getSecretString().replace("|", "\r\n"));
         return holder.getKey();
     }
 }

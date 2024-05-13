@@ -1,4 +1,4 @@
-package com.trecapps.auth.services.core;
+package com.trecapps.auth.services.web;
 
 import com.azure.core.credential.AzureNamedKeyCredential;
 import com.azure.core.util.BinaryData;
@@ -14,7 +14,6 @@ import com.trecapps.auth.encryptors.IFieldEncryptor;
 import com.trecapps.auth.models.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 
 import java.nio.charset.StandardCharsets;

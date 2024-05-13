@@ -6,11 +6,10 @@ import com.trecapps.auth.models.LoginToken;
 import com.trecapps.auth.models.TcUser;
 import com.trecapps.auth.models.TokenFlags;
 import com.trecapps.auth.models.TrecAuthentication;
-import com.trecapps.auth.services.core.JwtTokenService;
-import com.trecapps.auth.services.core.SessionManager;
-import com.trecapps.auth.services.core.TrecCookieSaver;
-import com.trecapps.auth.services.core.IUserStorageService;
-import com.trecapps.auth.services.web.TrecSecurityContextServlet;
+import com.trecapps.auth.services.web.JwtTokenService;
+import com.trecapps.auth.services.web.SessionManager;
+import com.trecapps.auth.services.web.TrecCookieSaver;
+import com.trecapps.auth.services.web.IUserStorageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,9 +27,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
-import reactor.netty.http.server.HttpServerRequest;
 
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @Component

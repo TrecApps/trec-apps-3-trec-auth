@@ -1,4 +1,4 @@
-package com.trecapps.auth.services.core;
+package com.trecapps.auth.services.web;
 
 import com.trecapps.auth.encryptors.IFieldEncryptor;
 import org.springframework.beans.factory.annotation.Value;

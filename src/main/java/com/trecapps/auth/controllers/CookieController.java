@@ -2,10 +2,10 @@ package com.trecapps.auth.controllers;
 
 import com.trecapps.auth.models.*;
 
-import com.trecapps.auth.services.core.JwtTokenService;
-import com.trecapps.auth.services.core.SessionManager;
-import com.trecapps.auth.services.core.TrecCookieSaver;
-import com.trecapps.auth.services.core.IUserStorageService;
+import com.trecapps.auth.services.web.JwtTokenService;
+import com.trecapps.auth.services.web.SessionManager;
+import com.trecapps.auth.services.web.TrecCookieSaver;
+import com.trecapps.auth.services.web.IUserStorageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

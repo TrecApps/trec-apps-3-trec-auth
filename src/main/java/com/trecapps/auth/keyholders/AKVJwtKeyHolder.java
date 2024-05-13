@@ -59,7 +59,7 @@ public class AKVJwtKeyHolder extends IJwtKeyHolder {
     protected String getKey(KeyPathHolder holder){
         if(!holder.isKeySet())
         {
-            holder.setKey(keyVaultClient.getSecret(holder.getKeyPath()).getValue());
+            holder.setKey(keyVaultClient.getSecret(holder.getKeyPath()).getValue().replace("|", "\r\n"));
         }
         return holder.getKey();
     }

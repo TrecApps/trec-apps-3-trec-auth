@@ -1,8 +1,8 @@
 package com.trecapps.auth.controllers;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.trecapps.auth.services.core.JwtTokenService;
-import com.trecapps.auth.services.core.SessionManager;
+import com.trecapps.auth.services.web.JwtTokenService;
+import com.trecapps.auth.services.web.SessionManager;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

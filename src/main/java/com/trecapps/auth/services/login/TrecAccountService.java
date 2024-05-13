@@ -5,7 +5,7 @@ import com.trecapps.auth.models.primary.TrecAccount;
 import com.trecapps.auth.models.secondary.UserSalt;
 import com.trecapps.auth.repos.primary.TrecAccountRepo;
 import com.trecapps.auth.repos.secondary.UserSaltRepo;
-import com.trecapps.auth.services.core.FailedLoginService;
+import com.trecapps.auth.services.web.FailedLoginService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

@@ -33,7 +33,7 @@ public class GCPSMJwtKeyHolder extends IJwtKeyHolder{
     @Override
     protected String getKey(KeyPathHolder holder) {
         if(!holder.isKeySet())
-            holder.setKey(gcpKeyHolder.getSecret(holder.getKeyPath()));
+            holder.setKey(gcpKeyHolder.getSecret(holder.getKeyPath()).replace("|", "\r\n"));
         return holder.getKey();
     }
 }

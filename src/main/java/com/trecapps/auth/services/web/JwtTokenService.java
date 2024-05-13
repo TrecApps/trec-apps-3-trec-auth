@@ -1,4 +1,4 @@
-package com.trecapps.auth.services.core;
+package com.trecapps.auth.services.web;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTCreator;
@@ -9,7 +9,6 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.trecapps.auth.keyholders.IJwtKeyHolder;
 import com.trecapps.auth.models.*;
 import com.trecapps.auth.models.primary.TrecAccount;
-import com.trecapps.auth.repos.primary.TrecAccountRepo;
 
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.openssl.PEMParser;
@@ -37,7 +36,7 @@ import java.util.concurrent.atomic.AtomicReference;
 @Service
 @Slf4j
 public class JwtTokenService {
-	
+
 	String app;
 	
 	RSAPublicKey publicKey;
