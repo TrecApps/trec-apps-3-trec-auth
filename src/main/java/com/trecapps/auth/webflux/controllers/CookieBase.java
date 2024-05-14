@@ -1,9 +1,10 @@
 package com.trecapps.auth.webflux.controllers;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.trecapps.auth.web.services.JwtTokenService;
-import com.trecapps.auth.web.services.SessionManager;
-import jakarta.servlet.http.Cookie;
+import com.trecapps.auth.webflux.services.JwtTokenServiceAsync;
+import com.trecapps.auth.webflux.services.SessionManagerAsync;
+import io.netty.handler.codec.http.cookie.Cookie;
+import io.netty.handler.codec.http.cookie.DefaultCookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
@@ -12,6 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
+import reactor.netty.http.server.HttpServerRequest;
+import reactor.netty.http.server.HttpServerResponse;
 
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -32,9 +35,9 @@ public class CookieBase {
     String appName;
 
     @Autowired
-    JwtTokenService tokenService;
+    JwtTokenServiceAsync tokenService;
     @Autowired
-    SessionManager sessionManager;
+    SessionManagerAsync sessionManager;
 
     public String getCookieAppName(){
         return this.appName;
@@ -48,8 +51,9 @@ public class CookieBase {
         return this.domain;
     }
 
-    public void SetCookie(HttpServletResponse response, String refreshToken){
-        Cookie cook = new Cookie(cookieName, refreshToken);
+    public void SetCookie(HttpServerResponse response, String refreshToken){
+        Cookie cook = new DefaultCookie(cookieName, refreshToken);
+
         cook.setHttpOnly(true);
         cook.setPath("/");
         if(domain != null) {
@@ -63,19 +67,18 @@ public class CookieBase {
         response.addCookie(cook);
     }
 
-    public void RemoveCookie(HttpServletRequest request, HttpServletResponse response, String userId){
-        for(Cookie cook : request.getCookies())
+    public void RemoveCookie(HttpServerRequest request, HttpServerResponse response, String userId){
+
+
+        for(Cookie cook : response.cookies().get(cookieName))
         {
-            if(cook.getName().equals(cookieName))
-            {
-                clearSessions(cook.getValue(), userId);
+                clearSessions(cook.value(), userId);
 
                 cook.setValue("");
                 cook.setPath("/");
                 cook.setMaxAge(0);
                 response.addCookie(cook);
                 return;
-            }
         }
     }
 
@@ -85,7 +88,7 @@ public class CookieBase {
 
         Map<String, String> sessionList = tokenService.claims(decodedJWT);
 
-        sessionList.forEach((String _app, String s) -> sessionManager.removeSession(userId, s));
+        sessionList.forEach((String _app, String s) -> sessionManager.removeSession(userId, s).subscribe());
 
     }
 }
