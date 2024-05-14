@@ -1,4 +1,4 @@
-package com.trecapps.auth.encryptors;
+package com.trecapps.auth.common.encryptors;
 
 public class BasicFieldEncryptor implements IFieldEncryptor{
     @Override

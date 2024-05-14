@@ -2,8 +2,8 @@ package com.trecapps.auth.common.models;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.trecapps.auth.encryptors.EncryptedField;
-import com.trecapps.auth.encryptors.IFieldEncryptor;
+import com.trecapps.auth.common.encryptors.EncryptedField;
+import com.trecapps.auth.common.encryptors.IFieldEncryptor;
 import lombok.Data;
 
 @Data

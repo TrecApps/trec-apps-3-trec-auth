@@ -1,6 +1,6 @@
 package com.trecapps.auth.common.models;
 
-import com.trecapps.auth.encryptors.EncryptedField;
+import com.trecapps.auth.common.encryptors.EncryptedField;
 import com.trecapps.auth.common.models.primary.TrecAccount;
 import jakarta.persistence.Transient;
 import lombok.Data;

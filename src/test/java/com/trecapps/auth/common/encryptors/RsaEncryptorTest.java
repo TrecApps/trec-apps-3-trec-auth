@@ -1,7 +1,9 @@
-package com.trecapps.auth.encryptors;
+package com.trecapps.auth.common.encryptors;
 
 import com.trecapps.auth.EncryptableTestObj;
-import com.trecapps.auth.keyholders.IEncryptorKeyHolder;
+import com.trecapps.auth.common.encryptors.IFieldEncryptor;
+import com.trecapps.auth.common.encryptors.RsaFieldEncryptor;
+import com.trecapps.auth.common.keyholders.IEncryptorKeyHolder;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

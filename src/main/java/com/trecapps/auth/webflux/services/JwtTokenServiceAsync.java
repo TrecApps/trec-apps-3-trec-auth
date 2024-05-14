@@ -7,7 +7,7 @@ import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.trecapps.auth.common.models.*;
-import com.trecapps.auth.keyholders.IJwtKeyHolder;
+import com.trecapps.auth.common.keyholders.IJwtKeyHolder;
 import com.trecapps.auth.common.models.primary.TrecAccount;
 import com.trecapps.auth.web.services.SessionManager;
 import lombok.extern.slf4j.Slf4j;
@@ -47,14 +47,14 @@ public class JwtTokenServiceAsync {
 
     IUserStorageServiceAsync userStorageService;
 
-    SessionManager sessionManager;
+    SessionManagerAsync sessionManager;
 
     IJwtKeyHolder jwtKeyHolder;
 
     @Autowired
     JwtTokenServiceAsync(
             IUserStorageServiceAsync userStorageServiceAsync,
-            SessionManager sessionManager,
+            SessionManagerAsync sessionManager,
             IJwtKeyHolder jwtKeyHolder,
             @Value("${trecauth.app}") String app
     ) {
@@ -154,12 +154,12 @@ public class JwtTokenServiceAsync {
         return privateKey != null && publicKey != null;
     }
 
-    public TokenTime generateToken(TrecAccount account, String userAgent, TcBrands brand, boolean expires, String app1)
+    public Mono<Optional<TokenTime>> generateToken(TrecAccount account, String userAgent, TcBrands brand, boolean expires, String app1)
     {
         return generateToken(account, userAgent, brand, null, expires, app1);
     }
 
-    public TokenTime generateToken(TrecAccount account, String userAgent, TcBrands brand, String session, boolean expires, String app1)
+    public Mono<Optional<TokenTime>> generateToken(TrecAccount account, String userAgent, TcBrands brand, String session, boolean expires, String app1)
     {
         return generateToken(account, userAgent, brand, session, expires, false, app1);
     }
@@ -169,13 +169,13 @@ public class JwtTokenServiceAsync {
      * @param account
      * @return
      */
-    public TokenTime generateToken(TrecAccount account, String userAgent, TcBrands brand, String session, boolean expires, boolean useMfa, String app1)
+    public Mono<Optional<TokenTime>> generateToken(TrecAccount account, String userAgent, TcBrands brand, String session, boolean expires, boolean useMfa, String app1)
     {
         if(account == null)
-            return null;
+            return Mono.empty();
 
         if(!setKeys())
-            return null;
+            return Mono.empty();
 
 
         String userId = account.getId();
@@ -183,41 +183,52 @@ public class JwtTokenServiceAsync {
 
         Date now = new Date(Calendar.getInstance().getTime().getTime());
 
-        TokenTime ret = null;
+        Mono<Optional<TokenTime>> tokenTime;
+
         if(session == null)
-            ret = sessionManager.addSession(app1, account.getId(), userAgent, expires);
+            tokenTime = sessionManager.addSession(app1, account.getId(), userAgent, expires);
         else
         {
-            ret = new TokenTime();
-            ret.setSession(session);
+            tokenTime = Mono.just(new TokenTime())
+                    .map((TokenTime ret) -> {
 
-            if(expires)
-            {
-                OffsetDateTime expiration = OffsetDateTime.now().plus(10, ChronoUnit.MINUTES);
-                sessionManager.updateSessionExpiration(account.getId(), session, expiration);
-                ret.setExpiration(expiration);
+                        ret = new TokenTime();
+                        ret.setSession(session);
+
+                        if(expires)
+                        {
+                            OffsetDateTime expiration = OffsetDateTime.now().plus(10, ChronoUnit.MINUTES);
+                            sessionManager.updateSessionExpiration(account.getId(), session, expiration);
+                            ret.setExpiration(expiration);
+                        }
+                        return Optional.of(ret);
+                    });
+
+        }
+
+        return tokenTime.doOnNext((Optional<TokenTime> oRet) -> {
+            if(oRet.isPresent()){
+                TokenTime ret = oRet.get();
+                String useBrand = "null";
+                if(brand != null)
+                {
+                    if(brand.getOwners().contains(account.getId())) useBrand = brand.getId().toString();
+                }
+
+                JWTCreator.Builder jwtBuilder = JWT.create().withIssuer(app1)
+                        .withClaim("ID", account.getId())
+                        .withClaim("Username", account.getUsername())
+                        .withClaim("Brand", useBrand)
+                        .withClaim("SessionId", ret.getSession())
+                        .withIssuedAt(now)
+                        .withClaim("mfa", useMfa);
+
+                if(ret.getExpiration() != null)
+                    jwtBuilder = jwtBuilder.withExpiresAt(ret.getExpiration().toInstant());
+
+                ret.setToken(jwtBuilder.sign(Algorithm.RSA512(publicKey, privateKey)));
             }
-        }
-
-        String useBrand = "null";
-        if(brand != null)
-        {
-            if(brand.getOwners().contains(account.getId())) useBrand = brand.getId().toString();
-        }
-
-        JWTCreator.Builder jwtBuilder = JWT.create().withIssuer(app1)
-                .withClaim("ID", account.getId())
-                .withClaim("Username", account.getUsername())
-                .withClaim("Brand", useBrand)
-                .withClaim("SessionId", ret.getSession())
-                .withIssuedAt(now)
-                .withClaim("mfa", useMfa);
-
-        if(ret.getExpiration() != null)
-            jwtBuilder = jwtBuilder.withExpiresAt(ret.getExpiration().toInstant());
-
-        ret.setToken(jwtBuilder.sign(Algorithm.RSA512(publicKey, privateKey)));
-        return ret;
+        });
 
     }
 

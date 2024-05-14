@@ -2,17 +2,14 @@ package com.trecapps.auth.webflux.services;
 
 import com.trecapps.auth.common.models.primary.TrecAccount;
 import com.trecapps.auth.common.models.secondary.UserSalt;
-import com.trecapps.auth.encryptors.IFieldEncryptor;
+import com.trecapps.auth.common.encryptors.IFieldEncryptor;
 import com.trecapps.auth.webflux.repos.primary.TrecAccountRepo;
 import com.trecapps.auth.webflux.repos.secondary.UserSaltRepo;
-import com.trecapps.auth.webflux.services.FailedLoginServiceAsync;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;

@@ -1,13 +1,11 @@
-package com.trecapps.auth.encryptors;
+package com.trecapps.auth.common.encryptors;
 
 import com.azure.spring.cloud.autoconfigure.implementation.condition.ConditionalOnMissingProperty;
-import com.google.errorprone.annotations.CompileTimeConstant;
-import com.trecapps.auth.keyholders.AKVEncryptorKeyHolder;
-import com.trecapps.auth.keyholders.AWSSMEncryptorKeyHolder;
-import com.trecapps.auth.keyholders.GCPSMEncryptorKeyHolder;
-import com.trecapps.auth.keyholders.IEncryptorKeyHolder;
+import com.trecapps.auth.common.keyholders.AKVEncryptorKeyHolder;
+import com.trecapps.auth.common.keyholders.AWSSMEncryptorKeyHolder;
+import com.trecapps.auth.common.keyholders.GCPSMEncryptorKeyHolder;
+import com.trecapps.auth.common.keyholders.IEncryptorKeyHolder;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

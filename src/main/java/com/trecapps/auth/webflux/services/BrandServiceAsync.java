@@ -129,19 +129,24 @@ public class BrandServiceAsync {
                    if(!isOwner) return Mono.just(Optional.empty());
 
                    return userStorageService.getBrandById(brandId)
-                           .map((Optional<TcBrands> oBrands) -> {
+                           .flatMap((Optional<TcBrands> oBrands) -> {
                                TcBrands brand = oBrands.orElse(null);
-                               TokenTime time = jwtTokenService.generateToken(account.getAccount(), userAgent, brand, session, doesExpire, app);
 
-                               sessionManager.setBrand(account.getAccount().getId(), session, brandId);
+                               return jwtTokenService.generateToken(account.getAccount(), userAgent, brand, session, doesExpire, app)
+                                       .map((Optional<TokenTime> oTime) -> {
+                                           if(oTime.isEmpty())
+                                               return Optional.empty();
+                                           TokenTime time = oTime.get();
+                                           sessionManager.setBrand(account.getAccount().getId(), session, brandId).subscribe();
 
-                               LoginToken ret = new LoginToken();
-                               ret.setAccess_token(time.getToken());
-                               OffsetDateTime exp = time.getExpiration();
-                               if(exp != null)
-                                   ret.setExpires_in(exp.getNano() - OffsetDateTime.now().getNano());
+                                           LoginToken ret = new LoginToken();
+                                           ret.setAccess_token(time.getToken());
+                                           OffsetDateTime exp = time.getExpiration();
+                                           if(exp != null)
+                                               ret.setExpires_in(exp.getNano() - OffsetDateTime.now().getNano());
 
-                               return Optional.of(ret);
+                                           return Optional.of(ret);
+                                       });
                            });
                 });
     }

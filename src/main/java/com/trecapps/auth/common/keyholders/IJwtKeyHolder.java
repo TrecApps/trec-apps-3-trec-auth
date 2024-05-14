@@ -1,4 +1,4 @@
-package com.trecapps.auth.keyholders;
+package com.trecapps.auth.common.keyholders;
 
 import com.trecapps.auth.common.models.RsaKeyPair;
 import org.springframework.stereotype.Service;

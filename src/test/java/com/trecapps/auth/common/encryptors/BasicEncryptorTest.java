@@ -1,8 +1,8 @@
-package com.trecapps.auth.encryptors;
+package com.trecapps.auth.common.encryptors;
 
 import com.trecapps.auth.EncryptableTestObj;
-import com.trecapps.auth.encryptors.BasicFieldEncryptor;
-import com.trecapps.auth.encryptors.EncryptableFields;
+import com.trecapps.auth.common.encryptors.BasicFieldEncryptor;
+import com.trecapps.auth.common.encryptors.EncryptableFields;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

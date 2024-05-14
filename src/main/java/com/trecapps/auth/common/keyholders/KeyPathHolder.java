@@ -1,4 +1,4 @@
-package com.trecapps.auth.keyholders;
+package com.trecapps.auth.common.keyholders;
 
 import lombok.Getter;
 import lombok.Setter;

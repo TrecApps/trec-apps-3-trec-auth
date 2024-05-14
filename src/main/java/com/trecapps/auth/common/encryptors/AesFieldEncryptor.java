@@ -1,6 +1,6 @@
-package com.trecapps.auth.encryptors;
+package com.trecapps.auth.common.encryptors;
 
-import com.trecapps.auth.keyholders.IEncryptorKeyHolder;
+import com.trecapps.auth.common.keyholders.IEncryptorKeyHolder;
 import lombok.SneakyThrows;
 
 import javax.crypto.Cipher;
@@ -12,11 +12,9 @@ import javax.crypto.spec.SecretKeySpec;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
 import java.util.Base64;
-import java.util.Collection;
 import java.util.List;
 
 /**

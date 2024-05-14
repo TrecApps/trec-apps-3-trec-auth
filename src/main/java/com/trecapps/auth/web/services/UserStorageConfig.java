@@ -1,6 +1,6 @@
 package com.trecapps.auth.web.services;
 
-import com.trecapps.auth.encryptors.IFieldEncryptor;
+import com.trecapps.auth.common.encryptors.IFieldEncryptor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;

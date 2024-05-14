@@ -1,7 +1,5 @@
 package com.trecapps.auth.common.models;
 
-import com.trecapps.auth.encryptors.EncryptedField;
-
 public enum PhoneCountryCode {
 
     // To-Do: Add More Country Codes

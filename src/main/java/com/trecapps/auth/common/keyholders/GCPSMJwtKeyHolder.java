@@ -1,7 +1,5 @@
-package com.trecapps.auth.keyholders;
+package com.trecapps.auth.common.keyholders;
 
-import com.google.cloud.secretmanager.v1.ProjectName;
-import com.google.cloud.secretmanager.v1.SecretManagerServiceClient;
 import lombok.SneakyThrows;
 
 public class GCPSMJwtKeyHolder extends IJwtKeyHolder{

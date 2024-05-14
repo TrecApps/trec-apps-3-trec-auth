@@ -1,11 +1,8 @@
-package com.trecapps.auth.encryptors;
-
-import org.springframework.stereotype.Component;
+package com.trecapps.auth.common.encryptors;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 

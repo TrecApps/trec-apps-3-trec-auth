@@ -1,6 +1,6 @@
 package com.trecapps.auth.web.services;
 
-import com.trecapps.auth.encryptors.IFieldEncryptor;
+import com.trecapps.auth.common.encryptors.IFieldEncryptor;
 import com.trecapps.auth.common.models.primary.TrecAccount;
 import com.trecapps.auth.common.models.secondary.UserSalt;
 import com.trecapps.auth.web.repos.primary.TrecAccountRepo;

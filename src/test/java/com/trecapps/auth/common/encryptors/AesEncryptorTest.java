@@ -1,7 +1,9 @@
-package com.trecapps.auth.encryptors;
+package com.trecapps.auth.common.encryptors;
 
 import com.trecapps.auth.EncryptableTestObj;
-import com.trecapps.auth.keyholders.IEncryptorKeyHolder;
+import com.trecapps.auth.common.encryptors.AesFieldEncryptor;
+import com.trecapps.auth.common.encryptors.IFieldEncryptor;
+import com.trecapps.auth.common.keyholders.IEncryptorKeyHolder;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -9,7 +11,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.util.Assert;
 
 @ExtendWith(MockitoExtension.class)
 public class AesEncryptorTest {

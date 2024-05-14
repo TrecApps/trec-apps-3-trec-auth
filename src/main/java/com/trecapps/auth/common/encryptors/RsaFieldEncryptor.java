@@ -1,6 +1,6 @@
-package com.trecapps.auth.encryptors;
+package com.trecapps.auth.common.encryptors;
 
-import com.trecapps.auth.keyholders.IEncryptorKeyHolder;
+import com.trecapps.auth.common.keyholders.IEncryptorKeyHolder;
 import lombok.SneakyThrows;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.util.io.pem.PemObject;

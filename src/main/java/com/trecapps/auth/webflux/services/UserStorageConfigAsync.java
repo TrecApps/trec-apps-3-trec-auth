@@ -1,10 +1,6 @@
 package com.trecapps.auth.webflux.services;
 
-import com.trecapps.auth.encryptors.IFieldEncryptor;
-import com.trecapps.auth.web.services.AwsS3UserStorageService;
-import com.trecapps.auth.web.services.AzureBlobUserStorageService;
-import com.trecapps.auth.web.services.GoogleCloudUserStorageService;
-import com.trecapps.auth.web.services.IUserStorageService;
+import com.trecapps.auth.common.encryptors.IFieldEncryptor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;

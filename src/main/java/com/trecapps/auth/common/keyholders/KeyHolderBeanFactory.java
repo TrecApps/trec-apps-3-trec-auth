@@ -1,4 +1,4 @@
-package com.trecapps.auth.keyholders;
+package com.trecapps.auth.common.keyholders;
 
 import com.trecapps.auth.web.services.IUserStorageService;
 import org.springframework.beans.factory.annotation.Value;

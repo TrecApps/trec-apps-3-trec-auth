@@ -1,4 +1,4 @@
-package com.trecapps.auth.keyholders;
+package com.trecapps.auth.common.keyholders;
 
 import com.google.cloud.secretmanager.v1.*;
 import lombok.SneakyThrows;

@@ -1,6 +1,6 @@
 package com.trecapps.auth.common.models.secondary;
 
-import com.trecapps.auth.encryptors.EncryptedField;
+import com.trecapps.auth.common.encryptors.EncryptedField;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

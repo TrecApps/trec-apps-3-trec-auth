@@ -1,4 +1,4 @@
-package com.trecapps.auth.keyholders;
+package com.trecapps.auth.common.keyholders;
 
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;

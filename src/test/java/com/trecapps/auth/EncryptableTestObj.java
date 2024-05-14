@@ -1,6 +1,6 @@
 package com.trecapps.auth;
 
-import com.trecapps.auth.encryptors.EncryptedField;
+import com.trecapps.auth.common.encryptors.EncryptedField;
 import lombok.Data;
 
 @Data

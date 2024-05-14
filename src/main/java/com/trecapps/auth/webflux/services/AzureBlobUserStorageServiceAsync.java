@@ -8,7 +8,7 @@ import com.azure.storage.blob.specialized.BlobAsyncClientBase;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.trecapps.auth.common.models.*;
-import com.trecapps.auth.encryptors.IFieldEncryptor;
+import com.trecapps.auth.common.encryptors.IFieldEncryptor;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import reactor.core.publisher.Mono;
 
