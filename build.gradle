@@ -61,8 +61,13 @@ dependencies {
 
     implementation 'com.azure:azure-storage-blob:+'             // Use Azure for Storage
     implementation 'com.amazonaws:aws-java-sdk-s3:1.12.694'     // Use AWS for storage
+
     implementation platform('com.google.cloud:libraries-bom:26.38.0')
     implementation 'com.google.cloud:google-cloud-storage'      // Use GCP Cloud Storage for Storage
+
+    // AWS Support
+    implementation 'com.amazonaws:aws-java-sdk:1.12.720'
+    implementation 'software.amazon.awssdk:s3:2.25.50'
 
 
 
