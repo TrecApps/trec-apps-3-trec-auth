@@ -37,6 +37,22 @@ public class TrecAccount implements UserDetails {
     @Transient
     UUID brandId;
 
+    transient byte invalid = (byte)1;
+
+    public boolean isInvalid(){
+        return invalid < 1;
+    }
+
+    public boolean makeNull(){
+        return invalid == 0;
+    }
+
+    public static TrecAccount getInvalidAccount(boolean makeNull){
+        TrecAccount ret = new TrecAccount();
+        ret.invalid = (byte) (makeNull ? 0 : -1);
+        return ret;
+    }
+
     public TrecAccount()
     {
         authorities = new ArrayList<>();
