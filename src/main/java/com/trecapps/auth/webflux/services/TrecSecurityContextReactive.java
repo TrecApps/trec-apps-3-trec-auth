@@ -6,9 +6,6 @@ import com.trecapps.auth.common.models.LoginToken;
 import com.trecapps.auth.common.models.TcUser;
 import com.trecapps.auth.common.models.TokenFlags;
 import com.trecapps.auth.common.models.TrecAuthentication;
-import com.trecapps.auth.web.services.SessionManager;
-import com.trecapps.auth.web.services.TrecCookieSaver;
-import com.trecapps.auth.web.services.IUserStorageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,10 +24,11 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @Component
-public class TrecSecurityContextReactive extends TrecCookieSaver implements ServerSecurityContextRepository {
+public class TrecSecurityContextReactive extends TrecCookieSaverAsync implements ServerSecurityContextRepository {
 
     Logger logger = LoggerFactory.getLogger(TrecSecurityContextReactive.class);
 
@@ -43,8 +41,8 @@ public class TrecSecurityContextReactive extends TrecCookieSaver implements Serv
     @Autowired
     public TrecSecurityContextReactive(
             JwtTokenServiceAsync tokenService,
-            SessionManager sessionManager,
-            IUserStorageService userStorageService1,
+            SessionManagerAsync sessionManager,
+            IUserStorageServiceAsync userStorageService1,
             @Value("${trecauth.app}") String app,
             @Value("${trecauth.refresh.domain:#{NULL}}") String domain,
             @Value("${trecauth.refresh.app:#{NULL}}") String cookieApp,
@@ -95,16 +93,17 @@ public class TrecSecurityContextReactive extends TrecCookieSaver implements Serv
         return getContextFromHeader(req);
     }
 
-    void handleSecurityDecoding(DecodedJWT decode, SecurityContext context)
+    Mono<SecurityContext> handleSecurityDecoding(DecodedJWT decode, SecurityContext context)
     {
-        TrecAuthentication acc = tokenService.verifyToken(decode, new TokenFlags());
-        if(acc == null)
-        {
-            logger.info("Null Account from Cookie detected!");
-            return;
-        }
-        context.setAuthentication(acc);
-        logger.info("Set Authentication from Cookie");
+        return tokenService.verifyToken(decode, new TokenFlags())
+                .map((Optional<TrecAuthentication> oTrecAuthentication) -> {
+                    if(oTrecAuthentication.isEmpty())
+                    {
+                        logger.info("Null Account from Cookie detected!");
+                    }
+                    else context.setAuthentication(oTrecAuthentication.get());
+                    return context;
+                });
     }
 
 
@@ -132,31 +131,45 @@ public class TrecSecurityContextReactive extends TrecCookieSaver implements Serv
 
     Mono<SecurityContext> getContextFromHeader(ServerHttpRequest request) {
         return Mono.just(SecurityContextHolder.createEmptyContext())
-                .doOnNext((SecurityContext context) -> {
+                .flatMap((SecurityContext context) -> {
                     HttpHeaders headers = request.getHeaders();
                     String auth = headers.getFirst("Authorization");
                     DecodedJWT decode = tokenService.decodeToken(auth);
                     if(decode == null) {
                         logger.info("Null Decode token detected!");
+                        return Mono.just(context);
                     }
                     else
                     {
                         TokenFlags tokenFlags = new TokenFlags();
                         String sessionId = tokenService.getSessionId(auth);
-                        TrecAuthentication acc = tokenService.verifyToken(decode, tokenFlags);
+                        return tokenService.verifyToken(decode, tokenFlags)
+                                .flatMap((Optional<TrecAuthentication> oAuth) -> {
+                                    if(oAuth.isPresent() && sessionId != null)
+                                    {
+                                        TrecAuthentication acc = oAuth.get();
+                                        return sessionManager.isValidSession(acc.getUser().getId(), app, sessionId)
+                                                .map((Boolean isValidSession) -> {
+                                                    if(isValidSession){
+                                                        acc.setSessionId(sessionId);
+                                                        LoginToken token = new LoginToken();
+                                                        token.setAccess_token(auth);
+                                                        acc.setLoginToken(token);
+
+                                                        acc.setBrandId(acc.getBrandId());
+
+                                                        context.setAuthentication(acc);
+                                                    }
+                                                    return context;
+                                                });
 
 
-                        if(sessionId != null && sessionManager.isValidSession(acc.getUser().getId(), app, sessionId)) {
-                            logger.info("Found Valid Session!");
-                            acc.setSessionId(sessionId);
-                            LoginToken token = new LoginToken();
-                            token.setAccess_token(auth);
-                            acc.setLoginToken(token);
+                                    }
+                                    return Mono.just(context);
+                                });
 
-                            acc.setBrandId(acc.getBrandId());
 
-                            context.setAuthentication(acc);
-                        }
+
                     }
                 })
                 .doOnNext((SecurityContext context) -> {

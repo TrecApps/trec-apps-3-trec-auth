@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.trecapps.auth.common.models.*;
 import com.trecapps.auth.encryptors.IFieldEncryptor;
-import com.trecapps.auth.models.*;
 import lombok.SneakyThrows;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import reactor.core.publisher.Mono;
@@ -77,7 +76,6 @@ public class AwsS3UserStorageServiceAsync implements IUserStorageServiceAsync {
         this.encryptor = encryptor1;
     }
 
-    @SneakyThrows(IOException.class)
     @Override
     public Mono<String> retrieveKey(String keyId) {
         GetObjectRequest request = GetObjectRequest.builder()
@@ -111,7 +109,6 @@ public class AwsS3UserStorageServiceAsync implements IUserStorageServiceAsync {
                 .onErrorReturn(Optional.empty());
     }
 
-    @SneakyThrows(IOException.class)
     @Override
     public Mono<Optional<SessionList>> retrieveSessions(String id) {
         GetObjectRequest request = GetObjectRequest.builder()
@@ -145,7 +142,6 @@ public class AwsS3UserStorageServiceAsync implements IUserStorageServiceAsync {
     }
 
 
-    @SneakyThrows(IOException.class)
     @Override
     public Mono<Optional<AppLocker>> retrieveAppLocker(String id) {
         GetObjectRequest request = GetObjectRequest.builder()

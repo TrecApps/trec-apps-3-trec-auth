@@ -8,7 +8,6 @@ import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.trecapps.auth.common.models.*;
 import com.trecapps.auth.keyholders.IJwtKeyHolder;
-import com.trecapps.auth.models.*;
 import com.trecapps.auth.common.models.primary.TrecAccount;
 
 import lombok.extern.slf4j.Slf4j;

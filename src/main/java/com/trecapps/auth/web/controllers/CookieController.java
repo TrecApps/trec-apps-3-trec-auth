@@ -2,7 +2,6 @@ package com.trecapps.auth.web.controllers;
 
 import com.trecapps.auth.common.models.LoginToken;
 import com.trecapps.auth.common.models.TrecAuthentication;
-import com.trecapps.auth.models.*;
 
 import com.trecapps.auth.web.services.JwtTokenService;
 import com.trecapps.auth.web.services.SessionManager;
