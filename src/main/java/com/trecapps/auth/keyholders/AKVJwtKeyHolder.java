@@ -3,10 +3,6 @@ package com.trecapps.auth.keyholders;
 import com.azure.identity.ClientSecretCredentialBuilder;
 import com.azure.security.keyvault.secrets.SecretClient;
 import com.azure.security.keyvault.secrets.SecretClientBuilder;
-import com.trecapps.auth.services.core.RsaKeyPair;
-
-import java.time.OffsetDateTime;
-import java.util.Timer;
 
 /**
  * Looks for Keys in the Specified Azure Key Vault

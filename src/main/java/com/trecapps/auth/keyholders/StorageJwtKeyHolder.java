@@ -1,7 +1,7 @@
 package com.trecapps.auth.keyholders;
 
 
-import com.trecapps.auth.services.web.IUserStorageService;
+import com.trecapps.auth.web.services.IUserStorageService;
 
 /**
  * Looks for Keys in the Storage Account of the User Service

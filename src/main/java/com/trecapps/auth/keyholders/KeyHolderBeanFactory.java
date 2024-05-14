@@ -1,6 +1,6 @@
 package com.trecapps.auth.keyholders;
 
-import com.trecapps.auth.services.web.IUserStorageService;
+import com.trecapps.auth.web.services.IUserStorageService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
