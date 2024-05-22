@@ -60,14 +60,16 @@ dependencies {
     implementation "org.springframework.boot:spring-boot-starter-data-jpa:$springbootVersion"
 
     implementation 'com.azure:azure-storage-blob:+'             // Use Azure for Storage
-    implementation 'com.amazonaws:aws-java-sdk-s3:1.12.694'     // Use AWS for storage
+    //implementation 'com.amazonaws:aws-java-sdk-s3:1.12.694'     // Use AWS for storage
 
     implementation platform('com.google.cloud:libraries-bom:26.38.0')
     implementation 'com.google.cloud:google-cloud-storage'      // Use GCP Cloud Storage for Storage
 
     // AWS Support
-    implementation 'com.amazonaws:aws-java-sdk:1.12.720'
-    implementation 'software.amazon.awssdk:s3:2.25.50'
+    //implementation 'com.amazonaws:aws-java-sdk:1.12.720'
+    implementation 'software.amazon.awssdk:s3:2.25.56'
+    implementation 'software.amazon.awssdk:secretsmanager:2.25.56'
+
 
 
 
@@ -78,7 +80,7 @@ dependencies {
     implementation 'com.auth0:java-jwt:+'
     implementation 'org.bouncycastle:bcpkix-jdk18on:1.78.1'
     implementation "com.azure.spring:spring-cloud-azure-starter-keyvault:5.11.0" // Getting secret info from Azure Key Vault
-    implementation 'com.amazonaws:aws-java-sdk-secretsmanager:1.11.355'         // Getting Secret info from AWS Secrets Manager
+    // implementation 'com.amazonaws:aws-java-sdk-secretsmanager:1.11.355'         // Getting Secret info from AWS Secrets Manager
     implementation 'com.google.cloud:google-cloud-secretmanager:2.42.0'         // Getting Secret info from GCP Secret Manager
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'

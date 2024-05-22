@@ -14,6 +14,8 @@ public interface IUserStorageService {
 
 
     String retrieveKey(String keyId);
+
+    @Deprecated(since = "0.6.3")
     TcUser retrieveUser(String id) throws JsonProcessingException;
 
     Optional<TcUser> getAccountById(String id);
@@ -22,6 +24,7 @@ public interface IUserStorageService {
 
     Optional<TcBrands> getBrandById(String id);
 
+    @Deprecated(since = "0.6.3")
     TcBrands retrieveBrand(String id) throws JsonProcessingException;
     AppLocker retrieveAppLocker(String id) throws JsonProcessingException;
     void saveLogins(AppLocker locker, String id);
