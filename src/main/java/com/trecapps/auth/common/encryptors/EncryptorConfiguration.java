@@ -34,11 +34,11 @@ public class EncryptorConfiguration {
     @ConditionalOnProperty(prefix="trecauth.key-holder", name="type", havingValue = "aws-secrets-manager")
     IEncryptorKeyHolder getAWSEncryptorKeyHolder(
         @Value("${trecauth.secrets-manager.region}") String region,
-        @Value("${trecauth.secrets-manager.endpoint}") String endpoint,
+        @Value("${trecauth.secrets-manager.secret}") String secret,
         @Value("${trecauth.secrets-manager.clientName}") String clientName,
         @Value("${trecauth.secrets-manager.clientSecret}") String clientSecret
     ){
-        return new AWSSMEncryptorKeyHolder(endpoint, region, clientName, clientSecret);
+        return new AWSSMEncryptorKeyHolder(secret, region, clientName, clientSecret);
     }
 
     @Bean

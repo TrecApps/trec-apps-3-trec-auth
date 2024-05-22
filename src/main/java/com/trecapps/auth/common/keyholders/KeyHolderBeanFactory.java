@@ -44,7 +44,7 @@ public class KeyHolderBeanFactory {
     @Bean
     @ConditionalOnProperty(prefix = "trecauth.jwt.key-storage", name="strategy", havingValue = "AWSSM")
     IJwtKeyHolder getAwsSecretsManagerJwtKeyHolder(
-            @Value("${trec.jwt.endpoint}") String endpoint,
+            @Value("${trec.jwt.secret}") String secret,
             @Value("${trec.key.public}") String publicKeyStr,
             @Value("${trec.key.private}") String privateKeyStr,
             @Value("${trec.key-notify.public:#{NULL}}") String publicKeyStrNotify,
@@ -55,8 +55,8 @@ public class KeyHolderBeanFactory {
     )
     {
         if(publicKeyStrNotify != null && privateKeyStrNotify != null)
-            return new AWSSMJwtKeyHolder(publicKeyStr, privateKeyStr, publicKeyStrNotify, privateKeyStrNotify, endpoint, region, clientId, clientSecret);
-        return new AWSSMJwtKeyHolder(publicKeyStr, privateKeyStr, endpoint, region, clientId, clientSecret);
+            return new AWSSMJwtKeyHolder(publicKeyStr, privateKeyStr, publicKeyStrNotify, privateKeyStrNotify, secret, region, clientId, clientSecret);
+        return new AWSSMJwtKeyHolder(publicKeyStr, privateKeyStr, secret, region, clientId, clientSecret);
     }
 
     @Bean
