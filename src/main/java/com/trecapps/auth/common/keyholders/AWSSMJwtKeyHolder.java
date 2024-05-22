@@ -1,18 +1,26 @@
 package com.trecapps.auth.common.keyholders;
 
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.SneakyThrows;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
 
+import java.util.HashMap;
 import java.util.Optional;
 
 public class AWSSMJwtKeyHolder extends IJwtKeyHolder{
 
     SecretsManagerClient client;
     String secretContainer;
+
+    TypeReference<HashMap<String,Object>> typeRef
+            = new TypeReference<HashMap<String,Object>>() {};
+    ObjectMapper mapper = new ObjectMapper();
 
     private void prepResource(String secretContainer,
                               String region,
@@ -56,6 +64,7 @@ public class AWSSMJwtKeyHolder extends IJwtKeyHolder{
 
 
 
+    @SneakyThrows
     @Override
     protected String getKey(KeyPathHolder holder) {
         if(!holder.isKeySet())
@@ -63,8 +72,11 @@ public class AWSSMJwtKeyHolder extends IJwtKeyHolder{
             GetSecretValueRequest request = GetSecretValueRequest.builder()
                     .secretId(secretContainer)
                     .build();
-            Optional<String> ret = client.getSecretValue(request).getValueForField(holder.getKeyPath(), String.class);
-            ret.ifPresent(holder::setKey);
+            String secret = client.getSecretValue(request).secretString();
+            HashMap<String,Object> values = mapper.readValue(secret, typeRef);
+            Object o = values.get(holder.getKeyPath());
+            if(o != null)
+                holder.setKey(o.toString().replace("|", "\r\n"));
         }
 
         return holder.getKey();
