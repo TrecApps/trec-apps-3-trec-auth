@@ -5,8 +5,10 @@ import com.trecapps.auth.common.models.primary.TrecAccount;
 import com.trecapps.auth.common.models.secondary.BrandEntry;
 import com.trecapps.auth.webflux.repos.primary.TrecAccountRepo;
 import com.trecapps.auth.webflux.repos.secondary.BrandEntryRepo;
+import org.antlr.v4.runtime.misc.Triple;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Flux;
@@ -38,7 +40,7 @@ public class BrandServiceAsync {
     public Mono<String> createNewBrand(TrecAccount account, String name)
     {
         return userStorageService.getAccountById(account.getId())
-                .flatMap((Optional<TcUser> oUsers) -> {
+                .map((Optional<TcUser> oUsers) -> {
                     if(oUsers.isPresent()){
                         TcUser user = oUsers.get();
 
@@ -50,30 +52,30 @@ public class BrandServiceAsync {
                         Set<String> captured = brands;
 
                         if(brands.size() >= MAX_BRAND_COUNT)
-                            return Mono.just("409: User Already has too many Brand-Accounts");
+                            return "409: User Already has too many Brand-Accounts";
 
                         BrandEntry newEntry = new BrandEntry();
                         newEntry.setCreator(account.getId());
                         newEntry.setName(name);
 
-                        return brandEntryRepo.save(newEntry)
-                                .map((BrandEntry savedEntry) -> {
-                                    TcBrands newBrand = new TcBrands();
-                                    newBrand.setId(savedEntry.getId());
-                                    newBrand.setName(name);
-                                    Set<String> owners = new TreeSet<>();
-                                    owners.add(account.getId());
-                                    newBrand.setOwners(owners);
+                        newEntry = brandEntryRepo.save(newEntry);
+                        TcBrands newBrand = new TcBrands();
+                        newBrand.setId(newEntry.getId());
+                        newBrand.setName(name);
+                        Set<String> owners = new TreeSet<>();
+                        owners.add(account.getId());
+                        newBrand.setOwners(owners);
 
-                                    captured.add(savedEntry.getId());
-                                    user.setBrands(captured);
+                        captured.add(newEntry.getId());
+                        user.setBrands(captured);
 
-                                    userStorageService.saveBrand(newBrand);
-                                    userStorageService.saveUser(user);
-                                    return "200: Success";
-                                });
+                        userStorageService.saveBrand(newBrand);
+                        userStorageService.saveUser(user);
+                        return "200: Success";
+
+
                     }
-                    return Mono.just("500: Could not get User Information from Storage");
+                    return "500: Could not get User Information from Storage";
                 });
     }
 
@@ -101,8 +103,9 @@ public class BrandServiceAsync {
                         if(brands == null)
                             return Mono.just(ret);
                         return Flux.just(brands.toArray(new String[]{}))
-                                .flatMap((String brandId) -> brandEntryRepo.findById(brandId))
-                                .doOnNext(ret::add)
+                                .map((String brandId) -> brandEntryRepo.findById(brandId))
+                                .filter(Optional::isPresent)
+                                .map(Optional::get)
                                 .collectList();
                     }
                     return Mono.just(new ArrayList<>());
@@ -153,15 +156,17 @@ public class BrandServiceAsync {
 
     public Mono<Boolean> assignOwner(TrecAccount currentOwner, String newId, String brandId)
     {
-        return brandEntryRepo.existsById(brandId)
-                .flatMap((Boolean brandExists) -> {
-                    return !brandExists ? Mono.just(false) : trecAccountRepo.existsById(newId);
-                }).flatMap((Boolean brandAndUserExists) -> {
-                    return !brandAndUserExists ? Mono.just(false) : isOwner(currentOwner, brandId);
-                }).flatMap((Boolean isOwner) -> {
-                    if(!isOwner) return Mono.just(false);
+        return Mono.just(new Triple<TrecAccount, String, String>(currentOwner, newId, brandId))
+                .flatMap((Triple<TrecAccount, String, String> trip) -> {
+                    boolean exists = brandEntryRepo.existsById(trip.c) && trecAccountRepo.existsById(trip.b);
 
-                    return userStorageService.getAccountById(newId)
+                    return isOwner(trip.a, trip.c)
+                            .map((Boolean isOwner) -> Pair.of(exists && isOwner, trip));
+                }).flatMap((Pair<Boolean, Triple<TrecAccount, String, String>> doFinal) -> {
+                        if(!doFinal.getFirst())
+                            return Mono.just(Boolean.FALSE);
+                        Triple<TrecAccount, String, String> trip = doFinal.getSecond();
+                    return userStorageService.getAccountById(trip.b)
                             .flatMap((Optional<TcUser> oUser) -> {
                                 if(oUser.isEmpty()) return Mono.just(false);
                                 TcUser newUser = oUser.get();
@@ -173,12 +178,12 @@ public class BrandServiceAsync {
 
                                 Set<String> cBrands = brands;
 
-                                return userStorageService.getBrandById(brandId)
+                                return userStorageService.getBrandById(trip.c)
                                         .map((Optional<TcBrands> oBrands) -> {
                                             if(oBrands.isEmpty())return false;
                                             TcBrands brand = oBrands.get();
-                                            cBrands.add(brandId);
-                                            brand.getOwners().add(newId);
+                                            cBrands.add(trip.c);
+                                            brand.getOwners().add(trip.b);
                                             newUser.setBrands(cBrands);
 
                                             userStorageService.saveBrand(brand);

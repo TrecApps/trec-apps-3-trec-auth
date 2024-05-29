@@ -1,13 +1,22 @@
 package com.trecapps.auth.webflux.repos.primary;
 
 import com.trecapps.auth.common.models.primary.TrecAccount;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
 @Repository
-public interface TrecAccountRepo extends ReactiveCrudRepository<TrecAccount, String> {
+public interface TrecAccountRepo extends JpaRepository<TrecAccount, String> {
 
-    Mono<Boolean> existsByUsername(String username);
+    boolean existsByUsername(String username);
 
-    Mono<TrecAccount> findByUsername(String username);
+    TrecAccount findByUsername(String username);
+
+    default Mono<Boolean> existsByUsernameMono(String username) {
+        return Mono.just(existsByUsername(username));
+    }
+
+    default Mono<TrecAccount> findByUsernameMono(String username){
+        return Mono.just(findByUsername(username));
+    }
 }
