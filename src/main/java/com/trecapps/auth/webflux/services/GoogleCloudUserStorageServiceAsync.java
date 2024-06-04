@@ -60,7 +60,7 @@ public class GoogleCloudUserStorageServiceAsync implements IUserStorageServiceAs
         return Mono.just("user-" + id)
                 .map(k -> client.get(k))
                 .map((Blob object) -> {
-                    if(object.exists())
+                    if(object != null && object.exists())
                         return retrieveObject(object, TcUser.class);
                     return Optional.empty();
                 });
@@ -72,7 +72,7 @@ public class GoogleCloudUserStorageServiceAsync implements IUserStorageServiceAs
         return Mono.just("sessions-" + id)
                 .map(k -> client.get(k))
                 .map((Blob object) -> {
-                    if(object.exists())
+                    if(object != null && object.exists())
                         return retrieveObject(object, SessionList.class);
                     return Optional.empty();
                 });
@@ -84,7 +84,7 @@ public class GoogleCloudUserStorageServiceAsync implements IUserStorageServiceAs
         return Mono.just("brand-" + id)
                 .map(k -> client.get(k))
                 .map((Blob object) -> {
-                    if(object.exists())
+                    if(object != null && object.exists())
                         return retrieveObject(object, TcBrands.class);
                     return Optional.empty();
                 });
@@ -95,7 +95,7 @@ public class GoogleCloudUserStorageServiceAsync implements IUserStorageServiceAs
         return Mono.just("logins-" + id + ".json")
                 .map(k -> client.get(k))
                 .map((Blob object) -> {
-                    if(object.exists())
+                    if(object != null && object.exists())
                         return retrieveObject(object, AppLocker.class);
                     AppLocker ret = new AppLocker();
                     Map<String, FailedLoginList> list = new HashMap<>();
@@ -109,8 +109,7 @@ public class GoogleCloudUserStorageServiceAsync implements IUserStorageServiceAs
 
     BlobInfo getBlobInfo(String bucket, String object){
         BlobId blobId = BlobId.of(bucket, object);
-        BlobInfo blobInfo = BlobInfo.newBuilder(blobId).build();
-        return blobInfo;
+        return BlobInfo.newBuilder(blobId).build();
     }
 
     Storage.BlobTargetOption getPrecondition(BlobInfo blobInfo)

@@ -60,7 +60,7 @@ public class GoogleCloudUserStorageService implements IUserStorageService
     @SneakyThrows
     public Optional<TcUser> getAccountById(String id) {
         Blob object = client.get("user-" + id);
-        if(!object.exists())
+        if(object == null || !object.exists())
             return Optional.empty();
         String data = new String(object.getContent(), StandardCharsets.UTF_8);
         return Optional.of(encryptor.decrypt(objectMapper.readValue(data, TcUser.class)));
@@ -69,7 +69,7 @@ public class GoogleCloudUserStorageService implements IUserStorageService
     @Override
     public SessionList retrieveSessions(String id) throws JsonProcessingException {
         Blob object = client.get("sessions-" + id);
-        if(!object.exists())
+        if(object == null || !object.exists())
             return null;
         String data = new String(object.getContent(), StandardCharsets.UTF_8);
         return encryptor.decrypt(objectMapper.readValue(data, SessionList.class));
@@ -79,7 +79,7 @@ public class GoogleCloudUserStorageService implements IUserStorageService
     @SneakyThrows
     public Optional<TcBrands> getBrandById(String id) {
         Blob object = client.get("brand-" + id);
-        if(!object.exists())
+        if(object == null || !object.exists())
             return Optional.empty();
         String data = new String(object.getContent(), StandardCharsets.UTF_8);
         return Optional.of(encryptor.decrypt(objectMapper.readValue(data, TcBrands.class)));
@@ -88,7 +88,7 @@ public class GoogleCloudUserStorageService implements IUserStorageService
     @Override
     public TcBrands retrieveBrand(String id) throws JsonProcessingException {
         Blob object = client.get("brand-" + id);
-        if(!object.exists())
+        if(object == null || !object.exists())
             return null;
         String data = new String(object.getContent(), StandardCharsets.UTF_8);
         return encryptor.decrypt(objectMapper.readValue(data, TcBrands.class));
@@ -98,7 +98,7 @@ public class GoogleCloudUserStorageService implements IUserStorageService
     public AppLocker retrieveAppLocker(String id) throws JsonProcessingException {
         String objectName = "logins-" + id + ".json";
         Blob object = client.get(objectName);
-        if(!object.exists()){
+        if(object == null || !object.exists()){
             AppLocker ret = new AppLocker();
             Map<String, FailedLoginList> list = new HashMap<>();
             FailedLoginList logins = new FailedLoginList();
@@ -113,8 +113,7 @@ public class GoogleCloudUserStorageService implements IUserStorageService
 
     BlobInfo getBlobInfo(String bucket, String object){
         BlobId blobId = BlobId.of(bucket, object);
-        BlobInfo blobInfo = BlobInfo.newBuilder(blobId).build();
-        return blobInfo;
+        return BlobInfo.newBuilder(blobId).build();
     }
 
     Storage.BlobTargetOption getPrecondition(BlobInfo blobInfo)
