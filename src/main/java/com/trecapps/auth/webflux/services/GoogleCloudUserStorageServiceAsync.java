@@ -107,7 +107,7 @@ public class GoogleCloudUserStorageServiceAsync implements IUserStorageServiceAs
                 });
     }
 
-    BlobInfo getBlobInfo(String bucket, String object){
+    BlobInfo getBlobInfo(String object, String bucket){
         BlobId blobId = BlobId.of(bucket, object);
         return BlobInfo.newBuilder(blobId).build();
     }

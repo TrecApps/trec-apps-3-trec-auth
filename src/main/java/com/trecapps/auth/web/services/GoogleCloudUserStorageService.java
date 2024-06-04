@@ -111,7 +111,7 @@ public class GoogleCloudUserStorageService implements IUserStorageService
         return encryptor.decrypt(objectMapper.readValue(data, AppLocker.class));
     }
 
-    BlobInfo getBlobInfo(String bucket, String object){
+    BlobInfo getBlobInfo(String object, String bucket){
         BlobId blobId = BlobId.of(bucket, object);
         return BlobInfo.newBuilder(blobId).build();
     }
