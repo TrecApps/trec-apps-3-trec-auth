@@ -58,10 +58,10 @@ public class GoogleCloudUserStorageServiceAsync implements IUserStorageServiceAs
     @SneakyThrows
     public Mono<Optional<TcUser>> getAccountById(String id) {
         return Mono.just("user-" + id)
-                .map(k -> client.get(k))
-                .map((Blob object) -> {
-                    if(object != null && object.exists())
-                        return retrieveObject(object, TcUser.class);
+                .map(k -> Optional.ofNullable(client.get(k)))
+                .map((Optional<Blob> object) -> {
+                    if(object.isPresent() && object.get().exists())
+                        return retrieveObject(object.get(), TcUser.class);
                     return Optional.empty();
                 });
     }
@@ -70,10 +70,10 @@ public class GoogleCloudUserStorageServiceAsync implements IUserStorageServiceAs
     public Mono<Optional<SessionList>> retrieveSessions(String id) {
 
         return Mono.just("sessions-" + id)
-                .map(k -> client.get(k))
-                .map((Blob object) -> {
-                    if(object != null && object.exists())
-                        return retrieveObject(object, SessionList.class);
+                .map(k -> Optional.ofNullable(client.get(k)))
+                .map((Optional<Blob> object) -> {
+                    if(object.isPresent() && object.get().exists())
+                        return retrieveObject(object.get(), SessionList.class);
                     return Optional.empty();
                 });
     }
@@ -82,10 +82,10 @@ public class GoogleCloudUserStorageServiceAsync implements IUserStorageServiceAs
     @SneakyThrows
     public Mono<Optional<TcBrands>> getBrandById(String id) {
         return Mono.just("brand-" + id)
-                .map(k -> client.get(k))
-                .map((Blob object) -> {
-                    if(object != null && object.exists())
-                        return retrieveObject(object, TcBrands.class);
+                .map(k -> Optional.ofNullable(client.get(k)))
+                .map((Optional<Blob> object) -> {
+                    if(object.isPresent() && object.get().exists())
+                        return retrieveObject(object.get(), TcBrands.class);
                     return Optional.empty();
                 });
     }
@@ -93,10 +93,10 @@ public class GoogleCloudUserStorageServiceAsync implements IUserStorageServiceAs
     @Override
     public Mono<Optional<AppLocker>> retrieveAppLocker(String id) {
         return Mono.just("logins-" + id + ".json")
-                .map(k -> client.get(k))
-                .map((Blob object) -> {
-                    if(object != null && object.exists())
-                        return retrieveObject(object, AppLocker.class);
+                .map(k -> Optional.ofNullable(client.get(k)))
+                .map((Optional<Blob> object) -> {
+                    if(object.isPresent() && object.get().exists())
+                        return retrieveObject(object.get(), AppLocker.class);
                     AppLocker ret = new AppLocker();
                     Map<String, FailedLoginList> list = new HashMap<>();
                     FailedLoginList logins = new FailedLoginList();
