@@ -3,21 +3,20 @@ package com.trecapps.auth.webflux.controllers;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.trecapps.auth.webflux.services.JwtTokenServiceAsync;
 import com.trecapps.auth.webflux.services.SessionManagerAsync;
-import io.netty.handler.codec.http.cookie.Cookie;
-import io.netty.handler.codec.http.cookie.DefaultCookie;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.http.HttpCookie;
+import org.springframework.http.ResponseCookie;
+import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
-import reactor.netty.http.server.HttpServerRequest;
-import reactor.netty.http.server.HttpServerResponse;
 
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
 
 @Component
 @ConditionalOnProperty(prefix = "trecauth", name="use-cookie", havingValue = "true")
@@ -51,35 +50,26 @@ public class CookieBase {
         return this.domain;
     }
 
-    public void SetCookie(HttpServerResponse response, String refreshToken){
-        Cookie cook = new DefaultCookie(cookieName, refreshToken);
+    public void SetCookie(ServerHttpResponse response, String refreshToken){
+        ResponseCookie.ResponseCookieBuilder cookBuilder = ResponseCookie.from(this.cookieName, refreshToken)
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge((int)TimeUnit.DAYS.toSeconds(7L));
+        if(this.domain != null)cookBuilder = cookBuilder.domain(this.domain);
 
-        cook.setHttpOnly(true);
-        cook.setPath("/");
-        if(domain != null) {
-            logger.info("Setting Cookie domain to {}", domain);
-            cook.setDomain(domain);
-        }
-        cook.setSecure(true);
-
-        cook.setMaxAge((int) TimeUnit.DAYS.toSeconds(7));
-
-        response.addCookie(cook);
+        response.addCookie(cookBuilder.build());
     }
 
-    public void RemoveCookie(HttpServerRequest request, HttpServerResponse response, String userId){
+    public void RemoveCookie(ServerHttpResponse response, ServerHttpRequest request, String userId){
+        HttpCookie cookie = request.getCookies().getFirst(cookieName);
+        if(cookie != null)
+            clearSessions(cookie.getValue(), userId);
 
-
-        for(Cookie cook : response.cookies().get(cookieName))
-        {
-                clearSessions(cook.value(), userId);
-
-                cook.setValue("");
-                cook.setPath("/");
-                cook.setMaxAge(0);
-                response.addCookie(cook);
-                return;
-        }
+        ResponseCookie.ResponseCookieBuilder cookBuilder = ResponseCookie.from(this.cookieName, "")
+                .path("/")
+                .maxAge(0);
+        response.addCookie(cookBuilder.build());
     }
 
     public void clearSessions(String value, String userId){

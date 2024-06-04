@@ -12,11 +12,5 @@ public interface TrecAccountRepo extends JpaRepository<TrecAccount, String> {
 
     TrecAccount findByUsername(String username);
 
-    default Mono<Boolean> existsByUsernameMono(String username) {
-        return Mono.just(existsByUsername(username));
-    }
 
-    default Mono<TrecAccount> findByUsernameMono(String username){
-        return Mono.just(findByUsername(username));
-    }
 }

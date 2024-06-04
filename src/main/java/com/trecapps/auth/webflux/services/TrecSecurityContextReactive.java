@@ -2,6 +2,7 @@ package com.trecapps.auth.webflux.services;
 
 
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.trecapps.auth.common.ISecurityAlertHandler;
 import com.trecapps.auth.common.models.LoginToken;
 import com.trecapps.auth.common.models.TcUser;
 import com.trecapps.auth.common.models.TokenFlags;
@@ -24,6 +25,9 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -38,11 +42,14 @@ public class TrecSecurityContextReactive extends TrecCookieSaverAsync implements
 
     String domain;
 
+    ISecurityAlertHandler alertHandler;
+
     @Autowired
     public TrecSecurityContextReactive(
             JwtTokenServiceAsync tokenService,
             SessionManagerAsync sessionManager,
             IUserStorageServiceAsync userStorageService1,
+            @Autowired(required = false) ISecurityAlertHandler alertHandler,
             @Value("${trecauth.app}") String app,
             @Value("${trecauth.refresh.domain:#{NULL}}") String domain,
             @Value("${trecauth.refresh.app:#{NULL}}") String cookieApp,
@@ -50,6 +57,7 @@ public class TrecSecurityContextReactive extends TrecCookieSaverAsync implements
     )
     {
         super(sessionManager,tokenService, userStorageService1, app);
+        this.alertHandler = alertHandler;
         this.domain = domain;
         this.cookieApp = cookieApp;
         this.cookieName = cookieName;
@@ -93,13 +101,32 @@ public class TrecSecurityContextReactive extends TrecCookieSaverAsync implements
         return getContextFromHeader(req);
     }
 
-    Mono<SecurityContext> handleSecurityDecoding(DecodedJWT decode, SecurityContext context)
+    Mono<SecurityContext> handleSecurityDecoding(DecodedJWT decode, SecurityContext context,ServerHttpRequest request)
     {
         return tokenService.verifyToken(decode, new TokenFlags())
                 .map((Optional<TrecAuthentication> oTrecAuthentication) -> {
                     if(oTrecAuthentication.isEmpty())
                     {
                         logger.info("Null Account from Cookie detected!");
+                        if(alertHandler != null) {
+                            MultiValueMap<String, String> queryMap = request.getQueryParams();
+                            StringBuilder queryStr = new StringBuilder();
+                            
+                            queryMap.forEach((String key, List<String> values) -> {
+                                
+                                for(String value: values){
+                                    if(!queryStr.isEmpty())
+                                        queryStr.append('&');
+                                    queryStr.append(key).append('=').append(value);
+                                }
+                                
+                            });
+                            alertHandler.alertNullAccount(
+                                    Objects.requireNonNull(request.getRemoteAddress()).toString(),
+                                    request.getPath().toString(),
+                                    queryStr.toString(),
+                                    request.getMethod().name());
+                        }
                     }
                     else context.setAuthentication(oTrecAuthentication.get());
                     return context;
@@ -109,7 +136,7 @@ public class TrecSecurityContextReactive extends TrecCookieSaverAsync implements
 
     Mono<SecurityContext> getContectFromCookie(ServerHttpRequest request) {
         return Mono.just(SecurityContextHolder.createEmptyContext())
-                .doOnNext((SecurityContext context) -> {
+                .flatMap((SecurityContext context) -> {
 
                     MultiValueMap<String, HttpCookie> cookies = request.getCookies();
                     HttpCookie cookie = cookies.getFirst(cookieName);
@@ -117,13 +144,15 @@ public class TrecSecurityContextReactive extends TrecCookieSaverAsync implements
                     {
                         DecodedJWT decode = tokenService.decodeToken(cookie.getValue());
                         if(decode == null) {
-                            logger.info("Null Decode token detected!");
+                            logger.info("Null Decode token detected in Cookie! request path: {} , IP Address: {}", request.getPath(), request.getRemoteAddress());
+
                         }
                         else
                         {
-                            handleSecurityDecoding(decode, context);
+                            return handleSecurityDecoding(decode, context, request);
                         }
                     }
+                    return Mono.just(context);
                 });
 
 
@@ -136,7 +165,7 @@ public class TrecSecurityContextReactive extends TrecCookieSaverAsync implements
                     String auth = headers.getFirst("Authorization");
                     DecodedJWT decode = tokenService.decodeToken(auth);
                     if(decode == null) {
-                        logger.info("Null Decode token detected!");
+                        logger.info("Null Decode token detected in Auth Header! request path: {} , IP Address: {}", request.getPath(), request.getRemoteAddress());
                         return Mono.just(context);
                     }
                     else

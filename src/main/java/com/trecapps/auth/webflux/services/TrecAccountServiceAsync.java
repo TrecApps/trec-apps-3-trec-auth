@@ -54,7 +54,7 @@ public class TrecAccountServiceAsync implements ReactiveUserDetailsService {
 
     public Mono<Boolean> userNameExists(String username)
     {
-        return trecRepo.existsByUsernameMono(username);
+        return Mono.just(trecRepo.existsByUsername(username));
     }
 
     public Mono<Optional<TrecAccount>> saveNewAccount(TrecAccount a)
@@ -128,7 +128,7 @@ public class TrecAccountServiceAsync implements ReactiveUserDetailsService {
                 .flatMap((Pair<String, String> pair) -> {
                     String u = pair.getFirst();
 
-                    if(trecRepo.existsByUsername(u))
+                    if(!trecRepo.existsByUsername(u))
                         return Mono.just(TrecAccount.getInvalidAccount(true));
 
                     TrecAccount ret = trecRepo.findByUsername(u);

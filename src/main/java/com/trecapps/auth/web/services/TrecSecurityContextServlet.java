@@ -1,6 +1,7 @@
 package com.trecapps.auth.web.services;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.trecapps.auth.common.ISecurityAlertHandler;
 import com.trecapps.auth.common.models.LoginToken;
 import com.trecapps.auth.common.models.TcUser;
 import com.trecapps.auth.common.models.TokenFlags;
@@ -32,6 +33,9 @@ public class TrecSecurityContextServlet extends TrecCookieSaver implements Secur
 
     @Autowired
     IUserStorageService userStorageService;
+
+    @Autowired(required = false)
+    ISecurityAlertHandler alertHandler;
 
     @Value("${trecauth.app}")
     String app;
@@ -95,7 +99,7 @@ public class TrecSecurityContextServlet extends TrecCookieSaver implements Secur
             cook.setHttpOnly(true);
             cook.setPath("/");
             if(domain != null) {
-                logger.info("Setting Cookie domain to {}", domain);
+                logger.debug("Setting Cookie domain to {}", domain);
                 cook.setDomain(domain);
             }
             cook.setSecure(true);
@@ -134,12 +138,20 @@ public class TrecSecurityContextServlet extends TrecCookieSaver implements Secur
 
                 DecodedJWT decode = tokenService.decodeToken(data);
                 if(decode == null) {
-                    logger.info("Null Decode token detected!");
+                    logger.warn("Null Decode token detected from Cookie! Request Path: {} ; IP Address: {}", request.getContextPath(), request.getRemoteAddr());
                     return context;
                 }
                 TrecAuthentication acc = tokenService.verifyToken(decode, new TokenFlags());
                 if(acc == null) {
                     logger.info("Null Account from Cookie detected!");
+                    if(alertHandler != null){
+                        alertHandler.alertNullAccount(
+                                request.getRemoteAddr(),
+                                request.getContextPath(),
+                                request.getQueryString(),
+                                request.getMethod()
+                        );
+                    }
                     return context;
                 }
                 context.setAuthentication(acc);
@@ -162,17 +174,27 @@ public class TrecSecurityContextServlet extends TrecCookieSaver implements Secur
 
         TokenFlags tokenFlags = new TokenFlags();
         DecodedJWT decode = tokenService.decodeToken(auth);
-        if(decode == null)
+        if(decode == null) {
+            logger.warn("Null Decode token detected from Header! Request Path: {} ; IP Address: {}", request.getContextPath(), request.getRemoteAddr());
             return context;
+        }
         TrecAuthentication acc = tokenService.verifyToken(decode, tokenFlags);
-        if(acc == null)
+        if(acc == null) {
+            if(alertHandler != null){
+                alertHandler.alertNullAccount(
+                        request.getRemoteAddr(),
+                        request.getContextPath(),
+                        request.getQueryString(),
+                        request.getMethod()
+                );
+            }
             return context;
-
+        }
         // Now that we have our account, get Session Information
         String sessionId = tokenService.getSessionId(auth);
         // Only authenticate if both the user, app, and session can be verified
         if(sessionId != null && sessionManager.isValidSession(acc.getUser().getId(), app, sessionId)) {
-            logger.info("Found Valid Session!");
+            logger.debug("Found Valid Session!");
             acc.setSessionId(sessionId);
             LoginToken token = new LoginToken();
             token.setAccess_token(auth);
