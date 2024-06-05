@@ -32,4 +32,13 @@ public class SessionV2 {
         sessionApp.setBrandId(brand);
         apps.add(sessionApp);
     }
+
+    public SessionApp getApp(String app){
+        for(SessionApp sessionApp: apps){
+            if(sessionApp.getApp().equals(app)) {
+                return sessionApp;
+            }
+        }
+        return null;
+    }
 }
