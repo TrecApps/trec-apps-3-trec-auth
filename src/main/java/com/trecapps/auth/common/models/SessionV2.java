@@ -41,4 +41,12 @@ public class SessionV2 {
         }
         return null;
     }
+
+    public String getBrandByApp(String app){
+        for(SessionApp sessionApp: apps){
+            if(sessionApp.getApp().equals(app))
+                return sessionApp.getBrandId();
+        }
+        return null;
+    }
 }

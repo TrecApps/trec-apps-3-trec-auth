@@ -2,7 +2,7 @@ package com.trecapps.auth.webflux.controllers;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.trecapps.auth.webflux.services.JwtTokenServiceAsync;
-import com.trecapps.auth.webflux.services.SessionManagerAsync;
+import com.trecapps.auth.webflux.services.V2SessionManagerAsync;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +36,7 @@ public class CookieBase {
     @Autowired
     JwtTokenServiceAsync tokenService;
     @Autowired
-    SessionManagerAsync sessionManager;
+    V2SessionManagerAsync sessionManager;
 
     public String getCookieAppName(){
         return this.appName;
@@ -78,7 +78,7 @@ public class CookieBase {
 
         Map<String, String> sessionList = tokenService.claims(decodedJWT);
 
-        sessionList.forEach((String _app, String s) -> sessionManager.removeSession(userId, s).subscribe());
+        sessionList.forEach((String _app, String s) -> sessionManager.removeSession(userId, s));
 
     }
 }

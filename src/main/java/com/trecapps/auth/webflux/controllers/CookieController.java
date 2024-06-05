@@ -4,7 +4,7 @@ import com.trecapps.auth.common.models.LoginToken;
 import com.trecapps.auth.common.models.TrecAuthentication;
 import com.trecapps.auth.webflux.services.IUserStorageServiceAsync;
 import com.trecapps.auth.webflux.services.JwtTokenServiceAsync;
-import com.trecapps.auth.webflux.services.SessionManagerAsync;
+import com.trecapps.auth.webflux.services.V2SessionManagerAsync;
 import com.trecapps.auth.webflux.services.TrecCookieSaverAsync;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,7 +30,7 @@ public class CookieController extends TrecCookieSaverAsync {
     @Autowired
 
     protected CookieController(
-            SessionManagerAsync sessionManager1,
+            V2SessionManagerAsync sessionManager1,
             JwtTokenServiceAsync tokenService1,
             IUserStorageServiceAsync userStorageService1,
             @Value("${trecauth.app}") String app1) {

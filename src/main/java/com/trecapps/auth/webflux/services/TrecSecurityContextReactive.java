@@ -46,7 +46,7 @@ public class TrecSecurityContextReactive extends TrecCookieSaverAsync implements
     @Autowired
     public TrecSecurityContextReactive(
             JwtTokenServiceAsync tokenService,
-            SessionManagerAsync sessionManager,
+            V2SessionManagerAsync sessionManager,
             IUserStorageServiceAsync userStorageService1,
             @Autowired(required = false) ISecurityAlertHandler alertHandler,
             @Value("${trecauth.app}") String app,

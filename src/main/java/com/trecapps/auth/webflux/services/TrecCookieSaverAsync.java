@@ -8,14 +8,14 @@ import java.util.Optional;
 
 public class TrecCookieSaverAsync {
 
-    protected SessionManagerAsync sessionManager;
+    protected V2SessionManagerAsync sessionManager;
     protected JwtTokenServiceAsync tokenService;
     protected IUserStorageServiceAsync userStorageService;
 
     protected String app;
 
     protected TrecCookieSaverAsync(
-            SessionManagerAsync sessionManager1,
+            V2SessionManagerAsync sessionManager1,
             JwtTokenServiceAsync tokenService1,
             IUserStorageServiceAsync userStorageService1,
             String app1){
@@ -28,38 +28,37 @@ public class TrecCookieSaverAsync {
     protected Mono<Optional<LoginToken>> getLoginTokens(TrecAuthentication authentication, String client)
     {
         return sessionManager.getSessionList(authentication.getAccount().getId())
-                .map((List<Session> sessionList) -> {
-                    for(Session s: sessionList)
-                        if(app.equals(s.getAppId()))
-                            return s;
-                    return null;
+                .map((List<SessionV2> sessionList) -> {
+                    Optional<SessionV2> ret = Optional.empty();
+                    for(SessionV2 s: sessionList) {
+                        if (app.equals(s.getDeviceId()))
+                            return Optional.of(s);
+                    }
+                    return ret;
                 })
-                .flatMap((Session s) -> {
-                    if(s == null)
-                        return Mono.just(Optional.of(TokenTime.getInvalidInstance()));
-                    return this.getBrand(s, authentication.getAccount().getId())
+                .flatMap((Optional<SessionV2> sOpt) -> {
+                    return sOpt.map(sessionV2 -> this.getBrand(sessionV2, authentication.getAccount().getId())
                             .map((Optional<TcBrands> brands) -> {
-                                String brandStr = null;
-                                if(brands.isPresent())
-                                    return tokenService.generateToken(authentication.getAccount(), client, brands.get(), s.getSessionId(), s.getExpiration() != null, app);
-                                return tokenService.generateToken(authentication.getAccount(), client, null, s.getSessionId(), s.getExpiration() != null, app);
-                            }).flatMap(m -> m);
+                                SessionV2 s = sessionV2;
+                                if (brands.isPresent())
+                                    return tokenService.generateToken(authentication.getAccount(), client, brands.get(), s.getDeviceId(), s.getExpiration() != null, app);
+                                return tokenService.generateToken(authentication.getAccount(), client, null, s.getDeviceId(), s.getExpiration() != null, app);
+                            }).flatMap(m -> m)).orElseGet(() -> Mono.just(Optional.of(TokenTime.getInvalidInstance())));
                 })
                 .flatMap((Optional<TokenTime> tokenTime) -> {
                     if(tokenTime.isEmpty() || !tokenTime.get().isValid())
                         return sessionManager.addSession(app, authentication.getAccount().getId(), client, false);
-                    return Mono.just(tokenTime);
+                    return Mono.just(tokenTime.get());
                 })
-                .map((Optional<TokenTime> oTokenTime) -> {
-                    if(oTokenTime.isEmpty())
-                        return null;
+                .map((TokenTime tokenTime) -> {
+
                     LoginToken login = authentication.getLoginToken();
                     if(login == null){
                         login = new LoginToken();
                         authentication.setLoginToken(login);
                     }
                     login.setToken_type("User");
-                    login.setAccess_token(oTokenTime.get().getToken());
+                    login.setAccess_token(tokenTime.getToken());
 
                     login.setRefresh_token(tokenService.generateRefreshToken(authentication.getAccount()));
                     return login;
@@ -77,10 +76,10 @@ public class TrecCookieSaverAsync {
         });
     }
 
-    Mono<Optional<TcBrands>> getBrand(Session s, String userId){
+    Mono<Optional<TcBrands>> getBrand(SessionV2 s, String userId){
         if(s == null)
             return Mono.just(Optional.empty());
-        String brandId = s.getBrandId();
+        String brandId = s.getBrandByApp(app);
         if(brandId == null)
             return Mono.just(Optional.empty());
 

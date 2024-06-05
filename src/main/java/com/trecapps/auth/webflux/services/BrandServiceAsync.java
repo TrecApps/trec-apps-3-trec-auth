@@ -30,7 +30,7 @@ public class BrandServiceAsync {
     JwtTokenServiceAsync jwtTokenService;
 
     @Autowired
-    SessionManagerAsync sessionManager;
+    V2SessionManagerAsync sessionManager;
 
     @Autowired
     TrecAccountRepo trecAccountRepo;
@@ -140,7 +140,7 @@ public class BrandServiceAsync {
                                            if(oTime.isEmpty())
                                                return Optional.empty();
                                            TokenTime time = oTime.get();
-                                           sessionManager.setBrand(account.getAccount().getId(), session, brandId).subscribe();
+                                           sessionManager.setBrand(account.getAccount().getId(), session, brandId,app);
 
                                            LoginToken ret = new LoginToken();
                                            ret.setAccess_token(time.getToken());

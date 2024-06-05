@@ -46,14 +46,14 @@ public class JwtTokenServiceAsync {
 
     IUserStorageServiceAsync userStorageService;
 
-    SessionManagerAsync sessionManager;
+    V2SessionManagerAsync sessionManager;
 
     IJwtKeyHolder jwtKeyHolder;
 
     @Autowired
     JwtTokenServiceAsync(
             IUserStorageServiceAsync userStorageServiceAsync,
-            SessionManagerAsync sessionManager,
+            V2SessionManagerAsync sessionManager,
             IJwtKeyHolder jwtKeyHolder,
             @Value("${trecauth.app}") String app
     ) {
@@ -171,18 +171,17 @@ public class JwtTokenServiceAsync {
     public Mono<Optional<TokenTime>> generateToken(TrecAccount account, String userAgent, TcBrands brand, String session, boolean expires, boolean useMfa, String app1)
     {
         if(account == null)
-            return Mono.empty();
+            return Mono.just(Optional.empty());
 
         if(!setKeys())
-            return Mono.empty();
+            return Mono.just(Optional.empty());
 
 
         String userId = account.getId();
-        sessionManager.prepNewUser(userId);
 
         Date now = new Date(Calendar.getInstance().getTime().getTime());
 
-        Mono<Optional<TokenTime>> tokenTime;
+        Mono<TokenTime> tokenTime;
 
         if(session == null)
             tokenTime = sessionManager.addSession(app1, account.getId(), userAgent, expires);
@@ -200,14 +199,13 @@ public class JwtTokenServiceAsync {
                             sessionManager.updateSessionExpiration(account.getId(), session, expiration);
                             ret.setExpiration(expiration);
                         }
-                        return Optional.of(ret);
+                        return ret;
                     });
 
         }
 
-        return tokenTime.doOnNext((Optional<TokenTime> oRet) -> {
-            if(oRet.isPresent()){
-                TokenTime ret = oRet.get();
+        return tokenTime.doOnNext((TokenTime ret) -> {
+
                 String useBrand = "null";
                 if(brand != null)
                 {
@@ -226,8 +224,8 @@ public class JwtTokenServiceAsync {
                     jwtBuilder = jwtBuilder.withExpiresAt(ret.getExpiration().toInstant());
 
                 ret.setToken(jwtBuilder.sign(Algorithm.RSA512(publicKey, privateKey)));
-            }
-        });
+
+        }).map(Optional::of);
 
     }
 
