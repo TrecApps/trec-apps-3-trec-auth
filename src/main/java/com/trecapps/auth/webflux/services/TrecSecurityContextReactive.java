@@ -3,10 +3,7 @@ package com.trecapps.auth.webflux.services;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.trecapps.auth.common.ISecurityAlertHandler;
-import com.trecapps.auth.common.models.LoginToken;
-import com.trecapps.auth.common.models.TcUser;
-import com.trecapps.auth.common.models.TokenFlags;
-import com.trecapps.auth.common.models.TrecAuthentication;
+import com.trecapps.auth.common.models.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -93,10 +90,15 @@ public class TrecSecurityContextReactive extends TrecCookieSaverAsync implements
     @Override
     public Mono<SecurityContext> load(ServerWebExchange exchange) {
         ServerHttpRequest req = exchange.getRequest();
-
+        Mono<SecurityContext> ret;
         if(cookieApp != null && req.getPath().contextPath().value().endsWith("/refresh_token"))
-            return getContectFromCookie(req);
-        return getContextFromHeader(req);
+            ret = getContectFromCookie(req);
+        else
+            ret = getContextFromHeader(req);
+        return ret.doOnNext((SecurityContext context) -> {
+            if(context.getAuthentication() == null)
+                context.setAuthentication(new AnonymousAuthentication());
+        });
     }
 
     Mono<SecurityContext> handleSecurityDecoding(DecodedJWT decode, SecurityContext context,ServerHttpRequest request)
