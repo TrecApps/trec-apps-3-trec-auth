@@ -1,6 +1,7 @@
 package com.trecapps.auth.web.controllers;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.trecapps.auth.common.models.SessionV2;
 import com.trecapps.auth.web.services.JwtTokenService;
 import com.trecapps.auth.web.services.V2SessionManager;
 import jakarta.servlet.http.Cookie;
@@ -13,6 +14,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -87,5 +89,9 @@ public class CookieBase {
 
         sessionList.forEach((String _app, String s) -> sessionManager.removeSession(userId, s));
 
+    }
+
+    public void assertAppAdded(String userId, String sessionId, String brandId){
+        sessionManager.setBrand(userId, sessionId, brandId, appName, false);
     }
 }

@@ -54,12 +54,16 @@ public class V2SessionManagerAsync  extends SessionManagerBase {
                 }).subscribe();
     }
 
-    public void setBrand(String userId, String sessionId, String brand, String app) {
+    public void setBrand(String userId, String sessionId, String brand, String app){
+        setBrand(userId, sessionId, brand, app, true);
+    }
+
+    public void setBrand(String userId, String sessionId, String brand, String app, boolean updateBrand) {
         userStorageService.retrieveSessionList(userId)
                 .doOnNext((SessionListV2 sessions) -> {
                     SessionV2 session = sessions.getSessionById(sessionId);
 
-                    session.setApp(app, brand);
+                    session.setApp(app, brand, updateBrand);
 
                     userStorageService.saveSessions(sessions, userId);
                 }).subscribe();

@@ -81,4 +81,8 @@ public class CookieBase {
         sessionList.forEach((String _app, String s) -> sessionManager.removeSession(userId, s));
 
     }
+
+    public void assertAppAdded(String userId, String sessionId, String brandId){
+        sessionManager.setBrand(userId, sessionId, brandId, appName, false);
+    }
 }

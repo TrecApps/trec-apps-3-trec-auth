@@ -27,14 +27,17 @@ import java.util.Optional;
 @ConditionalOnProperty(prefix = "trecauth", name="use-cookie", havingValue = "true")
 public class CookieController extends TrecCookieSaverAsync {
 
-    @Autowired
+    CookieBase cookieBase;
 
+    @Autowired
     protected CookieController(
             V2SessionManagerAsync sessionManager1,
             JwtTokenServiceAsync tokenService1,
             IUserStorageServiceAsync userStorageService1,
+            CookieBase cookieBase,
             @Value("${trecauth.app}") String app1) {
         super(sessionManager1, tokenService1, userStorageService1, app1);
+        this.cookieBase = cookieBase;
     }
 
     @GetMapping
@@ -46,8 +49,14 @@ public class CookieController extends TrecCookieSaverAsync {
 
             tAuth.setUseCookie(true);
 
-            return this.prepLoginTokens(tAuth, userClient).map((Optional<LoginToken> oToken) ->
-                            oToken.map(loginToken -> new ResponseEntity<>(loginToken, HttpStatus.OK)).orElseGet(() -> new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR))
+            return this.prepLoginTokens(tAuth, userClient)
+                    .map((Optional<LoginToken> oToken) ->
+                            oToken
+                                    .map(loginToken -> {
+                                        this.cookieBase.assertAppAdded(tAuth.getAccount().getId(), tAuth.getSessionId(), null);
+                                        return new ResponseEntity<>(loginToken, HttpStatus.OK);
+                                    })
+                                    .orElseGet(() -> new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR))
                     );
         }
         return Mono.just(new ResponseEntity<>(HttpStatus.NOT_FOUND));

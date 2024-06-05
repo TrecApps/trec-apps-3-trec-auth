@@ -19,10 +19,15 @@ public class SessionV2 {
         return expiration != null && expiration.isBefore(OffsetDateTime.now());
     }
 
-    public void setApp(String app, String brand) {
+    public void setApp(String app, String brand){
+        setApp(app, brand, true);
+    }
+
+    public void setApp(String app, String brand, boolean doUpdate) {
         for(SessionApp sessionApp: apps){
             if(sessionApp.getApp().equals(app)) {
-                sessionApp.setBrandId(brand);
+                if(doUpdate)
+                    sessionApp.setBrandId(brand);
                 return;
             }
         }

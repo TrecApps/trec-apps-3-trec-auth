@@ -46,6 +46,8 @@ public class CookieController extends TrecCookieSaver {
 
             this.prepLoginTokens(tAuth, userClient);
 
+            sessionManager.setBrand(tAuth.getAccount().getId(), tAuth.getSessionId(), null, this.app, false);
+
             return new ResponseEntity<>(tAuth.getLoginToken(), HttpStatus.OK);
         }
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);

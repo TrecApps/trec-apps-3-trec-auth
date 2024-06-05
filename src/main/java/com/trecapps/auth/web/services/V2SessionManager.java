@@ -48,11 +48,16 @@ public class V2SessionManager extends SessionManagerBase {
         userStorageService.saveSessions(sessions, userId);
     }
 
-    public void setBrand(String userId, String sessionId, String brand, String app) {
+    public void setBrand(String userId, String sessionId, String brand, String app)
+    {
+        setBrand(userId, sessionId, brand, app, true);
+    }
+
+    public void setBrand(String userId, String sessionId, String brand, String app, boolean doUpdate) {
         SessionListV2 sessions = userStorageService.retrieveSessionList(userId);
         SessionV2 session = sessions.getSessionById(sessionId);
 
-        session.setApp(app, brand);
+        session.setApp(app, brand, doUpdate);
 
         userStorageService.saveSessions(sessions, userId);
     }

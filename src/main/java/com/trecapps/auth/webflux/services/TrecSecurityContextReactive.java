@@ -74,7 +74,6 @@ public class TrecSecurityContextReactive extends TrecCookieSaverAsync implements
                 .getHeaders()
                 .getFirst("User-Agent"));
 
-
         ServerHttpResponse response = exchange.getResponse();
         ResponseCookie.ResponseCookieBuilder cookieBuilder = ResponseCookie.from(cookieName)
             .secure(true)
