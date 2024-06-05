@@ -4,7 +4,7 @@ import com.trecapps.auth.common.models.LoginToken;
 import com.trecapps.auth.common.models.TrecAuthentication;
 
 import com.trecapps.auth.web.services.JwtTokenService;
-import com.trecapps.auth.web.services.SessionManager;
+import com.trecapps.auth.web.services.V2SessionManager;
 import com.trecapps.auth.web.services.TrecCookieSaver;
 import com.trecapps.auth.web.services.IUserStorageService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +28,7 @@ public class CookieController extends TrecCookieSaver {
     @Autowired
 
     protected CookieController(
-            SessionManager sessionManager1,
+            V2SessionManager sessionManager1,
             JwtTokenService tokenService1,
             IUserStorageService userStorageService1,
             @Value("${trecauth.app}") String app1) {

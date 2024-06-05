@@ -29,7 +29,7 @@ public class TrecSecurityContextServlet extends TrecCookieSaver implements Secur
 
     @Autowired
     JwtTokenService jwtService;
-    @Autowired SessionManager sessionManager;
+    @Autowired V2SessionManager sessionManager;
 
     @Autowired
     IUserStorageService userStorageService;
@@ -52,7 +52,7 @@ public class TrecSecurityContextServlet extends TrecCookieSaver implements Secur
     @Autowired
     public TrecSecurityContextServlet(
             JwtTokenService jwtService,
-            SessionManager sessionManager,
+            V2SessionManager sessionManager,
             IUserStorageService userStorageService,
             @Value("${trecauth.app}") String app,
 

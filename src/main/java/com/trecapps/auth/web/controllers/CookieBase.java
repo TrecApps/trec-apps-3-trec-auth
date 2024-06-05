@@ -2,7 +2,7 @@ package com.trecapps.auth.web.controllers;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.trecapps.auth.web.services.JwtTokenService;
-import com.trecapps.auth.web.services.SessionManager;
+import com.trecapps.auth.web.services.V2SessionManager;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -34,7 +34,7 @@ public class CookieBase {
     @Autowired
     JwtTokenService tokenService;
     @Autowired
-    SessionManager sessionManager;
+    V2SessionManager sessionManager;
 
     public String getCookieAppName(){
         return this.appName;

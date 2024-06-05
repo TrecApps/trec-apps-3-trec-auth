@@ -4,17 +4,18 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.trecapps.auth.common.models.*;
 
 import java.util.List;
+import java.util.Optional;
 
 public class TrecCookieSaver {
 
-    protected SessionManager sessionManager;
+    protected V2SessionManager sessionManager;
     protected JwtTokenService tokenService;
     protected IUserStorageService userStorageService;
 
     protected String app;
 
     protected TrecCookieSaver(
-            SessionManager sessionManager1,
+            V2SessionManager sessionManager1,
             JwtTokenService tokenService1,
             IUserStorageService userStorageService1,
             String app1){
@@ -28,13 +29,13 @@ public class TrecCookieSaver {
     {
         TokenTime time = null;
 
-        List<Session> sessionList = sessionManager.getSessionList(authentication.getAccount().getId());
+        List<SessionV2> sessionList = sessionManager.getSessionList(authentication.getAccount().getId());
 
-        for(Session s: sessionList){
-            if(app.equals(s.getAppId())){
+        for(SessionV2 s: sessionList){
+            if(app.equals(s.getDeviceId())){
                 TcBrands brands = this.getBrand(s, authentication.getAccount().getId());
 
-                time = tokenService.generateToken(authentication.getAccount(), client, brands, s.getSessionId(), s.getExpiration() != null, app);
+                time = tokenService.generateToken(authentication.getAccount(), client, brands, s.getDeviceId(), s.getExpiration() != null, app);
                 break;
             }
         }
@@ -73,26 +74,23 @@ public class TrecCookieSaver {
 
     }
 
-    TcBrands getBrand(Session s, String userId){
-        try{
-            String brandId = s.getBrandId();
-            if(brandId == null)
-                return null;
-            TcBrands ret = userStorageService.retrieveBrand(brandId);
-            if(ret != null)
-            {
-                if(!ret.getOwners().contains(userId))
-                {
-                    // To-Do: RED ALERT alert staff somehow
-                    return null;
-                }
-
-
-            }
-            return ret;
-        } catch(JsonProcessingException e){
-            // To-Do: Add event to indicate this had happened
+    TcBrands getBrand(SessionV2 s, String userId){
+        String brandId = s.getBrandByApp(app);
+        if(brandId == null)
             return null;
+        Optional<TcBrands> oRet = userStorageService.getBrandById(brandId);
+        if(oRet.isPresent())
+        {
+            TcBrands ret = oRet.get();
+            if(!ret.getOwners().contains(userId))
+            {
+                // To-Do: RED ALERT! Alert staff somehow
+                return null;
+            }
+
+            return ret;
         }
+        return null;
+
     }
 }

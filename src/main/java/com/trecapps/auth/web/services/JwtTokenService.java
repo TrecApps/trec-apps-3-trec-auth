@@ -45,14 +45,14 @@ public class JwtTokenService {
 
 	IUserStorageService userStorageService;
 
-	SessionManager sessionManager;
+	V2SessionManager sessionManager;
 
 	IJwtKeyHolder jwtKeyHolder;
 
 	@Autowired
 	JwtTokenService(
 			IUserStorageService userStorageService,
-			SessionManager sessionManager,
+			V2SessionManager sessionManager,
 			IJwtKeyHolder jwtKeyHolder,
 			@Value("${trecauth.app}") String app
 	) {
@@ -177,7 +177,6 @@ public class JwtTokenService {
 
 
 		String userId = account.getId();
-		sessionManager.prepNewUser(userId);
 
 		Date now = new Date(Calendar.getInstance().getTime().getTime());
 

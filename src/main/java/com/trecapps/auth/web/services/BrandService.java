@@ -27,7 +27,7 @@ public class BrandService {
     JwtTokenService jwtTokenService;
 
     @Autowired
-    SessionManager sessionManager;
+    V2SessionManager sessionManager;
 
     @Autowired
     TrecAccountRepo trecAccountRepo;
@@ -129,23 +129,19 @@ public class BrandService {
     {
         if(!isOwner(account.getAccount(), brandId))
             return null;
-        try {
-            TcBrands brand = userStorageService.retrieveBrand(brandId);
-            TokenTime time = jwtTokenService.generateToken(account.getAccount(), userAgent, brand, session, doesExpire, app);
+        Optional<TcBrands> oBrand = userStorageService.getBrandById(brandId);
+        TcBrands brand = oBrand.orElse(null);
+        TokenTime time = jwtTokenService.generateToken(account.getAccount(), userAgent, brand, session, doesExpire, app);
 
-            sessionManager.setBrand(account.getAccount().getId(), session, brandId);
+        sessionManager.setBrand(account.getAccount().getId(), session, brandId, app);
 
-            LoginToken ret = new LoginToken();
-            ret.setAccess_token(time.getToken());
-            OffsetDateTime exp = time.getExpiration();
-            if(exp != null)
-                ret.setExpires_in(exp.getNano() - OffsetDateTime.now().getNano());
+        LoginToken ret = new LoginToken();
+        ret.setAccess_token(time.getToken());
+        OffsetDateTime exp = time.getExpiration();
+        if(exp != null)
+            ret.setExpires_in(exp.getNano() - OffsetDateTime.now().getNano());
 
-            return ret;
-        }catch(JsonProcessingException e)
-        {
-            return null;
-        }
+        return ret;
 
     }
 
