@@ -191,6 +191,23 @@ public class AwsS3UserStorageService implements IUserStorageService{
         }
     }
 
+    @Override
+    @SneakyThrows
+    public SessionListV2 retrieveSessionList(String id) {
+        String objName = String.format("V2-sessions-%s.json", id);
+        GetObjectRequest request = GetObjectRequest.builder()
+                .bucket(s3BucketName)
+                .key(objName)
+                .build();
+
+        try{
+            byte[] bytes = client.getObject(request).readAllBytes();
+            return encryptor.decrypt(objectMapper.readValue(bytes, SessionListV2.class));
+        } catch(NoSuchKeyException e){
+            return new SessionListV2();
+        }
+    }
+
     @SneakyThrows
     @Override
     public void saveLogins(AppLocker locker, String id) {
@@ -233,5 +250,17 @@ public class AwsS3UserStorageService implements IUserStorageService{
                 .build();
 
         client.putObject(putObjectRequest, RequestBody.fromString(objectMapper.writeValueAsString(encryptor.encrypt(brand))));
+    }
+
+    @Override
+    @SneakyThrows
+    public void saveSessions(SessionListV2 sessions, String id) {
+        String objName = String.format("V2-sessions-%s.json", id);
+        PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                .bucket(s3BucketName)
+                .key(objName)
+                .build();
+
+        client.putObject(putObjectRequest, RequestBody.fromString(objectMapper.writeValueAsString(encryptor.encrypt(sessions))));
     }
 }

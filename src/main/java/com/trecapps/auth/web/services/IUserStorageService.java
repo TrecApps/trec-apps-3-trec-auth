@@ -1,10 +1,7 @@
 package com.trecapps.auth.web.services;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.trecapps.auth.common.models.AppLocker;
-import com.trecapps.auth.common.models.SessionList;
-import com.trecapps.auth.common.models.TcBrands;
-import com.trecapps.auth.common.models.TcUser;
+import com.trecapps.auth.common.models.*;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -27,8 +24,13 @@ public interface IUserStorageService {
     @Deprecated(since = "0.6.3")
     TcBrands retrieveBrand(String id) throws JsonProcessingException;
     AppLocker retrieveAppLocker(String id) throws JsonProcessingException;
+
+    SessionListV2 retrieveSessionList(String id);
+
+
     void saveLogins(AppLocker locker, String id);
     void saveUser(TcUser user);
     void saveBrand(TcBrands brand);
     void saveSessions(SessionList brand, String id);
+    void saveSessions(SessionListV2 sessions, String id);
 }

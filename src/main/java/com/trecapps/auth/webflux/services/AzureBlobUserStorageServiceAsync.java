@@ -135,6 +135,21 @@ public class AzureBlobUserStorageServiceAsync implements IUserStorageServiceAsyn
     }
 
     @Override
+    public Mono<SessionListV2> retrieveSessionList(String id) {
+        String objName = String.format("V2-sessions-%s.json", id);
+        BlobAsyncClient client = containerClient.getBlobAsyncClient(objName);
+        return Mono.just(client)
+                .map(BlobAsyncClientBase::exists)
+                .flatMap((Mono<Boolean> exists) ->
+                        exists.flatMap((Boolean e) ->
+                        {
+                            return downloadContent(client, SessionListV2.class)
+                                    .map((Optional<SessionListV2> opt) -> opt.orElse(new SessionListV2()));
+
+                        }));
+    }
+
+    @Override
     public void saveLogins(AppLocker locker, String id)
     {
         BlobAsyncClient client = containerClient.getBlobAsyncClient("logins-" + id + ".json");
@@ -164,5 +179,14 @@ public class AzureBlobUserStorageServiceAsync implements IUserStorageServiceAsyn
         BlobAsyncClient client = containerClient.getBlobAsyncClient("sessions-" + id);
 
         client.upload(BinaryData.fromObject(encryptor.encrypt(brand)), true).subscribe();
+    }
+
+    @Override
+    public void saveSessions(SessionListV2 sessions, String id) {
+        String objName = String.format("V2-sessions-%s.json", id);
+        BlobAsyncClient client = containerClient.getBlobAsyncClient(objName);
+
+        client.upload(BinaryData.fromObject(encryptor.encrypt(sessions)), true).subscribe();
+
     }
 }

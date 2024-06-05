@@ -107,6 +107,18 @@ public class GoogleCloudUserStorageServiceAsync implements IUserStorageServiceAs
                 });
     }
 
+    @Override
+    public Mono<SessionListV2> retrieveSessionList(String id) {
+        String objName = String.format("V2-sessions-%s.json", id);
+        return Mono.just(objName)
+                .map(k -> Optional.ofNullable(client.get(k)))
+                .map((Optional<Blob> object) -> {
+                    if(object.isPresent() && object.get().exists())
+                        return retrieveObject(object.get(), SessionListV2.class).get();
+                    return new SessionListV2();
+                });
+    }
+
     BlobInfo getBlobInfo(String object, String bucket){
         BlobId blobId = BlobId.of(bucket, object);
         return BlobInfo.newBuilder(blobId).build();
@@ -168,6 +180,19 @@ public class GoogleCloudUserStorageServiceAsync implements IUserStorageServiceAs
         storage.create(
                 blobInfo,
                 objectMapper.writeValueAsString(encryptor.encrypt(brand)).getBytes(StandardCharsets.UTF_8)
+                , precondition);
+    }
+
+    @Override
+    @SneakyThrows
+    public void saveSessions(SessionListV2 sessions, String id) {
+        String objName = String.format("V2-sessions-%s.json", id);
+        BlobInfo blobInfo = getBlobInfo(objName, client.getName());
+        Storage.BlobTargetOption precondition = getPrecondition(blobInfo);
+
+        storage.create(
+                blobInfo,
+                objectMapper.writeValueAsString(encryptor.encrypt(sessions)).getBytes(StandardCharsets.UTF_8)
                 , precondition);
     }
 }

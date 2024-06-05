@@ -111,6 +111,18 @@ public class GoogleCloudUserStorageService implements IUserStorageService
         return encryptor.decrypt(objectMapper.readValue(data, AppLocker.class));
     }
 
+    @Override
+    @SneakyThrows
+    public SessionListV2 retrieveSessionList(String id) {
+        String objName = String.format("V2-sessions-%s.json", id);
+        Blob object = client.get(objName);
+        if(object == null || !object.exists()){
+            return new SessionListV2();
+        }
+        String data = new String(object.getContent(), StandardCharsets.UTF_8);
+        return encryptor.decrypt(objectMapper.readValue(data, SessionListV2.class));
+    }
+
     BlobInfo getBlobInfo(String object, String bucket){
         BlobId blobId = BlobId.of(bucket, object);
         return BlobInfo.newBuilder(blobId).build();
@@ -172,6 +184,19 @@ public class GoogleCloudUserStorageService implements IUserStorageService
         storage.create(
                 blobInfo,
                 objectMapper.writeValueAsString(encryptor.encrypt(brand)).getBytes(StandardCharsets.UTF_8)
+                , precondition);
+    }
+
+    @Override @SneakyThrows
+    public void saveSessions(SessionListV2 sessions, String id) {
+        String objName = String.format("V2-sessions-%s.json", id);
+
+        BlobInfo blobInfo = getBlobInfo(objName, client.getName());
+        Storage.BlobTargetOption precondition = getPrecondition(blobInfo);
+
+        storage.create(
+                blobInfo,
+                objectMapper.writeValueAsString(encryptor.encrypt(sessions)).getBytes(StandardCharsets.UTF_8)
                 , precondition);
     }
 }

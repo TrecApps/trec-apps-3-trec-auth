@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.trecapps.auth.common.models.*;
 import com.trecapps.auth.common.encryptors.IFieldEncryptor;
+import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
@@ -158,6 +159,22 @@ public class AzureBlobUserStorageService implements IUserStorageService{
     }
 
     @Override
+    @SneakyThrows
+    public SessionListV2 retrieveSessionList(String id) {
+        String objName = String.format("V2-sessions-%s.json", id);
+        BlobClient client = containerClient.getBlobClient(objName);
+
+        if(!client.exists())
+            return new SessionListV2();
+        BinaryData bData = client.downloadContent();
+
+        String data = new String(bData.toBytes(), StandardCharsets.UTF_8);
+
+        return encryptor.decrypt(objectMapper.readValue(data, SessionListV2.class));
+
+    }
+
+    @Override
     public void saveLogins(AppLocker locker, String id)
     {
         BlobClient client = containerClient.getBlobClient("logins-" + id + ".json");
@@ -187,5 +204,12 @@ public class AzureBlobUserStorageService implements IUserStorageService{
         BlobClient client = containerClient.getBlobClient("sessions-" + id);
 
         client.upload(BinaryData.fromObject(encryptor.encrypt(brand)), true);
+    }
+
+    @Override
+    public void saveSessions(SessionListV2 sessions, String id) {
+        BlobClient client = containerClient.getBlobClient(String.format("V2-sessions-%s.json", id));
+
+        client.upload(BinaryData.fromObject(encryptor.encrypt(sessions)), true);
     }
 }
