@@ -1,12 +1,26 @@
 package com.trecapps.auth.common;
 
+import com.trecapps.auth.common.models.SessionApp;
+import com.trecapps.auth.common.models.SessionListV2;
+import com.trecapps.auth.common.models.SessionV2;
 import com.trecapps.auth.web.services.SessionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.persistence.Transient;
+import java.time.OffsetDateTime;
+import java.util.List;
+
 public abstract class SessionManagerBase {
     // Whether we care what app the session belongs to
     protected boolean appAgnostic;
+
+
+    final String AlphaNumericString = "ABCDEFGHIJ"
+            + "0123456789"
+            + "abcdefghij";
+
+    final int RANDOM_STRING_LENGTH = 6;
 
     protected Logger logger = LoggerFactory.getLogger(SessionManagerBase.class);
 
@@ -18,7 +32,7 @@ public abstract class SessionManagerBase {
     {
         if(agent == null)
             return null;
-        StringBuilder ret = new StringBuilder("");
+        StringBuilder ret = new StringBuilder();
         if(agent.contains("Edg"))
             ret.append("Broswer: Microsoft Edge");
         else if(agent.contains("Chrome"))
@@ -40,7 +54,7 @@ public abstract class SessionManagerBase {
         {
             String systemAgent = agent.substring(startParenth + 1, endParenth);
 
-            String[] segments = systemAgent.split("[;]");
+            String[] segments = systemAgent.split(";");
 
             // Check for Windows
             if(segments.length > 1 && segments[0].contains("Windows"))
@@ -71,5 +85,42 @@ public abstract class SessionManagerBase {
             ret.append("Tool: ").append(agent);
 
         return ret.toString();
+    }
+
+    private String generateRandomString()
+    {
+        StringBuilder sb = new StringBuilder();
+        for(int c = 0; c < RANDOM_STRING_LENGTH; c++)
+        {
+            int ch = (int) (Math.random() * AlphaNumericString.length());
+            sb.append(AlphaNumericString.charAt(ch));
+        }
+        return sb.toString();
+    }
+
+    public SessionV2 prepareNewSession(SessionListV2 sessionList, String deviceInfo, String appId, OffsetDateTime expiration){
+        SessionV2 ret = new SessionV2();
+        ret.setExpiration(expiration);
+        ret.setDeviceInfo(deviceInfo);
+        SessionApp sessionApp = new SessionApp();
+        sessionApp.setApp(appId);
+        ret.getApps().add(sessionApp);
+
+        List<String> ids = sessionList.getSessionIdList();
+
+        String sessionId = null;
+        do {
+            sessionId = generateRandomString();
+        } while(ids.contains(sessionId));
+
+        ret.setDeviceId(sessionId);
+        sessionList.getSessions().add(ret);
+        return ret;
+    }
+
+    public void setApp(SessionListV2 sessionList, String sessionId, String app, String brand) {
+        SessionV2 session = sessionList.getSessionById(sessionId);
+
+        session.setApp(app, brand);
     }
 }
