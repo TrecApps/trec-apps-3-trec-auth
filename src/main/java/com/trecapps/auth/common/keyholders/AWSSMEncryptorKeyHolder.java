@@ -10,7 +10,6 @@ import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
 
 import java.util.HashMap;
-import java.util.Optional;
 
 public class AWSSMEncryptorKeyHolder implements IEncryptorKeyHolder {
 

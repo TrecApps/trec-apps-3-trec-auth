@@ -9,7 +9,6 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.trecapps.auth.common.models.*;
 import com.trecapps.auth.common.keyholders.IJwtKeyHolder;
 import com.trecapps.auth.common.models.primary.TrecAccount;
-import com.trecapps.auth.web.services.SessionManager;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.util.io.pem.PemObject;

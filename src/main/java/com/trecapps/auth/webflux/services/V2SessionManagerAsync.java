@@ -6,7 +6,6 @@ import com.trecapps.auth.common.models.SessionListV2;
 import com.trecapps.auth.common.models.SessionV2;
 import com.trecapps.auth.common.models.TokenTime;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 

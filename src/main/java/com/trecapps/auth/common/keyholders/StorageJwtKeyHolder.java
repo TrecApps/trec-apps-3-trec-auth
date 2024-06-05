@@ -1,6 +1,5 @@
 package com.trecapps.auth.common.keyholders;
 
-
 import com.trecapps.auth.web.services.IUserStorageService;
 
 /**

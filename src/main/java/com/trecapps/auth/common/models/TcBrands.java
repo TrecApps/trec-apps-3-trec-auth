@@ -3,7 +3,6 @@ package com.trecapps.auth.common.models;
 import lombok.Data;
 
 import java.util.Set;
-import java.util.UUID;
 
 @Data
 public class TcBrands {

@@ -3,11 +3,9 @@ package com.trecapps.auth.common;
 import com.trecapps.auth.common.models.SessionApp;
 import com.trecapps.auth.common.models.SessionListV2;
 import com.trecapps.auth.common.models.SessionV2;
-import com.trecapps.auth.web.services.SessionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.persistence.Transient;
 import java.time.OffsetDateTime;
 import java.util.List;
 
