@@ -96,6 +96,7 @@ public class AzureBlobUserStorageServiceAsync implements IUserStorageServiceAsyn
     }
 
     @Override
+    @Deprecated(since = "0.6.17")
     public Mono<Optional<SessionList>> retrieveSessions(String id) {
         BlobAsyncClient client = containerClient.getBlobAsyncClient("sessions-" + id);
         return Mono.just(client)
@@ -150,30 +151,28 @@ public class AzureBlobUserStorageServiceAsync implements IUserStorageServiceAsyn
     }
 
     @Override
-    public void saveLogins(AppLocker locker, String id)
-    {
+    public Mono<Void> saveLoginsMono(AppLocker locker, String id) {
         BlobAsyncClient client = containerClient.getBlobAsyncClient("logins-" + id + ".json");
 
-        client.upload(BinaryData.fromObject(encryptor.encrypt(locker)),true).subscribe();
+        return client.upload(BinaryData.fromObject(encryptor.encrypt(locker)),true).then(Mono.empty());
     }
 
     @Override
-    public void saveUser(TcUser user)
-    {
+    public Mono<Void> saveUserMono(TcUser user) {
         BlobAsyncClient client = containerClient.getBlobAsyncClient("user-" + user.getId());
 
-        client.upload(BinaryData.fromObject(encryptor.encrypt(user)),true).subscribe();
+        return client.upload(BinaryData.fromObject(encryptor.encrypt(user)),true).then(Mono.empty());
     }
 
     @Override
-    public void saveBrand(TcBrands brand)
-    {
+    public Mono<Void> saveBrandMono(TcBrands brand) {
         BlobAsyncClient client = containerClient.getBlobAsyncClient("brand-" + brand.getId());
 
-        client.upload(BinaryData.fromObject(encryptor.encrypt(brand)), true).subscribe();
+        return client.upload(BinaryData.fromObject(encryptor.encrypt(brand)), true).then(Mono.empty());
     }
 
     @Override
+    @Deprecated(since = "0.6.17")
     public void saveSessions(SessionList brand, String id)
     {
         BlobAsyncClient client = containerClient.getBlobAsyncClient("sessions-" + id);
@@ -182,11 +181,10 @@ public class AzureBlobUserStorageServiceAsync implements IUserStorageServiceAsyn
     }
 
     @Override
-    public void saveSessions(SessionListV2 sessions, String id) {
+    public Mono<Void> saveSessionsMono(SessionListV2 sessions, String id) {
         String objName = String.format("V2-sessions-%s.json", id);
         BlobAsyncClient client = containerClient.getBlobAsyncClient(objName);
 
-        client.upload(BinaryData.fromObject(encryptor.encrypt(sessions)), true).subscribe();
-
+        return client.upload(BinaryData.fromObject(encryptor.encrypt(sessions)), true).then(Mono.empty());
     }
 }

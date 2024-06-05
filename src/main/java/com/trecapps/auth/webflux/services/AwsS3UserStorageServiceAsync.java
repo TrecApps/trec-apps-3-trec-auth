@@ -109,6 +109,7 @@ public class AwsS3UserStorageServiceAsync implements IUserStorageServiceAsync {
     }
 
     @Override
+    @Deprecated(since = "0.6.17")
     public Mono<Optional<SessionList>> retrieveSessions(String id) {
         GetObjectRequest request = GetObjectRequest.builder()
                 .bucket(this.s3BucketName)
@@ -182,39 +183,47 @@ public class AwsS3UserStorageServiceAsync implements IUserStorageServiceAsync {
 
     @SneakyThrows
     @Override
-    public void saveLogins(AppLocker locker, String id) {
+    public Mono<Void> saveLoginsMono(AppLocker locker, String id) {
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                 .bucket(this.s3BucketName)
                 .key("logins-" + id + ".json")
                 .build();
 
-        client.putObject(putObjectRequest,
-                AsyncRequestBody.fromString(objectMapper.writeValueAsString(encryptor.encrypt(locker))));
+        return Mono.fromFuture(client.putObject(putObjectRequest,
+                AsyncRequestBody.fromString(objectMapper.writeValueAsString(encryptor.encrypt(locker)))))
+                .then(Mono.empty());
     }
+
+
     @SneakyThrows
     @Override
-    public void saveUser(TcUser user) {
+    public Mono<Void> saveUserMono(TcUser user) {
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                 .bucket(this.s3BucketName)
                 .key("user-" + user.getId())
                 .build();
 
-        client.putObject(putObjectRequest,
-                AsyncRequestBody.fromString(objectMapper.writeValueAsString(encryptor.encrypt(user))));
+        return Mono.fromFuture(client.putObject(putObjectRequest,
+                AsyncRequestBody.fromString(objectMapper.writeValueAsString(encryptor.encrypt(user)))))
+                .then(Mono.empty());
     }
+
     @SneakyThrows
     @Override
-    public void saveBrand(TcBrands brand) {
+    public Mono<Void> saveBrandMono(TcBrands brand) {
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                 .bucket(this.s3BucketName)
                 .key("brand-" + brand.getId())
                 .build();
 
-        client.putObject(putObjectRequest,
-                AsyncRequestBody.fromString(objectMapper.writeValueAsString(encryptor.encrypt(brand))));
+        return Mono.fromFuture(client.putObject(putObjectRequest,
+                AsyncRequestBody.fromString(objectMapper.writeValueAsString(encryptor.encrypt(brand)))))
+                .then(Mono.empty());
     }
+
     @SneakyThrows
     @Override
+    @Deprecated(since = "0.6.17")
     public void saveSessions(SessionList brand, String id) {
 
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()
@@ -228,13 +237,15 @@ public class AwsS3UserStorageServiceAsync implements IUserStorageServiceAsync {
 
     @Override
     @SneakyThrows
-    public void saveSessions(SessionListV2 sessions, String id) {
+    public Mono<Void> saveSessionsMono(SessionListV2 sessions, String id) {
+
         String objName = String.format("V2-sessions-%s.json", id);
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                 .bucket(this.s3BucketName)
                 .key(objName)
                 .build();
-        client.putObject(putObjectRequest,
-                AsyncRequestBody.fromString(objectMapper.writeValueAsString(encryptor.encrypt(sessions))));
+        return Mono.fromFuture(client.putObject(putObjectRequest,
+                AsyncRequestBody.fromString(objectMapper.writeValueAsString(encryptor.encrypt(sessions)))))
+                .then(Mono.empty());
     }
 }

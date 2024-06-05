@@ -13,6 +13,7 @@ public interface IUserStorageServiceAsync {
 
     Mono<Optional<TcUser>> getAccountById(String id);
 
+    @Deprecated(since = "0.6.17")
     Mono<Optional<SessionList>> retrieveSessions(String id) ;
 
     Mono<Optional<TcBrands>> getBrandById(String id);
@@ -20,10 +21,28 @@ public interface IUserStorageServiceAsync {
 
     Mono<SessionListV2> retrieveSessionList(String id);
 
-    void saveLogins(AppLocker locker, String id);
-    void saveUser(TcUser user);
-    void saveBrand(TcBrands brand);
+    default void saveLogins(AppLocker locker, String id){
+        saveLoginsMono(locker, id).subscribe();
+    }
+    Mono<Void> saveLoginsMono(AppLocker locker, String id);
+
+
+    default void saveUser(TcUser user){
+        saveUserMono(user).subscribe();
+    }
+    Mono<Void> saveUserMono(TcUser user);
+
+    default void saveBrand(TcBrands brand){
+        saveBrandMono(brand).subscribe();
+    }
+    Mono<Void> saveBrandMono(TcBrands brands);
+
+    @Deprecated(since = "0.6.17")
     void saveSessions(SessionList brand, String id);
 
-    void saveSessions(SessionListV2 sessions, String id);
+    default void saveSessions(SessionListV2 sessions, String id){
+        saveSessionsMono(sessions,id).subscribe();
+    }
+
+    Mono<Void> saveSessionsMono(SessionListV2 sessions, String id);
 }

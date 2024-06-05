@@ -84,14 +84,19 @@ public class V2SessionManagerAsync  extends SessionManagerBase {
                 .map(SessionListV2::getSessions);
     }
 
+    public Mono<Void> removeSessionMono(String userId, String sessionId){
+        return userStorageService.retrieveSessionList(userId)
+                .flatMap((SessionListV2 sessions) -> {
+                    sessions.setSessions(sessions.getSessions()
+                            .stream()
+                            .filter((SessionV2 session) -> !session.getDeviceId().equals(sessionId))
+                            .toList());
+                    return userStorageService.saveSessionsMono(sessions, userId);})
+                .then(Mono.empty());
+    }
+
     public void removeSession(String userId, String sessionId){
-        userStorageService.retrieveSessionList(userId)
-                .doOnNext((SessionListV2 sessions) -> {
-        sessions.setSessions(sessions.getSessions()
-                .stream()
-                .filter((SessionV2 session) -> !session.getDeviceId().equals(sessionId))
-                .toList());
-        userStorageService.saveSessions(sessions, userId);}).subscribe();
+        removeSessionMono(userId, sessionId).subscribe();
     }
 
     public void blockApp(String userId, String sessionId, String app){

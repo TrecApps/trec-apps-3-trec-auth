@@ -2,6 +2,7 @@ package com.trecapps.auth.webflux.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.google.cloud.Tuple;
 import com.google.cloud.storage.*;
 import com.trecapps.auth.common.models.*;
 import com.trecapps.auth.common.encryptors.IFieldEncryptor;
@@ -67,6 +68,7 @@ public class GoogleCloudUserStorageServiceAsync implements IUserStorageServiceAs
     }
 
     @Override
+    @Deprecated(since = "0.6.17")
     public Mono<Optional<SessionList>> retrieveSessions(String id) {
 
         return Mono.just("sessions-" + id)
@@ -147,6 +149,13 @@ public class GoogleCloudUserStorageServiceAsync implements IUserStorageServiceAs
 
     }
 
+    @Override
+    public Mono<Void> saveLoginsMono(AppLocker locker, String id) {
+        return Mono.just(Tuple.of(locker, id))
+                .doOnNext((Tuple<AppLocker, String> tuple) -> saveLogins(tuple.x(), tuple.y()))
+                .then(Mono.empty());
+    }
+
     @Override    @SneakyThrows
     public void saveUser(TcUser user) {
         String objectName = "user-" + user.getId();
@@ -157,6 +166,13 @@ public class GoogleCloudUserStorageServiceAsync implements IUserStorageServiceAs
                 blobInfo,
                 objectMapper.writeValueAsString(encryptor.encrypt(user)).getBytes(StandardCharsets.UTF_8)
                 , precondition);
+    }
+
+    @Override
+    public Mono<Void> saveUserMono(TcUser user) {
+        return Mono.just(user)
+                .doOnNext(this::saveUser)
+                .then(Mono.empty());
     }
 
     @Override    @SneakyThrows
@@ -171,7 +187,15 @@ public class GoogleCloudUserStorageServiceAsync implements IUserStorageServiceAs
                 , precondition);
     }
 
+    @Override
+    public Mono<Void> saveBrandMono(TcBrands brands) {
+        return Mono.just(brands)
+                .doOnNext(this::saveBrand)
+                .then(Mono.empty());
+    }
+
     @Override    @SneakyThrows
+    @Deprecated(since = "0.6.17")
     public void saveSessions(SessionList brand, String id) {
         String objectName = "sessions-" + id;
         BlobInfo blobInfo = getBlobInfo(objectName, client.getName());
@@ -194,5 +218,12 @@ public class GoogleCloudUserStorageServiceAsync implements IUserStorageServiceAs
                 blobInfo,
                 objectMapper.writeValueAsString(encryptor.encrypt(sessions)).getBytes(StandardCharsets.UTF_8)
                 , precondition);
+    }
+
+    @Override
+    public Mono<Void> saveSessionsMono(SessionListV2 sessions, String id) {
+        return Mono.just(Tuple.of(sessions, id))
+                .doOnNext((Tuple<SessionListV2, String> tuple) -> saveSessions(tuple.x(), tuple.y()))
+                .then(Mono.empty());
     }
 }
