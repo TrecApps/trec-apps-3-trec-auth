@@ -88,11 +88,13 @@ public class AzureBlobUserStorageServiceAsync implements IUserStorageServiceAsyn
 
     @Override
     public Mono<Optional<TcUser>> getAccountById(String id){
-        BlobAsyncClient client = containerClient.getBlobAsyncClient("user-" + id);
-        return Mono.just(client)
-                .map(BlobAsyncClientBase::exists)
-                .flatMap((Mono<Boolean> exists) ->
-                        exists.flatMap((Boolean e) -> !e ? Mono.just(Optional.empty()) : downloadContent(client, TcUser.class)));
+
+        String objName = String.format("user-%s", id);
+        return Mono.just(objName)
+                .map((String on) -> containerClient.getBlobAsyncClient(on))
+                .flatMap((BlobAsyncClient client)-> downloadContent(client, TcUser.class))
+                .onErrorResume((Throwable t) -> Mono.just(Optional.empty()));
+
     }
 
     @Override
@@ -107,47 +109,46 @@ public class AzureBlobUserStorageServiceAsync implements IUserStorageServiceAsyn
 
     @Override
     public Mono<Optional<TcBrands>> getBrandById(String id) {
-        BlobAsyncClient client = containerClient.getBlobAsyncClient("brand-" + id);
-        return Mono.just(client)
-                .map(BlobAsyncClientBase::exists)
-                .flatMap((Mono<Boolean> exists) ->
-                        exists.flatMap((Boolean e) -> !e ? Mono.just(Optional.empty()) : downloadContent(client, TcBrands.class)));
+
+        String objName = String.format("brand-%s", id);
+        return Mono.just(objName)
+                .map((String on) -> containerClient.getBlobAsyncClient(on))
+                .flatMap((BlobAsyncClient client)-> downloadContent(client, TcBrands.class))
+                .onErrorResume((Throwable t) -> Mono.just(Optional.empty()));
     }
 
     @Override
     public Mono<Optional<AppLocker>> retrieveAppLocker(String id)
     {
-        BlobAsyncClient client = containerClient.getBlobAsyncClient("brand-" + id);
-        return Mono.just(client)
-                .map(BlobAsyncClientBase::exists)
-                .flatMap((Mono<Boolean> exists) ->
-                        exists.flatMap((Boolean e) ->
-                        {
-                            if(e)
-                                return downloadContent(client, AppLocker.class);
-                            AppLocker ret = new AppLocker();
-                            Map<String, FailedLoginList> list = new HashMap<>();
-                            FailedLoginList logins = new FailedLoginList();
-                            logins.setFailedLogins(new ArrayList<>());
-                            list.put(app, logins);
-                            ret.setLoginListMap(list);
-                            return Mono.just(Optional.of(ret));
-                        }));
+        String objName = String.format("logins-%s.json", id);
+
+        return Mono.just(objName)
+                .map((String on) -> containerClient.getBlobAsyncClient(on))
+                .flatMap((BlobAsyncClient client)-> downloadContent(client, AppLocker.class))
+                .onErrorResume((Throwable t) -> {
+                    AppLocker ret = new AppLocker();
+                    Map<String, FailedLoginList> list = new HashMap<>();
+                    FailedLoginList logins = new FailedLoginList();
+                    logins.setFailedLogins(new ArrayList<>());
+                    list.put(app, logins);
+                    ret.setLoginListMap(list);
+                    return Mono.just(Optional.of(ret));
+                });
     }
 
     @Override
     public Mono<SessionListV2> retrieveSessionList(String id) {
         String objName = String.format("V2-sessions-%s.json", id);
-        BlobAsyncClient client = containerClient.getBlobAsyncClient(objName);
-        return Mono.just(client)
-                .map(BlobAsyncClientBase::exists)
-                .flatMap((Mono<Boolean> exists) ->
-                        exists.flatMap((Boolean e) ->
-                        {
-                            return downloadContent(client, SessionListV2.class)
-                                    .map((Optional<SessionListV2> opt) -> opt.orElse(new SessionListV2()));
 
-                        }));
+        return Mono.just(objName)
+                .map((String on) -> containerClient.getBlobAsyncClient(on))
+                .flatMap((BlobAsyncClient client) ->
+
+                             downloadContent(client, SessionListV2.class)
+                                    .map((Optional<SessionListV2> opt) -> opt.orElse(new SessionListV2()))
+
+                )
+                .onErrorResume((Throwable t) -> Mono.just(new SessionListV2()));
     }
 
     @Override

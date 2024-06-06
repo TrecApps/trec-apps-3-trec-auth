@@ -7,6 +7,7 @@ import com.azure.storage.blob.BlobClient;
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClient;
 import com.azure.storage.blob.BlobServiceClientBuilder;
+import com.azure.storage.blob.models.BlobStorageException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -96,12 +97,16 @@ public class AzureBlobUserStorageService implements IUserStorageService{
     @Override
     public Optional<TcUser> getAccountById(String id){
 
-        BlobClient client = containerClient.getBlobClient("user-" + id);
-        if(!client.exists())
-            return Optional.empty();
-        BinaryData bData = client.downloadContent();
+        try {
+            BlobClient client = containerClient.getBlobClient("user-" + id);
+            if (!client.exists())
+                return Optional.empty();
+            BinaryData bData = client.downloadContent();
 
-        return Optional.of(encryptor.decrypt(bData.toObject(TcUser.class)));
+            return Optional.of(encryptor.decrypt(bData.toObject(TcUser.class)));
+        } catch(BlobStorageException e) {
+            return Optional.empty();
+        }
     }
 
     @Override
@@ -117,11 +122,15 @@ public class AzureBlobUserStorageService implements IUserStorageService{
 
     @Override
     public Optional<TcBrands> getBrandById(String id) {
-        BlobClient client = containerClient.getBlobClient("brand-" + id);
-        if(!client.exists())
+        try{
+            BlobClient client = containerClient.getBlobClient("brand-" + id);
+
+            BinaryData bData = client.downloadContent();
+            return Optional.of(encryptor.decrypt(bData.toObject(TcBrands.class)));
+        } catch(Exception e){
             return Optional.empty();
-        BinaryData bData = client.downloadContent();
-        return Optional.of(encryptor.decrypt(bData.toObject(TcBrands.class)));
+        }
+
     }
 
     @Override
@@ -139,10 +148,15 @@ public class AzureBlobUserStorageService implements IUserStorageService{
     @Override
     public AppLocker retrieveAppLocker(String id) throws JsonProcessingException
     {
-         BlobClient client = containerClient.getBlobClient("logins-" + id + ".json");
-
-        if(!client.exists())
+        try
         {
+            BlobClient client = containerClient.getBlobClient("logins-" + id + ".json");
+            BinaryData bData = client.downloadContent();
+
+            String data = new String(bData.toBytes(), StandardCharsets.UTF_8);
+
+            return encryptor.decrypt(objectMapper.readValue(data, AppLocker.class));
+        } catch(Exception e){
             AppLocker ret = new AppLocker();
             Map<String, FailedLoginList> list = new HashMap<>();
             FailedLoginList logins = new FailedLoginList();
@@ -151,27 +165,25 @@ public class AzureBlobUserStorageService implements IUserStorageService{
             ret.setLoginListMap(list);
             return ret;
         }
-        BinaryData bData = client.downloadContent();
 
-        String data = new String(bData.toBytes(), StandardCharsets.UTF_8);
-
-        return encryptor.decrypt(objectMapper.readValue(data, AppLocker.class));
     }
 
     @Override
     @SneakyThrows
     public SessionListV2 retrieveSessionList(String id) {
-        String objName = String.format("V2-sessions-%s.json", id);
-        BlobClient client = containerClient.getBlobClient(objName);
+        try {
+            String objName = String.format("V2-sessions-%s.json", id);
+            BlobClient client = containerClient.getBlobClient(objName);
 
-        if(!client.exists())
+            BinaryData bData = client.downloadContent();
+
+            String data = new String(bData.toBytes(), StandardCharsets.UTF_8);
+
+            return encryptor.decrypt(objectMapper.readValue(data, SessionListV2.class));
+        }
+        catch(Exception e){
             return new SessionListV2();
-        BinaryData bData = client.downloadContent();
-
-        String data = new String(bData.toBytes(), StandardCharsets.UTF_8);
-
-        return encryptor.decrypt(objectMapper.readValue(data, SessionListV2.class));
-
+        }
     }
 
     @Override
