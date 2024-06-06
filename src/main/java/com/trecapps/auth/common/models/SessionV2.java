@@ -12,6 +12,7 @@ public class SessionV2 {
     String deviceId;
     String deviceInfo;
     OffsetDateTime expiration;
+    String expirationStr;
     List<SessionApp> apps = new ArrayList<>();
     List<String> blockedApps = new ArrayList<>();
 
@@ -53,5 +54,10 @@ public class SessionV2 {
                 return sessionApp.getBrandId();
         }
         return null;
+    }
+
+    public void prep(){
+        if(expiration != null)
+            expirationStr = expiration.toString();
     }
 }

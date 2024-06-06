@@ -21,4 +21,10 @@ public class SessionListV2 {
         }
         return null;
     }
+
+    public void prep(){
+        for(SessionV2 session: sessions) {
+            session.prep();
+        }
+    }
 }
