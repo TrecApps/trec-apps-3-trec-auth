@@ -40,6 +40,12 @@ public class TrecSecurityContextReactive extends TrecCookieSaverAsync implements
 
     ISecurityAlertHandler alertHandler;
 
+    boolean logLocal;
+
+    boolean isLocal(String address) {
+        return address.contains("localhost") || address.contains("127.0.0.1");
+    }
+
     @Autowired
     public TrecSecurityContextReactive(
             JwtTokenServiceAsync tokenService,
@@ -49,7 +55,8 @@ public class TrecSecurityContextReactive extends TrecCookieSaverAsync implements
             @Value("${trecauth.app}") String app,
             @Value("${trecauth.refresh.domain:#{NULL}}") String domain,
             @Value("${trecauth.refresh.app:#{NULL}}") String cookieApp,
-            @Value("${trecauth.refresh.cookie-name:#{NULL}}") String cookieName
+            @Value("${trecauth.refresh.cookie-name:#{NULL}}") String cookieName,
+            @Value("${trecauth.flag-local:false}") boolean flagLocal
     )
     {
         super(sessionManager,tokenService, userStorageService1, app);
@@ -57,6 +64,7 @@ public class TrecSecurityContextReactive extends TrecCookieSaverAsync implements
         this.domain = domain;
         this.cookieApp = cookieApp;
         this.cookieName = cookieName;
+        this.logLocal = flagLocal;
     }
 
     @Override
@@ -144,7 +152,9 @@ public class TrecSecurityContextReactive extends TrecCookieSaverAsync implements
                     {
                         DecodedJWT decode = tokenService.decodeToken(cookie.getValue());
                         if(decode == null) {
-                            logger.info("Null Decode token detected in Cookie! request path: {} , IP Address: {}", request.getPath(), request.getRemoteAddress());
+                            String address = Objects.requireNonNull(request.getRemoteAddress()).toString();
+                            if(!isLocal(address) || logLocal)
+                                logger.info("Null Decode token detected in Cookie! request path: {} , IP Address: {}", request.getPath(), address);
 
                         }
                         else
@@ -165,7 +175,9 @@ public class TrecSecurityContextReactive extends TrecCookieSaverAsync implements
                     String auth = headers.getFirst("Authorization");
                     DecodedJWT decode = tokenService.decodeToken(auth);
                     if(decode == null) {
-                        logger.info("Null Decode token detected in Auth Header! request path: {} , IP Address: {}", request.getPath(), request.getRemoteAddress());
+                        String address = Objects.requireNonNull(request.getRemoteAddress()).toString();
+                        if(!isLocal(address) || logLocal)
+                            logger.info("Null Decode token detected in Auth Header! request path: {} , IP Address: {}", request.getPath(), address);
                         return Mono.just(context);
                     }
                     else

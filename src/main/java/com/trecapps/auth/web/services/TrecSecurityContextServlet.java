@@ -21,54 +21,49 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 @Component
 public class TrecSecurityContextServlet extends TrecCookieSaver implements SecurityContextRepository  {
 
+    V2SessionManager sessionManager;
 
-    @Autowired
-    JwtTokenService jwtService;
-    @Autowired V2SessionManager sessionManager;
-
-    @Autowired
-    IUserStorageService userStorageService;
-
-    @Autowired(required = false)
     ISecurityAlertHandler alertHandler;
 
-    @Value("${trecauth.app}")
     String app;
 
-    @Value("${trecauth.refresh.cookie-name:#{NULL}}")
-
     String cookieName;
-
 
     String cookieApp;
 
     String domain;
+
+    boolean logLocal;
+
+    boolean isLocal(String address) {
+        return address.contains("localhost") || address.contains("127.0.0.1");
+    }
 
     @Autowired
     public TrecSecurityContextServlet(
             JwtTokenService jwtService,
             V2SessionManager sessionManager,
             IUserStorageService userStorageService,
+            @Autowired(required = false) ISecurityAlertHandler alertHandler,
             @Value("${trecauth.app}") String app,
-
-            @Value("${trecauth.refresh.cookie-name:#{NULL}}")
-            String cookieName,
-
-            @Value("${trecauth.refresh.app:#{NULL}}")
-            String cookieApp,
-            @Value("${trecauth.refresh.domain:#{NULL}}")
-            String domain)
+            @Value("${trecauth.refresh.cookie-name:#{NULL}}") String cookieName,
+            @Value("${trecauth.refresh.app:#{NULL}}") String cookieApp,
+            @Value("${trecauth.refresh.domain:#{NULL}}") String domain,
+            @Value("${trecauth.flag-local:false}") boolean flagLocal
+    )
     {
         super(sessionManager, jwtService, userStorageService, app);
         this.domain = domain;
         this.cookieName = cookieName;
         this.cookieApp = cookieApp;
-
+        this.alertHandler = alertHandler;
+        this.logLocal = flagLocal;
     }
 
     Logger logger = LoggerFactory.getLogger(TrecSecurityContextServlet.class);
@@ -138,7 +133,9 @@ public class TrecSecurityContextServlet extends TrecCookieSaver implements Secur
 
                 DecodedJWT decode = tokenService.decodeToken(data);
                 if(decode == null) {
-                    logger.warn("Null Decode token detected from Cookie! Request Path: {} ; IP Address: {}", request.getContextPath(), request.getRemoteAddr());
+                    String address = Objects.requireNonNull(request.getRemoteAddr());
+                    if(!isLocal(address) || logLocal)
+                        logger.warn("Null Decode token detected from Cookie! Request Path: {} ; IP Address: {}", request.getContextPath(), request.getRemoteAddr());
                     return context;
                 }
                 TrecAuthentication acc = tokenService.verifyToken(decode, new TokenFlags());
@@ -155,12 +152,12 @@ public class TrecSecurityContextServlet extends TrecCookieSaver implements Secur
                     return context;
                 }
                 context.setAuthentication(acc);
-                logger.info("Set Authentication from Cookie");
+                logger.debug("Set Authentication from Cookie");
                 return context;
             }
         }
 
-        logger.info("Empty Context from Cookie!");
+        logger.debug("Empty Context from Cookie!");
 
         return context;
     }
@@ -175,7 +172,9 @@ public class TrecSecurityContextServlet extends TrecCookieSaver implements Secur
         TokenFlags tokenFlags = new TokenFlags();
         DecodedJWT decode = tokenService.decodeToken(auth);
         if(decode == null) {
-            logger.warn("Null Decode token detected from Header! Request Path: {} ; IP Address: {}", request.getContextPath(), request.getRemoteAddr());
+            String address = Objects.requireNonNull(request.getRemoteAddr());
+            if(!isLocal(address) || logLocal)
+                logger.warn("Null Decode token detected from Header! Request Path: {} ; IP Address: {}", request.getContextPath(), address);
             return context;
         }
         TrecAuthentication acc = tokenService.verifyToken(decode, tokenFlags);
