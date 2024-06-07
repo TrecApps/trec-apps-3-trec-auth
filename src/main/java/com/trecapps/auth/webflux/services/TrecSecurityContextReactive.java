@@ -201,10 +201,15 @@ public class TrecSecurityContextReactive extends TrecCookieSaverAsync implements
 
                                                         context.setAuthentication(acc);
                                                     }
+                                                    else {
+                                                        logger.info("Session {} deemed invalid!", sessionId);
+                                                    }
                                                     return context;
                                                 });
 
 
+                                    } else{
+                                        logger.info("Not setting authentication due to sessionId {} and authorization {}", sessionId, oAuth.orElse(null));
                                     }
                                     return Mono.just(context);
                                 });
