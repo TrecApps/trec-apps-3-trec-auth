@@ -27,8 +27,6 @@ import java.util.concurrent.TimeUnit;
 @Component
 public class TrecSecurityContextServlet extends TrecCookieSaver implements SecurityContextRepository  {
 
-    V2SessionManager sessionManager;
-
     ISecurityAlertHandler alertHandler;
 
     String app;
