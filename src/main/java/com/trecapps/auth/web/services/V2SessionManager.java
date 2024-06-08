@@ -6,6 +6,7 @@ import com.trecapps.auth.common.models.SessionListV2;
 import com.trecapps.auth.common.models.SessionV2;
 import com.trecapps.auth.common.models.TokenTime;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
@@ -14,10 +15,14 @@ import java.util.List;
 @Service
 public class V2SessionManager extends SessionManagerBase {
 
+    boolean appAgnostic;
+
     @Autowired
-    V2SessionManager(IUserStorageService userStorageService1){
+    V2SessionManager(IUserStorageService userStorageService1,
+            @Value("${trecauth.app.agnostic:false}")boolean appAgnostic1){
         super(true);
         userStorageService = userStorageService1;
+        this.appAgnostic = appAgnostic1;
     }
 
     IUserStorageService userStorageService;
@@ -104,6 +109,6 @@ public class V2SessionManager extends SessionManagerBase {
         if(session == null || session.isExpired() || session.getBlockedApps().contains(app))
             return false;
 
-        return session.getApps().stream().anyMatch((SessionApp sessionApp) -> sessionApp.getApp().equals(app));
+        return appAgnostic || session.getApps().stream().anyMatch((SessionApp sessionApp) -> sessionApp.getApp().equals(app));
     }
 }
