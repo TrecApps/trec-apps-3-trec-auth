@@ -1,6 +1,7 @@
 package com.trecapps.auth.webflux.controllers;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.trecapps.auth.common.models.SessionListV2;
 import com.trecapps.auth.webflux.services.JwtTokenServiceAsync;
 import com.trecapps.auth.webflux.services.V2SessionManagerAsync;
 import org.slf4j.Logger;
@@ -13,6 +14,7 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Mono;
 
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -82,7 +84,7 @@ public class CookieBase {
 
     }
 
-    public void assertAppAdded(String userId, String sessionId, String brandId){
-        sessionManager.setBrand(userId, sessionId, brandId, appName, false);
+    public Mono<SessionListV2> assertAppAdded(String userId, String sessionId, String brandId){
+        return sessionManager.setBrandMono(userId, sessionId, brandId, appName, false);
     }
 }

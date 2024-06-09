@@ -14,6 +14,7 @@ public class TrecAuthManagerWeb implements AuthenticationManager {
         {
             trecAuthentication.setAuthenticated(true);
         }
+        else authentication.setAuthenticated(false);
         return authentication;
     }
 }

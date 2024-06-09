@@ -16,6 +16,7 @@ public class TrecAuthManagerReactive implements ReactiveAuthenticationManager {
                 .doOnNext((Authentication auth)-> {
                     if(auth instanceof TrecAuthentication trecAuthentication)
                         trecAuthentication.setAuthenticated(true);
+                    else auth.setAuthenticated(false);
                 });
     }
 }

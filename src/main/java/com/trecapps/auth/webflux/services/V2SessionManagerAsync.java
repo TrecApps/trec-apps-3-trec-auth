@@ -57,19 +57,29 @@ public class V2SessionManagerAsync  extends SessionManagerBase {
                 }).subscribe();
     }
 
-    public void setBrand(String userId, String sessionId, String brand, String app){
-        setBrand(userId, sessionId, brand, app, true);
-    }
-
-    public void setBrand(String userId, String sessionId, String brand, String app, boolean updateBrand) {
-        userStorageService.retrieveSessionList(userId)
+    public Mono<SessionListV2> setBrandMono(String userId, String sessionId, String brand, String app, boolean updateBrand)
+    {
+        return userStorageService.retrieveSessionList(userId)
                 .doOnNext((SessionListV2 sessions) -> {
                     SessionV2 session = sessions.getSessionById(sessionId);
 
                     session.setApp(app, brand, updateBrand);
 
                     userStorageService.saveSessions(sessions, userId);
-                }).subscribe();
+                });
+    }
+
+    public Mono<SessionListV2> setBrandMono(String userId, String sessionId, String brand, String app)
+    {
+        return setBrandMono(userId, sessionId, brand, app, true);
+    }
+
+    public void setBrand(String userId, String sessionId, String brand, String app){
+        setBrand(userId, sessionId, brand, app, true);
+    }
+
+    public void setBrand(String userId, String sessionId, String brand, String app, boolean updateBrand) {
+        setBrandMono(userId, sessionId, brand, app, updateBrand).subscribe();
     }
 
     public Mono<String> getBrand(String userId, String sessionId, String app){
