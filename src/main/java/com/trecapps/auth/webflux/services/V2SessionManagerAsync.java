@@ -24,6 +24,7 @@ public class V2SessionManagerAsync  extends SessionManagerBase {
     ){
         super(true);
         this.userStorageService = userStorageService1;
+        this.appAgnostic = appAgnostic1;
     }
 
     public Mono<TokenTime> addSession(String app, String userId, String clientInfo, boolean expires)
