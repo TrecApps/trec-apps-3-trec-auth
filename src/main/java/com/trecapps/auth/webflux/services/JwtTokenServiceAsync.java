@@ -188,7 +188,7 @@ public class JwtTokenServiceAsync {
         else
         {
             tokenTime = Mono.just(new TokenTime())
-                    .map((TokenTime ret) -> {
+                    .flatMap((TokenTime ret) -> {
 
                         ret = new TokenTime();
                         ret.setSession(session);
@@ -196,10 +196,11 @@ public class JwtTokenServiceAsync {
                         if(expires)
                         {
                             OffsetDateTime expiration = OffsetDateTime.now().plus(10, ChronoUnit.MINUTES);
-                            sessionManager.updateSessionExpiration(account.getId(), session, expiration);
-                            ret.setExpiration(expiration);
+                            return sessionManager.updateSessionExpiration(account.getId(), session, expiration)
+                                    .then(Mono.just(ret))
+                                    .doOnNext((TokenTime t) -> t.setExpiration(expiration));
                         }
-                        return ret;
+                        return Mono.just(ret);
                     });
 
         }
@@ -272,7 +273,7 @@ public class JwtTokenServiceAsync {
         return ret;
     }
 
-    public TokenTime generateNewTokenFromRefresh(String refreshToken)
+    public Mono<TokenTime> generateNewTokenFromRefresh(String refreshToken)
     {
         DecodedJWT decodedJwt = null;
         try
@@ -284,29 +285,33 @@ public class JwtTokenServiceAsync {
         catch(JWTVerificationException e)
         {
             e.printStackTrace();
-            return null;
+            return Mono.empty();
         }
 
         String user = decodedJwt.getClaim("ID").asString();
         String session = decodedJwt.getClaim("Session").asString();
 
         OffsetDateTime newExp = OffsetDateTime.now().plusMinutes(10);
-        sessionManager.updateSessionExpiration(user, session, newExp);
+        DecodedJWT finalDecodedJwt = decodedJwt;
+        return sessionManager.updateSessionExpiration(user, session, newExp)
+                .then(Mono.just(new TokenTime()))
+                .map((TokenTime ret) -> {
+                    String brand = finalDecodedJwt.getClaim("Brand").asString();
+                    JWTCreator.Builder jwtBuilder = JWT.create().withIssuer(app)
+                            .withClaim("ID", user)
+                            .withClaim("Username", finalDecodedJwt.getClaim("Username").asString())
+                            .withClaim("Brand", brand)
+                            .withClaim("SessionId", session)
+                            .withIssuedAt(OffsetDateTime.now().toInstant())
+                            .withExpiresAt(newExp.toInstant());
 
-        String brand = decodedJwt.getClaim("Brand").asString();
-        JWTCreator.Builder jwtBuilder = JWT.create().withIssuer(app)
-                .withClaim("ID", user)
-                .withClaim("Username", decodedJwt.getClaim("Username").asString())
-                .withClaim("Brand", brand)
-                .withClaim("SessionId", session)
-                .withIssuedAt(OffsetDateTime.now().toInstant())
-                .withExpiresAt(newExp.toInstant());
+                    ret.setSession(session);
+                    ret.setExpiration(newExp);
+                    ret.setToken(jwtBuilder.sign(Algorithm.RSA512(publicKey, privateKey)));
+                    return ret;
+                });
 
-        TokenTime ret = new TokenTime();
-        ret.setSession(session);
-        ret.setExpiration(newExp);
-        ret.setToken(jwtBuilder.sign(Algorithm.RSA512(publicKey, privateKey)));
-        return ret;
+
     }
 
     public String generateRefreshToken(TrecAccount account)

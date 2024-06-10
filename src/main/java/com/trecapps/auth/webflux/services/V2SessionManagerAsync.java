@@ -30,7 +30,7 @@ public class V2SessionManagerAsync  extends SessionManagerBase {
     public Mono<TokenTime> addSession(String app, String userId, String clientInfo, boolean expires)
     {
         return userStorageService.retrieveSessionList(userId)
-                .map((SessionListV2 sessionList)-> {
+                .flatMap((SessionListV2 sessionList)-> {
                     OffsetDateTime exp = expires ?
                             OffsetDateTime.now().plusMinutes(10) : null;
 
@@ -40,21 +40,24 @@ public class V2SessionManagerAsync  extends SessionManagerBase {
                             app,
                             exp);
 
-                    userStorageService.saveSessions(sessionList, userId);
-                    TokenTime tokenTime = new TokenTime();
-                    tokenTime.setExpiration(exp);
-                    tokenTime.setSession(session.getDeviceId());
-                    return tokenTime;
+                    return userStorageService.saveSessionsMono(sessionList, userId)
+                            .then(Mono.just(new TokenTime()))
+                            .map((TokenTime tokenTime) -> {
+                                tokenTime.setExpiration(exp);
+                                tokenTime.setSession(session.getDeviceId());
+                                return tokenTime;
+                            });
+
                 });
     }
 
-    public void updateSessionExpiration(String userId, String sessionId, OffsetDateTime time) {
-        userStorageService.retrieveSessionList(userId)
+    public Mono<SessionListV2> updateSessionExpiration(String userId, String sessionId, OffsetDateTime time) {
+        return userStorageService.retrieveSessionList(userId)
                 .doOnNext((SessionListV2 sessions) -> {
                     SessionV2 session = sessions.getSessionById(sessionId);
                     session.setExpiration(time);
                     userStorageService.saveSessions(sessions, userId);
-                }).subscribe();
+                });
     }
 
     public Mono<SessionListV2> setBrandMono(String userId, String sessionId, String brand, String app, boolean updateBrand)
