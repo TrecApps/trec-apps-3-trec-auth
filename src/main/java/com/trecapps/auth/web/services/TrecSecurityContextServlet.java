@@ -29,8 +29,6 @@ public class TrecSecurityContextServlet extends TrecCookieSaver implements Secur
 
     ISecurityAlertHandler alertHandler;
 
-    String app;
-
     String cookieName;
 
     String cookieApp;
