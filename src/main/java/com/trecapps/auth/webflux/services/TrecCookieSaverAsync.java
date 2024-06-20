@@ -60,7 +60,7 @@ public class TrecCookieSaverAsync {
                     login.setToken_type("User");
                     login.setAccess_token(tokenTime.getToken());
 
-                    login.setRefresh_token(tokenService.generateRefreshToken(authentication.getAccount()));
+                    login.setRefresh_token(tokenService.generateRefreshToken(authentication.getAccount(), tokenTime.getSession()));
                     return login;
                 })
                 .map((loginToken -> loginToken == null ? Optional.empty() : Optional.of(loginToken)));

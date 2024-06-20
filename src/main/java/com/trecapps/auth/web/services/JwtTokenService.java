@@ -277,7 +277,7 @@ public class JwtTokenService {
 		}
 
 		String user = decodedJwt.getClaim("ID").asString();
-		String session = decodedJwt.getClaim("Session").asString();
+		String session = decodedJwt.getClaim("SessionId").asString();
 
 		OffsetDateTime newExp = OffsetDateTime.now().plusMinutes(10);
 		sessionManager.updateSessionExpiration(user, session, newExp);
@@ -298,7 +298,7 @@ public class JwtTokenService {
 		return ret;
 	}
 
-	public String generateRefreshToken(TrecAccount account)
+	public String generateRefreshToken(TrecAccount account, String sessionId)
 	{
 		if(account == null)
 			return null;
@@ -311,6 +311,7 @@ public class JwtTokenService {
 				.withClaim("ID", account.getId())
 				.withClaim("Username", account.getUsername())
 				.withClaim("Purpose", "Refresh")
+				.withClaim("SessionId", sessionId)
 				.withIssuedAt(now));
 
 		return jwtBuilder.get()
@@ -379,6 +380,10 @@ public class JwtTokenService {
 			tokenFlags.setIsMfa(mfaClaim.asBoolean());
 
 		TrecAuthentication trecAuthentication = new TrecAuthentication(acc);
+
+		Claim sessionIdClaim = decodedJwt.getClaim("SessionId");
+
+		trecAuthentication.setSessionId(sessionIdClaim.asString());
 
 		try {
 			trecAuthentication.setBrandId(UUID.fromString(brandStr));

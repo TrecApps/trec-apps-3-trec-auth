@@ -41,9 +41,7 @@ public class CookieController extends TrecCookieSaverAsync {
     }
 
     @GetMapping
-    public Mono<ResponseEntity<LoginToken>> checkRefresh(@RequestHeader("User-Agent") String userClient){
-        SecurityContext context = SecurityContextHolder.getContext();
-        Authentication authentication = context == null ? null : context.getAuthentication();
+    public Mono<ResponseEntity<LoginToken>> checkRefresh(@RequestHeader("User-Agent") String userClient, Authentication authentication){
 
         if(authentication instanceof TrecAuthentication tAuth){
 

@@ -195,7 +195,7 @@ public class JwtTokenServiceAsync {
 
                         if(expires)
                         {
-                            OffsetDateTime expiration = OffsetDateTime.now().plus(10, ChronoUnit.MINUTES);
+                            OffsetDateTime expiration = OffsetDateTime.now().plusMinutes(10);
                             return sessionManager.updateSessionExpiration(account.getId(), session, expiration)
                                     .then(Mono.just(ret))
                                     .doOnNext((TokenTime t) -> t.setExpiration(expiration));
@@ -289,7 +289,7 @@ public class JwtTokenServiceAsync {
         }
 
         String user = decodedJwt.getClaim("ID").asString();
-        String session = decodedJwt.getClaim("Session").asString();
+        String session = decodedJwt.getClaim("SessionId").asString();
 
         OffsetDateTime newExp = OffsetDateTime.now().plusMinutes(10);
         DecodedJWT finalDecodedJwt = decodedJwt;
@@ -314,7 +314,7 @@ public class JwtTokenServiceAsync {
 
     }
 
-    public String generateRefreshToken(TrecAccount account)
+    public String generateRefreshToken(TrecAccount account, String sessionId)
     {
         if(account == null)
             return null;
@@ -327,6 +327,7 @@ public class JwtTokenServiceAsync {
                 .withClaim("ID", account.getId())
                 .withClaim("Username", account.getUsername())
                 .withClaim("Purpose", "Refresh")
+                .withClaim("SessionId", sessionId)
                 .withIssuedAt(now));
 
         return jwtBuilder.get()
@@ -394,6 +395,10 @@ public class JwtTokenServiceAsync {
                             tokenFlags.setIsMfa(mfaClaim.asBoolean());
 
                         TrecAuthentication trecAuthentication = new TrecAuthentication(acc);
+
+                        Claim sessionIdClaim = decodedJwt.getClaim("SessionId");
+
+                        trecAuthentication.setSessionId(sessionIdClaim.asString());
 
                         try {
                             trecAuthentication.setBrandId(UUID.fromString(brandStr));

@@ -58,7 +58,7 @@ public class TrecCookieSaver {
         login.setToken_type("User");
         login.setAccess_token(time.getToken());
 
-        login.setRefresh_token(tokenService.generateRefreshToken(authentication.getAccount()));
+        login.setRefresh_token(tokenService.generateRefreshToken(authentication.getAccount(), time.getSession()));
         return login;
     }
 
