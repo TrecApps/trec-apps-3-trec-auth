@@ -31,7 +31,7 @@ public class TrecCookieSaverAsync {
                 .map((List<SessionV2> sessionList) -> {
                     Optional<SessionV2> ret = Optional.empty();
                     for(SessionV2 s: sessionList) {
-                        if (app.equals(s.getDeviceId()))
+                        if (authentication.getSessionId().equals(s.getDeviceId()))
                             return Optional.of(s);
                     }
                     return ret;
