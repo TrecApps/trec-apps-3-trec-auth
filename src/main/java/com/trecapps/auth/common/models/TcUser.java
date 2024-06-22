@@ -1,5 +1,7 @@
 package com.trecapps.auth.common.models;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.trecapps.auth.common.encryptors.EncryptedField;
 import com.trecapps.auth.common.models.primary.TrecAccount;
 import jakarta.persistence.Transient;
@@ -41,6 +43,8 @@ public class TcUser implements UserDetails {
     OffsetDateTime codeExpiration;
 
     // Birthday
+    @JsonProperty("birthday")
+    @JsonFormat(pattern="yyyy-MM-dd")
     OffsetDateTime birthday;
     String birthdaySetting;
 
