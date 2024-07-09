@@ -1,8 +1,5 @@
 package com.trecapps.auth.common.models;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,18 +8,16 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-@Getter
-@Setter
-@AllArgsConstructor
+@Data
 @NoArgsConstructor
 public class SessionList {
 
     @Transient
-    final String AlphaNumericString = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    final static String AlphaNumericString = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
             + "0123456789"
             + "abcdefghijklmnopqrstuvxyz";
     @Transient
-    final int RANDOM_STRING_LENGTH = 6;
+    final static int RANDOM_STRING_LENGTH = 6;
 
     final static int MAX_SESSION_COUNT = 30;
 
@@ -45,7 +40,7 @@ public class SessionList {
         return sb.toString();
     }
 
-    List<Session> sessions;
+    List<Session> sessions = new ArrayList<>();
 
     public String addNewSession(String app, String userInfo, OffsetDateTime expiration)
     {

@@ -87,6 +87,8 @@ public class AzureBlobUserStorageService implements IUserStorageService{
 
         BlobClient client = containerClient.getBlobClient("user-" + id);
 
+        if(!client.exists()) return null;
+
         BinaryData bData = client.downloadContent();
 
         String data = new String(bData.toBytes(), StandardCharsets.UTF_8);
@@ -112,7 +114,7 @@ public class AzureBlobUserStorageService implements IUserStorageService{
     @Override
     public SessionList retrieveSessions(String id) throws JsonProcessingException {
         BlobClient client = containerClient.getBlobClient("sessions-" + id);
-
+        if(!client.exists()) return null;
         BinaryData bData = client.downloadContent();
 
         String data = new String(bData.toBytes(), StandardCharsets.UTF_8);
@@ -137,7 +139,7 @@ public class AzureBlobUserStorageService implements IUserStorageService{
     public TcBrands retrieveBrand(String id) throws JsonProcessingException
     {
         BlobClient client = containerClient.getBlobClient("brand-" + id);
-
+        if(!client.exists()) return null;
         BinaryData bData = client.downloadContent();
 
         String data = new String(bData.toBytes(), StandardCharsets.UTF_8);

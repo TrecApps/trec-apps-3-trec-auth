@@ -50,7 +50,7 @@ public class GoogleCloudUserStorageService implements IUserStorageService
     @Override
     public TcUser retrieveUser(String id) throws JsonProcessingException {
         Blob object = client.get("user-" + id);
-        if(!object.exists())
+        if(object == null || !object.exists())
             return null;
         String data = new String(object.getContent(), StandardCharsets.UTF_8);
         return encryptor.decrypt(objectMapper.readValue(data, TcUser.class));
@@ -132,10 +132,11 @@ public class GoogleCloudUserStorageService implements IUserStorageService
     {
         String bucketName = blobInfo.getBucket();
         String objectName = blobInfo.getName();
-        if(storage.get(bucketName, objectName) == null)
+        Blob object = storage.get(bucketName, objectName);
+        if( object == null)
             return Storage.BlobTargetOption.doesNotExist();
         return Storage.BlobTargetOption.generationMatch(
-                storage.get(bucketName, objectName).getGeneration());
+                object.getGeneration());
     }
 
     @Override    @SneakyThrows
