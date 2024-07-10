@@ -47,4 +47,12 @@ public class RSATestHelper {
                     "D3YCPoH0xa6IOt4SXVnpDMo9I-YNVk7eWQcM_LyF9ZKn-DVEmhhVIGs-Ma0FUnONbd8OmemIIMtuSF4ykAO-89" +
                     "rt9jYagmOLrsmBD8OXip9msX1UwXLqERwf8OnYqRkQ4NvzHVWuyRVbKr5jB9QoHC_rwxb8PZ2wtaSAskGeHq81" +
                     "QIZTfa-9m4xDFOChYFmEENW06AdMRoX3U4az3AL7omVRcHnK3bMqr5Ec_ShDs4DcbWoL1WUzmfiBcVvvIn8A";
+
+    public static final String BASIC_REFRESH_TOKEN = // with session 'bbbbbb
+            "eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhcHAiLCJJRCI6ImlkIiwiVXNlcm5hbWUiOm51bGwsIlB1cnB" +
+                    "vc2UiOiJSZWZyZXNoIiwiU2Vzc2lvbklkIjoiYmJiYmJiIiwiaWF0IjoxNzIwNjM4NTMyfQ.rnnTtzV46wFlzSDO" +
+                    "WhZVvl4nZdyrREk6FUuoRqx38J91IOzlJSr9M8wtHXQLb2tqDIGSaSM8xFx2LoUWXB2QsRWk49W23WpMsMJjtzvc" +
+                    "Ft-udPT5SGN0lwJ2tQkWT9yw__4KjO2hdFpV4ks4I3X_Svj7nfGgYVLEI6QWMMZpUGePrjkS89umardD-vkuXTJV" +
+                    "_nVgbUrvNMdz97HyFluHGT73cj951ftFZD9hsHVR1ARRL0NHvWJsOqs8jPEJ7Y6U6IFpO1P2deSz2iGBpEvn2V8Y" +
+                    "HpfCXaWNNxBYT9syawSWD_JYkiYAvB55cKucLLbLCVr5PoobBQzI4EkSr_N8XQ";
 }

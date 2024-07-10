@@ -88,7 +88,7 @@ public class JwtTokenService {
 			+ "0123456789"
 			+ "abcdefghijklmnopqrstuvxyz";
 	final int RANDOM_STRING_LENGTH = 10;
-	
+
 	
 	private static final long TEN_MINUTES = 600_000;
 

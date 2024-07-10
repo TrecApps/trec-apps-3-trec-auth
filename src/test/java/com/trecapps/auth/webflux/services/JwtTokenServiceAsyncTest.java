@@ -230,7 +230,7 @@ public class JwtTokenServiceAsyncTest {
                 any(OffsetDateTime.class)
         );
         String refreshToken = jwtTokenServiceAsync.generateRefreshToken(user.getTrecAccount(), "bbbbbb");
-
+        System.out.println(refreshToken);
         Mono<TokenTime> mono = jwtTokenServiceAsync.generateNewTokenFromRefresh(refreshToken);
 
         StepVerifier.create(mono)
