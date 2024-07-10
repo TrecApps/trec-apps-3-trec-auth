@@ -105,7 +105,8 @@ public class AwsS3UserStorageServiceAsync implements IUserStorageServiceAsync {
                 .map((String content) ->getContent(content, TcUser.class))
                 .map((TcUser user) -> encryptor.decrypt(user))
                 .map(Optional::of)
-                .onErrorReturn(Optional.empty());
+                .onErrorReturn(Optional.empty())
+        ;
     }
 
     @Override
