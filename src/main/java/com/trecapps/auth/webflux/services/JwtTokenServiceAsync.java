@@ -9,6 +9,7 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.trecapps.auth.common.models.*;
 import com.trecapps.auth.common.keyholders.IJwtKeyHolder;
 import com.trecapps.auth.common.models.primary.TrecAccount;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.util.io.pem.PemObject;
@@ -30,7 +31,6 @@ import java.security.spec.X509EncodedKeySpec;
 import java.sql.Date;
 import java.time.Instant;
 import java.time.OffsetDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -89,40 +89,19 @@ public class JwtTokenServiceAsync {
             + "abcdefghijklmnopqrstuvxyz";
     final int RANDOM_STRING_LENGTH = 10;
 
-    private String generateRandomString()
-    {
-        StringBuilder sb = new StringBuilder();
-        for(int c = 0; c < RANDOM_STRING_LENGTH; c++)
-        {
-            int ch = (int) (Math.random() * AlphaNumericString.length());
-            sb.append(AlphaNumericString.charAt(ch));
-        }
-        return sb.toString();
-    }
 
     private static final long TEN_MINUTES = 600_000;
 
     private static final long ONE_MINUTE = 60_000;
 
+    @SneakyThrows
     private boolean setKeys()
     {
         if(publicKey == null)
         {
-            try {
-                String encKey = jwtKeyHolder.getPublicKey();
-
-                X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(Base64.getDecoder().decode(encKey));
-
-                publicKey = (RSAPublicKey) KeyFactory.getInstance("RSA").generatePublic(pubKeySpec);
-
-            } catch (InvalidKeySpecException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            } catch (NoSuchAlgorithmException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-
+            String encKey = jwtKeyHolder.getPublicKey();
+            X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(Base64.getDecoder().decode(encKey));
+            publicKey = (RSAPublicKey) KeyFactory.getInstance("RSA").generatePublic(pubKeySpec);
         }
 
         if(privateKey == null)
@@ -134,22 +113,8 @@ public class JwtTokenServiceAsync {
                 byte[] content = pemObject.getContent();
                 PKCS8EncodedKeySpec privKeySpec = new PKCS8EncodedKeySpec(content);
                 privateKey =  (RSAPrivateKey) KeyFactory.getInstance("RSA").generatePrivate(privKeySpec);
-            } catch (FileNotFoundException e2) {
-                // TODO Auto-generated catch block
-                e2.printStackTrace();
-            } catch (IOException e1) {
-                // TODO Auto-generated catch block
-                e1.printStackTrace();
-            } catch (InvalidKeySpecException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            } catch (NoSuchAlgorithmException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
             }
-
         }
-
         return privateKey != null && publicKey != null;
     }
 
@@ -171,9 +136,6 @@ public class JwtTokenServiceAsync {
     public Mono<Optional<TokenTime>> generateToken(TrecAccount account, String userAgent, TcBrands brand, String session, boolean expires, boolean useMfa, String app1)
     {
         if(account == null)
-            return Mono.just(Optional.empty());
-
-        if(!setKeys())
             return Mono.just(Optional.empty());
 
 
@@ -319,8 +281,6 @@ public class JwtTokenServiceAsync {
         if(account == null)
             return null;
 
-        if(!setKeys())
-            return null;
         Date now = new Date(Calendar.getInstance().getTime().getTime());
 
         AtomicReference<JWTCreator.Builder> jwtBuilder = new AtomicReference<>(JWT.create().withIssuer(app)
