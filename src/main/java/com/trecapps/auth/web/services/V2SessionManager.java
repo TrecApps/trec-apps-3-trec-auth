@@ -72,7 +72,10 @@ public class V2SessionManager extends SessionManagerBase {
         SessionV2 session = sessions.getSessionById(sessionId);
 
         SessionApp sessionApp = session.getApp(app);
-        return sessionApp == null ? null : sessionApp.getBrandId();
+        String ret = sessionApp == null ? null : sessionApp.getBrandId();
+        if(ret == null)
+            ret = "";
+        return ret;
     }
 
     public List<SessionV2> getSessionList(String userId){

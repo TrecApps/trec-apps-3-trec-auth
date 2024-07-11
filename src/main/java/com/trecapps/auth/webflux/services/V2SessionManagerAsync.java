@@ -91,7 +91,10 @@ public class V2SessionManagerAsync  extends SessionManagerBase {
                     SessionV2 session = sessions.getSessionById(sessionId);
 
                     SessionApp sessionApp = session.getApp(app);
-                    return sessionApp == null ? null : sessionApp.getBrandId();
+                    String ret = sessionApp == null ? null : sessionApp.getBrandId();
+                    if(ret == null)
+                        ret = "";
+                    return ret;
                 });
     }
 
@@ -115,8 +118,8 @@ public class V2SessionManagerAsync  extends SessionManagerBase {
         removeSessionMono(userId, sessionId).subscribe();
     }
 
-    public void blockApp(String userId, String sessionId, String app){
-        userStorageService.retrieveSessionList(userId)
+    public Mono<SessionListV2> blockApp(String userId, String sessionId, String app){
+        return userStorageService.retrieveSessionList(userId)
                 .doOnNext((SessionListV2 sessions) -> {
                     SessionV2 session = sessions.getSessionById(sessionId);
 
@@ -128,7 +131,7 @@ public class V2SessionManagerAsync  extends SessionManagerBase {
                     if (!blockedApps.contains(app))
                         blockedApps.add(app);
                     userStorageService.saveSessions(sessions, userId);
-                }).subscribe();
+                });
     }
 
     public Mono<Boolean> isValidSession(String userId, String app, String sessionId){

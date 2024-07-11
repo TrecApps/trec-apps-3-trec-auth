@@ -32,7 +32,7 @@ public abstract class SessionManagerBase {
             return null;
         StringBuilder ret = new StringBuilder();
         if(agent.contains("Edg"))
-            ret.append("Broswer: Microsoft Edge");
+            ret.append("Browser: Microsoft Edge");
         else if(agent.contains("Chrome"))
             ret.append("Browser: Google Chrome");
         else if(agent.contains("OPR"))
