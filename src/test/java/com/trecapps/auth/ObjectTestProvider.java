@@ -5,6 +5,8 @@ import com.trecapps.auth.common.models.TcBrands;
 import com.trecapps.auth.common.models.TcUser;
 import lombok.SneakyThrows;
 
+import java.util.Set;
+
 public class ObjectTestProvider {
 
     public static TcUser getTcUser(){
@@ -23,6 +25,7 @@ public class ObjectTestProvider {
 
         brand.setId("id");
         brand.setName("Trec-Apps");
+        brand.setOwners(Set.of("id"));
         return brand;
     }
 
