@@ -5,6 +5,7 @@ import com.trecapps.auth.ObjectTestProvider;
 import com.trecapps.auth.RSATestHelper;
 import com.trecapps.auth.common.ISecurityAlertHandler;
 import com.trecapps.auth.common.keyholders.IJwtKeyHolder;
+import com.trecapps.auth.common.models.AnonymousAuthentication;
 import com.trecapps.auth.common.models.LoginToken;
 import com.trecapps.auth.common.models.TcUser;
 import com.trecapps.auth.common.models.TrecAuthentication;
@@ -260,6 +261,61 @@ public class TrecSecurityContextReactiveTest {
         StepVerifier.create(mono)
                 .consumeNextWith((SecurityContext context) -> {
                     Assertions.assertTrue(this.securityHandler.called);
+                }).verifyComplete();
+    }
+
+    @Test
+    void testLoadBlankFromCookie()
+    {
+        TcUser user = ObjectTestProvider.getTcUser();
+        ServerWebExchange exchange = Mockito.mock(ServerWebExchange.class);
+        ServerHttpRequest request = Mockito.mock(ServerHttpRequest.class);
+
+        Mockito.doReturn(request).when(exchange).getRequest();
+
+        prepPath(request, "/refresh_token");
+
+        MultiValueMap<String, HttpCookie> cookieMap = new LinkedMultiValueMap<>();
+        HttpCookie cookie = new HttpCookie("trec-app", "A-Very_Bad_token");
+
+        cookieMap.add("trec-app", cookie);
+        Mockito.doReturn(cookieMap).when(request).getCookies();
+
+        Mockito.doReturn(new InetSocketAddress("1.2.3.4", 80)).when(request).getRemoteAddress();
+
+        //Mockito.doReturn(Mono.just(Optional.of(user))).when(userStorageService).getAccountById(anyString());
+
+        Mono<SecurityContext> mono = this.trecSecurtyContext.load(exchange);
+
+        StepVerifier.create(mono)
+                .consumeNextWith((SecurityContext context) -> {
+                    Authentication authentication = context.getAuthentication();
+                    Assertions.assertTrue(authentication instanceof AnonymousAuthentication);
+                }).verifyComplete();
+    }
+
+    @Test
+    void testLoadBlankFromHeader()
+    {
+        TcUser user = ObjectTestProvider.getTcUser();
+        ServerWebExchange exchange = Mockito.mock(ServerWebExchange.class);
+        ServerHttpRequest request = Mockito.mock(ServerHttpRequest.class);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Authorization", "SomeBadHeaderToken");
+
+        Mockito.doReturn(request).when(exchange).getRequest();
+
+        prepPath(request, "/endpoint");
+
+        Mockito.doReturn(headers).when(request).getHeaders();
+        Mockito.doReturn(new InetSocketAddress("1.2.3.4", 80)).when(request).getRemoteAddress();
+        Mono<SecurityContext> mono = this.trecSecurtyContext.load(exchange);
+
+        StepVerifier.create(mono)
+                .consumeNextWith((SecurityContext context) -> {
+                    Authentication authentication = context.getAuthentication();
+                    Assertions.assertTrue(authentication instanceof AnonymousAuthentication);
                 }).verifyComplete();
     }
 }

@@ -17,6 +17,7 @@ public class ObjectTestProvider {
         user.setBirthdaySetting("PUBLIC");
         user.setDisplayName("John Doe");
         user.setEmail("john.doe@gmail.com");
+        user.setUserProfile("John Doe");
         return user;
     }
 

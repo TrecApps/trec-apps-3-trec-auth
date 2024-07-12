@@ -4,6 +4,7 @@ import com.trecapps.auth.ObjectTestProvider;
 import com.trecapps.auth.RSATestHelper;
 import com.trecapps.auth.common.ISecurityAlertHandler;
 import com.trecapps.auth.common.keyholders.IJwtKeyHolder;
+import com.trecapps.auth.common.models.AnonymousAuthentication;
 import com.trecapps.auth.common.models.LoginToken;
 import com.trecapps.auth.common.models.TcUser;
 import com.trecapps.auth.common.models.TrecAuthentication;
@@ -192,6 +193,51 @@ public class TrecSecurityContextServletTest {
         Assertions.assertTrue(authentication instanceof TrecAuthentication);
         TrecAuthentication trecAuthentication = (TrecAuthentication) authentication;
         Assertions.assertEquals(user, trecAuthentication.getUser());
+
+        boolean containedContext = trecSecurtyContext.containsContext(request);
+        Assertions.assertTrue(containedContext);
+    }
+
+    @Test
+    void testLoadBlankFromCookie() {
+        HttpRequestResponseHolder httpRequestResponseHolder = Mockito.mock(HttpRequestResponseHolder.class);
+        HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+        Mockito.doReturn(request).when(httpRequestResponseHolder).getRequest();
+
+        prepPath(request, "/refresh_token");
+        TcUser user = ObjectTestProvider.getTcUser();
+
+        Cookie cookie = new Cookie("trecapps.com", "SomeBadCookie");
+        Mockito.doReturn(new Cookie[]{cookie}).when(request).getCookies();
+        Mockito.doReturn("/endpoint").when(request).getContextPath();
+        Mockito.doReturn("1.2.3.4").when(request).getRemoteAddr();
+
+        SecurityContext context = trecSecurtyContext.loadContext(httpRequestResponseHolder);
+
+        Authentication authentication = context.getAuthentication();
+        Assertions.assertNull(authentication);
+
+        boolean containedContext = trecSecurtyContext.containsContext(request);
+        Assertions.assertTrue(containedContext);
+    }
+
+    @Test
+    void testLoadBlankFromHeader() {
+        HttpRequestResponseHolder httpRequestResponseHolder = Mockito.mock(HttpRequestResponseHolder.class);
+        HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+        Mockito.doReturn(request).when(httpRequestResponseHolder).getRequest();
+
+        prepPath(request, "/endpoint");
+        TcUser user = ObjectTestProvider.getTcUser();
+
+        Mockito.doReturn("SomeBadHeaderToken").when(request).getHeader("Authorization");
+        Mockito.doReturn("/endpoint").when(request).getContextPath();
+        Mockito.doReturn("1.2.3.4").when(request).getRemoteAddr();
+
+        SecurityContext context = trecSecurtyContext.loadContext(httpRequestResponseHolder);
+
+        Authentication authentication = context.getAuthentication();
+        Assertions.assertNull(authentication);
 
         boolean containedContext = trecSecurtyContext.containsContext(request);
         Assertions.assertTrue(containedContext);
