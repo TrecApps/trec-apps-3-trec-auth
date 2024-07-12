@@ -18,8 +18,8 @@ public class V2SessionManager extends SessionManagerBase {
     boolean appAgnostic;
 
     @Autowired
-    V2SessionManager(IUserStorageService userStorageService1,
-            @Value("${trecauth.app.agnostic:false}")boolean appAgnostic1){
+    public V2SessionManager(IUserStorageService userStorageService1,
+                            @Value("${trecauth.app.agnostic:false}") boolean appAgnostic1){
         super(true);
         userStorageService = userStorageService1;
         this.appAgnostic = appAgnostic1;

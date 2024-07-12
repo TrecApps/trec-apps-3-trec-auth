@@ -71,24 +71,20 @@ public class CookieBase {
             if(cook.getName().equals(cookieName))
             {
                 clearSessions(cook.getValue(), userId);
-
-                cook.setValue("");
-                cook.setPath("/");
-                cook.setMaxAge(0);
-                response.addCookie(cook);
-                return;
+                break;
             }
         }
+        Cookie cook = new Cookie(cookieName, null);
+        cook.setValue("");
+        cook.setPath("/");
+        cook.setMaxAge(0);
+        response.addCookie(cook);
     }
 
     public void clearSessions(String value, String userId){
-        DecodedJWT decodedJWT = tokenService.decodeToken(value);
-        if(decodedJWT == null)return;
-
-        Map<String, String> sessionList = tokenService.claims(decodedJWT);
-
-        sessionList.forEach((String _app, String s) -> sessionManager.removeSession(userId, s));
-
+        String sessionId = tokenService.getSessionId(value);
+        if(sessionId == null) return;
+        sessionManager.removeSession(userId, sessionId);
     }
 
     public void assertAppAdded(String userId, String sessionId, String brandId){

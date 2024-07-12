@@ -49,7 +49,8 @@ public class CookieController extends TrecCookieSaverAsync {
 
             return this.prepLoginTokens(tAuth, userClient)
                     .flatMap((Optional<LoginToken> oToken) ->{
-                                return oToken.<Mono<? extends ResponseEntity<LoginToken>>>map(loginToken -> this.cookieBase.assertAppAdded(tAuth.getAccount().getId(), tAuth.getSessionId(), null)
+                                return oToken.<Mono<? extends ResponseEntity<LoginToken>>>map(
+                                        loginToken -> this.cookieBase.assertAppAdded(tAuth.getAccount().getId(), tAuth.getSessionId(), null)
                                         .thenReturn(new ResponseEntity<>(loginToken, HttpStatus.OK))).orElseGet(() -> Mono.just(new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR)));
                             }
 

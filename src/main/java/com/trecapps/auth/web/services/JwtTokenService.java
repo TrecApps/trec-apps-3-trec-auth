@@ -51,12 +51,12 @@ public class JwtTokenService {
 	IJwtKeyHolder jwtKeyHolder;
 
 	@Autowired
-	JwtTokenService(
-			IUserStorageService userStorageService,
-			V2SessionManager sessionManager,
-			IJwtKeyHolder jwtKeyHolder,
-			@Value("${trecauth.app}") String app
-	) {
+    public JwtTokenService(
+            IUserStorageService userStorageService,
+            V2SessionManager sessionManager,
+            IJwtKeyHolder jwtKeyHolder,
+            @Value("${trecauth.app}") String app
+    ) {
 		this.userStorageService = userStorageService;
 		this.sessionManager = sessionManager;
 		this.jwtKeyHolder = jwtKeyHolder;

@@ -18,9 +18,9 @@ public class V2SessionManagerAsync  extends SessionManagerBase {
     IUserStorageServiceAsync userStorageService;
     boolean appAgnostic;
     @Autowired
-    V2SessionManagerAsync(
+    public V2SessionManagerAsync(
             IUserStorageServiceAsync userStorageService1,
-            @Value("${trecauth.app.agnostic:false}")boolean appAgnostic1
+            @Value("${trecauth.app.agnostic:false}") boolean appAgnostic1
     ){
         super(true);
         this.userStorageService = userStorageService1;

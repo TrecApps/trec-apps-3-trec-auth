@@ -75,12 +75,12 @@ public class CookieBase {
     }
 
     public void clearSessions(String value, String userId){
-        DecodedJWT decodedJWT = tokenService.decodeToken(value);
-        if(decodedJWT == null)return;
 
-        Map<String, String> sessionList = tokenService.claims(decodedJWT);
+        String sessionId = tokenService.getSessionId(value);
+        if(sessionId == null)
+            return;
 
-        sessionList.forEach((String _app, String s) -> sessionManager.removeSession(userId, s));
+        sessionManager.removeSession(userId, sessionId);
 
     }
 

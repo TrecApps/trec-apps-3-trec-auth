@@ -51,7 +51,7 @@ public class JwtTokenServiceAsync {
     IJwtKeyHolder jwtKeyHolder;
 
     @Autowired
-    JwtTokenServiceAsync(
+    public JwtTokenServiceAsync(
             IUserStorageServiceAsync userStorageServiceAsync,
             V2SessionManagerAsync sessionManager,
             IJwtKeyHolder jwtKeyHolder,
