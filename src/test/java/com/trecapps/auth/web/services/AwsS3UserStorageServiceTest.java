@@ -136,30 +136,6 @@ public class AwsS3UserStorageServiceTest {
     }
 
     @Test
-    void testRetrieveSessions() throws IOException {
-        ResponseInputStream<GetObjectResponse> mockResponse = Mockito.mock(ResponseInputStream.class);
-
-        SessionList sessionList = new SessionList();
-        sessionList.addNewSession(
-                "Trec-Apps",
-                "FireFox",
-                null);
-
-        byte[] userAsBytes = mapper.writeValueAsBytes(sessionList);
-        Mockito.doReturn(userAsBytes).when(mockResponse).readAllBytes();
-        Mockito.doReturn(mockResponse).when(client).getObject(Mockito.any(GetObjectRequest.class));
-        Mockito.doReturn(sessionList).when(encryptor).decrypt(Mockito.any(SessionList.class));
-
-        SessionList returnedSessions = this.storageService.retrieveSessions("id");
-        Assertions.assertNotNull(returnedSessions);
-        Assertions.assertEquals(sessionList, returnedSessions);
-
-        Mockito.doThrow(NoSuchKeyException.class).when(client).getObject(Mockito.any(GetObjectRequest.class));
-        returnedSessions = this.storageService.retrieveSessions("id");
-        Assertions.assertNull(returnedSessions);
-    }
-
-    @Test
     void testRetrieveSessionsV2() throws IOException {
         ResponseInputStream<GetObjectResponse> mockResponse = Mockito.mock(ResponseInputStream.class);
 
@@ -283,33 +259,6 @@ public class AwsS3UserStorageServiceTest {
         }).when(client).putObject(Mockito.any(PutObjectRequest.class), Mockito.any(RequestBody.class));
 
         this.storageService.saveBrand(brand);
-    }
-
-    @Test
-    @Disabled("SessionList class should be deprecated")
-    void testSaveSession(){
-        SessionList sessionList = new SessionList();
-        sessionList.addNewSession(
-                "Trec-Apps",
-                "FireFox",
-                null);
-
-
-        Mockito.doReturn(sessionList).when(encryptor).encrypt(sessionList);
-        Mockito.doAnswer((InvocationOnMock invoke) -> {
-            RequestBody body = invoke.getArgument(1, RequestBody.class);
-            try(InputStream stream = body.contentStreamProvider().newStream())
-            {
-                byte[] bytes = stream.readAllBytes();
-                SessionList locker = mapper.readValue(bytes, SessionList.class);
-                Assertions.assertNotNull(locker);
-                Assertions.assertEquals(sessionList, locker);
-            }
-
-            return null;
-        }).when(client).putObject(Mockito.any(PutObjectRequest.class), Mockito.any(RequestBody.class));
-
-        this.storageService.saveSessions(sessionList, "id");
     }
 
     @Test

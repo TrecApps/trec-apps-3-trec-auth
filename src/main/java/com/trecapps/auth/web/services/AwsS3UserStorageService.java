@@ -118,22 +118,6 @@ public class AwsS3UserStorageService implements IUserStorageService{
         }
     }
 
-    @SneakyThrows(IOException.class)
-    @Override
-    public SessionList retrieveSessions(String id) throws JsonProcessingException {
-        GetObjectRequest request = GetObjectRequest.builder()
-                .bucket(s3BucketName)
-                .key("sessions-"+ id)
-                .build();
-
-        try{
-            byte[] bytes = client.getObject(request).readAllBytes();
-            return encryptor.decrypt(objectMapper.readValue(bytes, SessionList.class));
-        } catch(NoSuchKeyException e){
-            return null;
-        }
-    }
-
     @SneakyThrows
     @Override
     public Optional<TcBrands> getBrandById(String id) {
@@ -236,17 +220,6 @@ public class AwsS3UserStorageService implements IUserStorageService{
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                 .bucket(s3BucketName)
                 .key("brand-" + brand.getId())
-                .build();
-
-        client.putObject(putObjectRequest, RequestBody.fromString(objectMapper.writeValueAsString(encryptor.encrypt(brand))));
-    }
-    @SneakyThrows
-    @Override
-    public void saveSessions(SessionList brand, String id) {
-
-        PutObjectRequest putObjectRequest = PutObjectRequest.builder()
-                .bucket(s3BucketName)
-                .key("sessions-" + id)
                 .build();
 
         client.putObject(putObjectRequest, RequestBody.fromString(objectMapper.writeValueAsString(encryptor.encrypt(brand))));

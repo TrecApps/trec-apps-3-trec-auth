@@ -98,16 +98,6 @@ public class AzureBlobUserStorageServiceAsync implements IUserStorageServiceAsyn
     }
 
     @Override
-    @Deprecated(since = "0.6.17")
-    public Mono<Optional<SessionList>> retrieveSessions(String id) {
-        BlobAsyncClient client = containerClient.getBlobAsyncClient("sessions-" + id);
-        return Mono.just(client)
-                .map(BlobAsyncClientBase::exists)
-                .flatMap((Mono<Boolean> exists) ->
-                        exists.flatMap((Boolean e) -> !e ? Mono.just(Optional.empty()) : downloadContent(client, SessionList.class)));
-    }
-
-    @Override
     public Mono<Optional<TcBrands>> getBrandById(String id) {
 
         String objName = String.format("brand-%s", id);
@@ -170,15 +160,6 @@ public class AzureBlobUserStorageServiceAsync implements IUserStorageServiceAsyn
         BlobAsyncClient client = containerClient.getBlobAsyncClient("brand-" + brand.getId());
 
         return client.upload(BinaryData.fromObject(encryptor.encrypt(brand)), true).then(Mono.empty());
-    }
-
-    @Override
-    @Deprecated(since = "0.6.17")
-    public void saveSessions(SessionList brand, String id)
-    {
-        BlobAsyncClient client = containerClient.getBlobAsyncClient("sessions-" + id);
-
-        client.upload(BinaryData.fromObject(encryptor.encrypt(brand)), true).subscribe();
     }
 
     @Override

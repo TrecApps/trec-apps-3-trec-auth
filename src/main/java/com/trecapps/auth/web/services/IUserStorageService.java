@@ -17,8 +17,6 @@ public interface IUserStorageService {
 
     Optional<TcUser> getAccountById(String id);
 
-    SessionList retrieveSessions(String id) throws JsonProcessingException;
-
     Optional<TcBrands> getBrandById(String id);
 
     @Deprecated(since = "0.6.3")
@@ -31,6 +29,5 @@ public interface IUserStorageService {
     void saveLogins(AppLocker locker, String id);
     void saveUser(TcUser user);
     void saveBrand(TcBrands brand);
-    void saveSessions(SessionList brand, String id);
     void saveSessions(SessionListV2 sessions, String id);
 }

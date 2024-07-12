@@ -111,16 +111,7 @@ public class AzureBlobUserStorageService implements IUserStorageService{
         }
     }
 
-    @Override
-    public SessionList retrieveSessions(String id) throws JsonProcessingException {
-        BlobClient client = containerClient.getBlobClient("sessions-" + id);
-        if(!client.exists()) return null;
-        BinaryData bData = client.downloadContent();
 
-        String data = new String(bData.toBytes(), StandardCharsets.UTF_8);
-
-        return encryptor.decrypt(objectMapper.readValue(data, SessionList.class));
-    }
 
     @Override
     public Optional<TcBrands> getBrandById(String id) {
@@ -208,14 +199,6 @@ public class AzureBlobUserStorageService implements IUserStorageService{
     public void saveBrand(TcBrands brand)
     {
         BlobClient client = containerClient.getBlobClient("brand-" + brand.getId());
-
-        client.upload(BinaryData.fromObject(encryptor.encrypt(brand)), true);
-    }
-
-    @Override
-    public void saveSessions(SessionList brand, String id)
-    {
-        BlobClient client = containerClient.getBlobClient("sessions-" + id);
 
         client.upload(BinaryData.fromObject(encryptor.encrypt(brand)), true);
     }

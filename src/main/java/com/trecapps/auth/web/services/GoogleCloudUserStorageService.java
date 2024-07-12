@@ -67,15 +67,6 @@ public class GoogleCloudUserStorageService implements IUserStorageService
     }
 
     @Override
-    public SessionList retrieveSessions(String id) throws JsonProcessingException {
-        Blob object = client.get("sessions-" + id);
-        if(object == null || !object.exists())
-            return null;
-        String data = new String(object.getContent(), StandardCharsets.UTF_8);
-        return encryptor.decrypt(objectMapper.readValue(data, SessionList.class));
-    }
-
-    @Override
     @SneakyThrows
     public Optional<TcBrands> getBrandById(String id) {
         Blob object = client.get("brand-" + id);
@@ -167,18 +158,6 @@ public class GoogleCloudUserStorageService implements IUserStorageService
     @Override    @SneakyThrows
     public void saveBrand(TcBrands brand) {
         String objectName = "brand-" + brand.getId();
-        BlobInfo blobInfo = getBlobInfo(objectName, client.getName());
-        Storage.BlobTargetOption precondition = getPrecondition(blobInfo);
-
-        storage.create(
-                blobInfo,
-                objectMapper.writeValueAsString(encryptor.encrypt(brand)).getBytes(StandardCharsets.UTF_8)
-                , precondition);
-    }
-
-    @Override    @SneakyThrows
-    public void saveSessions(SessionList brand, String id) {
-        String objectName = "sessions-" + id;
         BlobInfo blobInfo = getBlobInfo(objectName, client.getName());
         Storage.BlobTargetOption precondition = getPrecondition(blobInfo);
 

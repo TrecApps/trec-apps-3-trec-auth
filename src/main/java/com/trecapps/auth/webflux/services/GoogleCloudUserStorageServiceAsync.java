@@ -68,19 +68,6 @@ public class GoogleCloudUserStorageServiceAsync implements IUserStorageServiceAs
     }
 
     @Override
-    @Deprecated(since = "0.6.17")
-    public Mono<Optional<SessionList>> retrieveSessions(String id) {
-
-        return Mono.just("sessions-" + id)
-                .map(k -> Optional.ofNullable(client.get(k)))
-                .map((Optional<Blob> object) -> {
-                    if(object.isPresent() && object.get().exists())
-                        return retrieveObject(object.get(), SessionList.class);
-                    return Optional.empty();
-                });
-    }
-
-    @Override
     @SneakyThrows
     public Mono<Optional<TcBrands>> getBrandById(String id) {
         return Mono.just("brand-" + id)
@@ -192,19 +179,6 @@ public class GoogleCloudUserStorageServiceAsync implements IUserStorageServiceAs
         return Mono.just(brands)
                 .doOnNext(this::saveBrand)
                 .then(Mono.empty());
-    }
-
-    @Override    @SneakyThrows
-    @Deprecated(since = "0.6.17")
-    public void saveSessions(SessionList brand, String id) {
-        String objectName = "sessions-" + id;
-        BlobInfo blobInfo = getBlobInfo(objectName, client.getName());
-        Storage.BlobTargetOption precondition = getPrecondition(blobInfo);
-
-        storage.create(
-                blobInfo,
-                objectMapper.writeValueAsString(encryptor.encrypt(brand)).getBytes(StandardCharsets.UTF_8)
-                , precondition);
     }
 
     @Override
