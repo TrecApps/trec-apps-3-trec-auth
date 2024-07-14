@@ -47,6 +47,7 @@ public class FailedLoginServiceAsync {
                          {
                              loginList = new FailedLoginList();
                              loginList.setFailedLogins(new ArrayList<>());
+                             appList.put(app, loginList);
                          }
 
                          List<OffsetDateTime> failedLogins = loginList.getFailedLogins();

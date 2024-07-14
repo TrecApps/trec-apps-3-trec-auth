@@ -41,17 +41,6 @@ public class TrecAccountServiceAsync implements ReactiveUserDetailsService {
             + "abcdefghijklmnopqrstuvxyz";
     final int RANDOM_STRING_LENGTH = 30;
 
-    private String generateRandomString()
-    {
-        StringBuilder sb = new StringBuilder();
-        for(int c = 0; c < RANDOM_STRING_LENGTH; c++)
-        {
-            int ch = (int) (Math.random() * AlphaNumericString.length());
-            sb.append(AlphaNumericString.charAt(ch));
-        }
-        return sb.toString();
-    }
-
     public Mono<Boolean> userNameExists(String username)
     {
         return Mono.just(trecRepo.existsByUsername(username));
@@ -96,6 +85,7 @@ public class TrecAccountServiceAsync implements ReactiveUserDetailsService {
     {
         Optional<TrecAccount> savedAccount = trecRepo.findById(account.getId());
 
+        if(savedAccount.isEmpty()) return false;
         TrecAccount trecAccount = savedAccount.get();
 
         Optional<UserSalt> salt = saltRepo.findById(trecAccount.getId());
@@ -120,7 +110,7 @@ public class TrecAccountServiceAsync implements ReactiveUserDetailsService {
         return false;
     }
 
-    public Mono<Optional<TrecAccount>> logInUsername(String username, String password) {
+    public Mono<Optional<TrecAccount>> logInUsername(String username, String password, String app) {
 
         Pair<String, String> up = Pair.of(username, password);
 
