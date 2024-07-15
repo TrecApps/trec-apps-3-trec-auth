@@ -320,4 +320,32 @@ public class GoogleCloudUserStorageServiceAsyncTest {
         StepVerifier.create(mono).verifyComplete();
     }
 
+    @Test
+    void testSaveSessions(){
+        Blob object = Mockito.mock(Blob.class);
+        Mockito.lenient().doReturn(object).when(storage).get(anyString(), anyString());
+        Mockito.lenient().doReturn(1L).when(object).getGeneration();
+        Mockito.lenient().doReturn("bucket").when(client).getName();
+
+
+        SessionListV2 brand = new SessionListV2();
+        Mockito.doReturn(brand).when(encryptor).encrypt(any(SessionListV2.class));
+
+        Mockito.doAnswer((InvocationOnMock invoke) -> {
+
+            byte[] data = invoke.getArgument(1, byte[].class);
+            SessionListV2 locker1 = mapper.readValue(data, SessionListV2.class);
+            Assertions.assertNotNull(brand);
+            Assertions.assertEquals(brand, locker1);
+            return null;
+
+        }).when(storage).create(any(BlobInfo.class), any(byte[].class), any(Storage.BlobTargetOption.class));
+
+        Mono<Void> mono = storageService.saveSessionsMono(brand, "id");
+        StepVerifier.create(mono).verifyComplete();
+        Mockito.doReturn(null).when(storage).get(anyString(), anyString());
+        mono = storageService.saveSessionsMono(brand, "id");
+        StepVerifier.create(mono).verifyComplete();
+    }
+
 }

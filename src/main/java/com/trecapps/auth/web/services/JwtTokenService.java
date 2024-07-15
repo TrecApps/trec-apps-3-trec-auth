@@ -10,6 +10,7 @@ import com.trecapps.auth.common.models.*;
 import com.trecapps.auth.common.keyholders.IJwtKeyHolder;
 import com.trecapps.auth.common.models.primary.TrecAccount;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.openssl.PEMParser;
@@ -66,8 +67,6 @@ public class JwtTokenService {
 
 	private DecodedJWT decodeJWT(String token)
 	{
-		if(!setKeys())
-			return null;
 		DecodedJWT ret = null;
 		try
 		{
@@ -95,7 +94,7 @@ public class JwtTokenService {
 	private static final long ONE_MINUTE = 60_000;
 
 	@SneakyThrows
-	private boolean setKeys()
+	private void setKeys()
 	{
 		if(publicKey == null)
 		{
@@ -115,7 +114,6 @@ public class JwtTokenService {
 				        privateKey =  (RSAPrivateKey) KeyFactory.getInstance("RSA").generatePrivate(privKeySpec);
 			}
 		}
-		return privateKey != null && publicKey != null;
 	}
 
 	public TokenTime generateToken(TrecAccount account, String userAgent, TcBrands brand, boolean expires, String app1)
@@ -261,13 +259,8 @@ public class JwtTokenService {
 		return ret;
 	}
 
-	public String generateRefreshToken(TrecAccount account, String sessionId)
+	public String generateRefreshToken(@NotNull TrecAccount account, String sessionId)
 	{
-		if(account == null)
-			return null;
-
-		if(!setKeys())
-			return null;
 		Date now = new Date(Calendar.getInstance().getTime().getTime());
 
 		AtomicReference<JWTCreator.Builder> jwtBuilder = new AtomicReference<>(JWT.create().withIssuer(app)
@@ -283,9 +276,6 @@ public class JwtTokenService {
 
 	public String getSessionId(String token)
 	{
-		if(!setKeys() || token== null)
-			return null;
-
 		DecodedJWT decodedJwt = null;
 		try
 		{
@@ -316,7 +306,6 @@ public class JwtTokenService {
 	 * @return
 	 */
 	public TrecAuthentication verifyToken(DecodedJWT decodedJwt, TokenFlags tokenFlags) {
-
 
 		if (decodedJwt == null) {
 			return null;
@@ -357,15 +346,15 @@ public class JwtTokenService {
 		return trecAuthentication;
 	}
 
-	public Map<String, String> claims(DecodedJWT decodedJwt){
-		Map<String, String> ret = new HashMap<>();
-		Map<String, Claim> claimMap = decodedJwt.getClaims();
-
-		claimMap.forEach((String n, Claim c) -> {
-			if(n.startsWith("app_")){
-				ret.put(n, c.asString());
-			}
-		});
-		return ret;
-	}
+//	public Map<String, String> claims(DecodedJWT decodedJwt){
+//		Map<String, String> ret = new HashMap<>();
+//		Map<String, Claim> claimMap = decodedJwt.getClaims();
+//
+//		claimMap.forEach((String n, Claim c) -> {
+//			if(n.startsWith("app_")){
+//				ret.put(n, c.asString());
+//			}
+//		});
+//		return ret;
+//	}
 }

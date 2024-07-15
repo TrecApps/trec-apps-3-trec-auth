@@ -66,8 +66,6 @@ public class JwtTokenServiceAsync {
 
     private DecodedJWT decodeJWT(String token)
     {
-        if(!setKeys())
-            return null;
         DecodedJWT ret = null;
         try
         {
@@ -95,7 +93,7 @@ public class JwtTokenServiceAsync {
     private static final long ONE_MINUTE = 60_000;
 
     @SneakyThrows
-    private boolean setKeys()
+    private void setKeys()
     {
         if(publicKey == null)
         {
@@ -115,7 +113,6 @@ public class JwtTokenServiceAsync {
                 privateKey =  (RSAPrivateKey) KeyFactory.getInstance("RSA").generatePrivate(privKeySpec);
             }
         }
-        return privateKey != null && publicKey != null;
     }
 
     public Mono<Optional<TokenTime>> generateToken(TrecAccount account, String userAgent, TcBrands brand, boolean expires, String app1)
@@ -296,9 +293,6 @@ public class JwtTokenServiceAsync {
 
     public String getSessionId(String token)
     {
-        if(!setKeys() || token== null)
-            return null;
-
         DecodedJWT decodedJwt = null;
         try
         {
@@ -372,15 +366,15 @@ public class JwtTokenServiceAsync {
                 });
     }
 
-    public Map<String, String> claims(DecodedJWT decodedJwt){
-        Map<String, String> ret = new HashMap<>();
-        Map<String, Claim> claimMap = decodedJwt.getClaims();
-
-        claimMap.forEach((String n, Claim c) -> {
-            if(n.startsWith("app_")){
-                ret.put(n, c.asString());
-            }
-        });
-        return ret;
-    }
+//    public Map<String, String> claims(DecodedJWT decodedJwt){
+//        Map<String, String> ret = new HashMap<>();
+//        Map<String, Claim> claimMap = decodedJwt.getClaims();
+//
+//        claimMap.forEach((String n, Claim c) -> {
+//            if(n.startsWith("app_")){
+//                ret.put(n, c.asString());
+//            }
+//        });
+//        return ret;
+//    }
 }
