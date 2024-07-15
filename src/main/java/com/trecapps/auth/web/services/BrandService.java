@@ -36,96 +36,80 @@ public class BrandService {
 
     public String createNewBrand(TrecAccount account, String name)
     {
-        try {
-            TcUser user = userStorageService.retrieveUser(account.getId());
+        Optional<TcUser> oUser = userStorageService.getAccountById(account.getId());
+        if(oUser.isEmpty()) return "500: Could not get User Information from Storage";
 
-            Set<String> brands = user.getBrands();
+        TcUser user = oUser.get();
 
-            if(brands == null)
-                brands = new TreeSet<>();
+        Set<String> brands = user.getBrands();
 
-            if(brands.size() >= MAX_BRAND_COUNT)
-                return "409: User Already has too many Brand-Accounts";
+        if(brands == null)
+            brands = new TreeSet<>();
 
-            BrandEntry newEntry = new BrandEntry();
-            newEntry.setCreator(account.getId());
-            newEntry.setName(name);
-            newEntry = brandEntryRepo.save(newEntry);
+        if(brands.size() >= MAX_BRAND_COUNT)
+            return "409: User Already has too many Brand-Accounts";
 
-            TcBrands newBrand = new TcBrands();
-            newBrand.setId(newEntry.getId());
-            newBrand.setName(name);
-            Set<String> owners = new TreeSet<>();
-            owners.add(account.getId());
-            newBrand.setOwners(owners);
+        BrandEntry newEntry = new BrandEntry();
+        newEntry.setCreator(account.getId());
+        newEntry.setName(name);
+        newEntry = brandEntryRepo.save(newEntry);
 
-            brands.add(newEntry.getId());
-            user.setBrands(brands);
+        TcBrands newBrand = new TcBrands();
+        newBrand.setId(newEntry.getId());
+        newBrand.setName(name);
+        Set<String> owners = new TreeSet<>();
+        owners.add(account.getId());
+        newBrand.setOwners(owners);
 
-            userStorageService.saveBrand(newBrand);
-            userStorageService.saveUser(user);
-            return "200: Success";
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-            return "500: Could not get User Information from Storage";
-        }
+        brands.add(newEntry.getId());
+        user.setBrands(brands);
+
+        userStorageService.saveBrand(newBrand);
+        userStorageService.saveUser(user);
+        return "200: Success";
+
     }
 
     public boolean isOwner(TrecAccount account, String brand)
     {
-        try {
-            TcBrands theBrand = userStorageService.retrieveBrand(brand);
-
-            return theBrand.getOwners().contains(account.getId());
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-            return false;
-        }
-
+        Optional<TcBrands> oBrands = userStorageService.getBrandById(brand);
+        return oBrands.map(tcBrands -> tcBrands.getOwners().contains(account.getId())).orElse(false);
     }
 
     public List<BrandEntry> getBrandList(TrecAccount account)
     {
-        try {
-            TcUser user = userStorageService.retrieveUser(account.getId());
+        Optional<TcUser> oUser = userStorageService.getAccountById(account.getId());
 
-            List<BrandEntry> ret = new ArrayList<>();
+        if(oUser.isEmpty()) return null;
 
-            var brands = user.getBrands();
-            if(brands == null)
-                return ret;
-            for(String brandId : brands)
-            {
-                BrandEntry entry = brandEntryRepo.getById(brandId);
-                ret.add(entry);
-            }
+        TcUser user = oUser.get();
+        List<BrandEntry> ret = new ArrayList<>();
+
+        var brands = user.getBrands();
+        if(brands == null)
             return ret;
-        } catch (JsonProcessingException e)
+        for(String brandId : brands)
         {
-            return null;
+            Optional<BrandEntry> entry = brandEntryRepo.findById(brandId);
+            entry.ifPresent(ret::add);
         }
+        return ret;
+
     }
 
     public TcBrands getBrandById(String brandId, TrecAccount account)
     {
-        if(!brandEntryRepo.existsById(brandId))
-            return null;
-        try {
-            TcBrands brand = userStorageService.retrieveBrand(brandId);
-            if(!isOwner(account, brandId))
-            {
-                brand.setOwners(null);
-            }
-            return brand;
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
+        Optional<TcBrands> oBrands = userStorageService.getBrandById(brandId);
+        if(oBrands.isEmpty()) return null;
+        TcBrands brand = oBrands.get();
+        if(!isOwner(account, brandId))
+        {
+            brand.setOwners(new HashSet<>());
         }
-
-        return null;
-
+        return brand;
     }
 
-    public LoginToken LoginAsBrand(TrecAuthentication account, String brandId, String userAgent, String session, boolean doesExpire, String app)
+    public LoginToken loginAsBrand(TrecAuthentication account, String brandId, String userAgent, String session, boolean doesExpire, String app)
     {
         if(!isOwner(account.getAccount(), brandId))
             return null;
@@ -151,25 +135,26 @@ public class BrandService {
             return false;
         if(!isOwner(currentOwner, brandId))
             return false;
-        try {
-            TcUser newUser = userStorageService.retrieveUser(newId);
 
-            Set<String> brands = newUser.getBrands();
-            if(brands == null)
-                brands = new TreeSet<>();
-            if(brands.size() >= MAX_BRAND_COUNT)
-                return false;
-            TcBrands brand = userStorageService.retrieveBrand(brandId);
-            brands.add(brandId);
-            brand.getOwners().add(newId);
-            newUser.setBrands(brands);
+        Optional<TcUser> oUser = userStorageService.getAccountById(newId);
+        if(oUser.isEmpty())return false;
+        TcUser newUser = oUser.get();
 
-            userStorageService.saveBrand(brand);
-            userStorageService.saveUser(newUser);
-            return true;
-        } catch(JsonProcessingException e)
-        {
+        Set<String> brands = newUser.getBrands();
+        if(brands == null)
+            brands = new TreeSet<>();
+        if(brands.size() >= MAX_BRAND_COUNT)
             return false;
-        }
+        Optional<TcBrands> oBrand = userStorageService.getBrandById(brandId);
+        if(oBrand.isEmpty())return false;
+        TcBrands brand = oBrand.get();
+        brands.add(brandId);
+        brand.getOwners().add(newId);
+        newUser.setBrands(brands);
+
+        userStorageService.saveBrand(brand);
+        userStorageService.saveUser(newUser);
+        return true;
+
     }
 }

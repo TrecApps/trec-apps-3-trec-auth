@@ -118,14 +118,14 @@ public class BrandServiceAsync {
                 .flatMap((Optional<TcBrands> oBrands) -> {
                     if(oBrands.isPresent()){
                         TcBrands brand = oBrands.get();
-                        return isOwner(account, brandId).doOnNext((Boolean isOwner) -> brand.setOwners(null))
+                        return isOwner(account, brandId).doOnNext((Boolean isOwner) -> {if(!isOwner)brand.setOwners(new HashSet<>());})
                                 .map((Boolean b) -> oBrands);
                     }
                     return Mono.just(oBrands);
                 });
     }
 
-    public Mono<Optional<LoginToken>> LoginAsBrand(TrecAuthentication account, String brandId, String userAgent, String session, boolean doesExpire, String app)
+    public Mono<Optional<LoginToken>> loginAsBrand(TrecAuthentication account, String brandId, String userAgent, String session, boolean doesExpire, String app)
     {
         return isOwner(account.getAccount(), brandId)
                 .flatMap((Boolean isOwner) -> {
