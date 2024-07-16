@@ -200,22 +200,19 @@ public class TrecSecurityContextServlet extends TrecCookieSaver implements Secur
             context.setAuthentication(acc);
         }
 
-        try {
-            TcUser tcUser = acc.getUser();
+        TcUser tcUser = acc.getUser();
 
-            if(tcUser.isEmailVerified())
-                tcUser.addAuthority("EMAIL_VERIFIED");
-            if(tcUser.isPhoneVerified())
-                tcUser.addAuthority("PHONE_VERIFIED");
+        if(tcUser.isEmailVerified())
+            tcUser.addAuthority("EMAIL_VERIFIED");
+        if(tcUser.isPhoneVerified())
+            tcUser.addAuthority("PHONE_VERIFIED");
 
-            if(tokenFlags.getIsMfa())
-                tcUser.addAuthority("MFA_PROVIDED");
+        if(tokenFlags.getIsMfa())
+            tcUser.addAuthority("MFA_PROVIDED");
 
-            for(String role : tcUser.getAuthRoles())
-                tcUser.addAuthority(role);
-        } catch (NullPointerException e) {
-            e.printStackTrace();
-        }
+        for(String role : tcUser.getAuthRoles())
+            tcUser.addAuthority(role);
+
 
         return context;
     }

@@ -158,6 +158,32 @@ public class JwtTokenServiceAsyncTest {
     }
 
     @Test
+    void testGenerateTokenSessionExpires(){
+        TcUser user = ObjectTestProvider.getTcUser();
+        TrecAccount account = user.getTrecAccount();
+
+        TokenTime time = new TokenTime();
+        time.setSession("aaaaaa");
+
+        Mockito.doReturn(Mono.just(new SessionListV2())).when(sessionManager).updateSessionExpiration(anyString(), anyString(), any(OffsetDateTime.class));
+
+        Mono<Optional<TokenTime>> mono = jwtTokenServiceAsync.generateToken(
+                account,
+                "Windows 10 Firefox",
+                null,
+                "aaaaaa",
+                true,
+                "app");
+        StepVerifier.create(mono)
+                .consumeNextWith((Optional<TokenTime> oTokenTime) -> {
+                    Assertions.assertTrue(oTokenTime.isPresent());
+                    TokenTime tokenTime = oTokenTime.get();
+
+                    Assertions.assertNotNull(tokenTime.getToken());
+                }).verifyComplete();
+    }
+
+    @Test
     void testGenerateTokenSessionMfa(){
         TcUser user = ObjectTestProvider.getTcUser();
         TrecAccount account = user.getTrecAccount();

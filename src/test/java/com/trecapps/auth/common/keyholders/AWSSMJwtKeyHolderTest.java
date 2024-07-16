@@ -43,6 +43,8 @@ public class AWSSMJwtKeyHolderTest {
             keyHolder = new AWSSMJwtKeyHolder(
                     "public",
                     "private",
+                    "nPublic",
+                    "nPrivate",
                     "containers",
                     Region.US_EAST_1.toString(),
                     "client",

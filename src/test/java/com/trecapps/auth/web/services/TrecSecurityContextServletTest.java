@@ -199,6 +199,34 @@ public class TrecSecurityContextServletTest {
     }
 
     @Test
+    void testLoadFromHeaderWithPermissions() {
+        HttpRequestResponseHolder httpRequestResponseHolder = Mockito.mock(HttpRequestResponseHolder.class);
+        HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+        Mockito.doReturn(request).when(httpRequestResponseHolder).getRequest();
+
+        prepPath(request, "/endpoint");
+        TcUser user = ObjectTestProvider.getTcUser();
+        user.addAuthority("TREC_VERIFIED");
+        user.setEmailVerified(true);
+        user.setPhoneVerified(true);
+
+        Mockito.doReturn(RSATestHelper.NO_SESSION_OR_BRAND_OR_EXP).when(request).getHeader("Authorization");
+        Mockito.doReturn(Optional.of(user)).when(userStorageService).getAccountById(anyString());
+
+        Mockito.doReturn(true).when(sessionManager).isValidSession(anyString(), anyString(), anyString());
+
+        SecurityContext context = trecSecurtyContext.loadContext(httpRequestResponseHolder);
+
+        Authentication authentication = context.getAuthentication();
+        Assertions.assertTrue(authentication instanceof TrecAuthentication);
+        TrecAuthentication trecAuthentication = (TrecAuthentication) authentication;
+        Assertions.assertEquals(user, trecAuthentication.getUser());
+
+        boolean containedContext = trecSecurtyContext.containsContext(request);
+        Assertions.assertTrue(containedContext);
+    }
+
+    @Test
     void testLoadBlankFromCookie() {
         HttpRequestResponseHolder httpRequestResponseHolder = Mockito.mock(HttpRequestResponseHolder.class);
         HttpServletRequest request = Mockito.mock(HttpServletRequest.class);

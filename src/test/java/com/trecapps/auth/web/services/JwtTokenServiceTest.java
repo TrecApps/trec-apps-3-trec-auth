@@ -150,6 +150,27 @@ public class JwtTokenServiceTest {
     }
 
     @Test
+    void testGenerateTokenSessionExpires(){
+        TcUser user = ObjectTestProvider.getTcUser();
+        TrecAccount account = user.getTrecAccount();
+
+        TokenTime time = new TokenTime();
+        time.setSession("aaaaaa");
+
+
+        TokenTime tokenTime = jwtTokenServiceAsync.generateToken(
+                account,
+                "Windows 10 Firefox",
+                null,
+                "aaaaaa",
+                true,
+                "app");
+
+
+        Assertions.assertNotNull(tokenTime.getToken());
+    }
+
+    @Test
     void testGenerateTokenSessionMfa(){
         TcUser user = ObjectTestProvider.getTcUser();
         TrecAccount account = user.getTrecAccount();
