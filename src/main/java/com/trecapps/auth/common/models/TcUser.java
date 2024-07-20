@@ -65,6 +65,16 @@ public class TcUser implements UserDetails {
 
     Map<String, String> profilePics = new HashMap<>();
 
+    List<MfaMechanism> mfaMechanisms = new ArrayList<>();
+
+    public Optional<MfaMechanism> getMechanism(String source) {
+        for(MfaMechanism mech: mfaMechanisms){
+            if(source.equals(mech.getSource()))
+                return Optional.of(mech);
+        }
+        return Optional.empty();
+    }
+
     public Optional<String> GetMainProfilePic(){
         if(profilePics.containsKey("Main"))
             return Optional.of(profilePics.get("Main"));

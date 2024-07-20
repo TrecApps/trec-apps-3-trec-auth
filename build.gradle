@@ -58,15 +58,17 @@ dependencies {
 
     implementation "org.springframework.boot:spring-boot-starter-security:$springbootVersion"
     implementation "org.springframework.boot:spring-boot-starter-data-jpa:$springbootVersion"
+    implementation 'dev.samstevens.totp:totp:1.7.1'  // MFA Support
+    implementation 'commons-net:commons-net:3.11.1'  // Address known vulnerability in the samstevens dependency above
+    implementation 'com.beust:jcommander:1.78'      // Address known vulnerability in the samstevens dependency above
+
 
     implementation 'com.azure:azure-storage-blob:+'             // Use Azure for Storage
-    //implementation 'com.amazonaws:aws-java-sdk-s3:1.12.694'     // Use AWS for storage
 
     implementation platform('com.google.cloud:libraries-bom:26.38.0')
     implementation 'com.google.cloud:google-cloud-storage'      // Use GCP Cloud Storage for Storage
 
     // AWS Support
-    //implementation 'com.amazonaws:aws-java-sdk:1.12.720'
     implementation 'software.amazon.awssdk:s3:2.25.56'
     implementation 'software.amazon.awssdk:secretsmanager:2.25.56'
 
