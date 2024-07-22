@@ -1,6 +1,7 @@
 package com.trecapps.auth.webflux.services;
 
 import com.trecapps.auth.common.models.MfaMechanism;
+import com.trecapps.auth.common.models.MfaRegistrationData;
 import com.trecapps.auth.common.models.TcUser;
 import dev.samstevens.totp.code.CodeVerifier;
 import dev.samstevens.totp.exceptions.QrGenerationException;
@@ -60,9 +61,9 @@ public class MfaServiceAsync {
         return ret;
     }
 
-    public String getQRCode(TcUser user) throws QrGenerationException {
+    public MfaRegistrationData getQRCode(TcUser user) throws QrGenerationException {
         Optional<MfaMechanism> oTotp = user.getMechanism("Token");
-        if(oTotp.isEmpty()) return "";
+        if(oTotp.isEmpty()) return new MfaRegistrationData(null, null);
 
         String userCode = oTotp.get().getUserCode();
 
@@ -73,10 +74,11 @@ public class MfaServiceAsync {
                 .period(30)
                 .build();
 
-        return Utils.getDataUriForImage(
+        String qrCode = Utils.getDataUriForImage(
                 qrGenerator.generate(data),
                 qrGenerator.getImageMimeType()
         );
+        return new MfaRegistrationData(qrCode, userCode);
     }
 
     public boolean verifyTotp(String code, TcUser user){

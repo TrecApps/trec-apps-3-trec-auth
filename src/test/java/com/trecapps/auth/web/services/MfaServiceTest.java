@@ -2,6 +2,7 @@ package com.trecapps.auth.web.services;
 
 import com.trecapps.auth.ObjectTestProvider;
 import com.trecapps.auth.common.models.MfaMechanism;
+import com.trecapps.auth.common.models.MfaRegistrationData;
 import com.trecapps.auth.common.models.TcUser;
 import dev.samstevens.totp.code.CodeVerifier;
 import dev.samstevens.totp.exceptions.QrGenerationException;
@@ -108,8 +109,8 @@ public class MfaServiceTest {
 
     @Test
     void testGetQRCode() throws QrGenerationException {
-        String code = mfaService.getQRCode(user);
-        Assertions.assertTrue(code.isEmpty());
+        MfaRegistrationData code = mfaService.getQRCode(user);
+        Assertions.assertFalse(code.isValid());
 
         addTokenMech(defaultSecretGenerator.generate());
 
@@ -122,7 +123,7 @@ public class MfaServiceTest {
 
         code = mfaService.getQRCode(user);
 
-        Assertions.assertFalse(code.isEmpty());
+        Assertions.assertTrue(code.isValid());
     }
 
     @Test
