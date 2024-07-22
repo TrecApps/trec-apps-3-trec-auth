@@ -1,7 +1,6 @@
-package com.trecapps.auth.webflux.repos;
+package com.trecapps.auth.common.repos;
 
 import com.zaxxer.hikari.HikariDataSource;
-import jakarta.persistence.EntityManagerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
@@ -16,6 +15,8 @@ import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
+import jakarta.persistence.EntityManagerFactory;
+
 import javax.sql.DataSource;
 import java.util.HashMap;
 import java.util.Map;
@@ -25,7 +26,7 @@ import java.util.Map;
 @EnableJpaRepositories (
 		entityManagerFactoryRef = "primaryEntityManagerFactory",
         transactionManagerRef = "primaryTransactionManager",
-        basePackages = {"com.trecapps.auth.webflux.repos.primary"})
+        basePackages = {"com.trecapps.auth.common.repos.primary"})
 @ConditionalOnProperty(prefix = "trecauth", name = "login", havingValue = "true")
 public class PrimaryDataSourceConfiguration
 {

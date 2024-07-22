@@ -1,4 +1,4 @@
-package com.trecapps.auth.web.repos;
+package com.trecapps.auth.common.repos;
 
 import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -24,7 +24,7 @@ import java.util.Map;
 @EnableJpaRepositories(
         entityManagerFactoryRef = "secondaryEntityManagerFactory",
         transactionManagerRef = "secondaryTransactionManager",
-        basePackages = {"com.trecapps.auth.web.repos.secondary"})
+        basePackages = {"com.trecapps.auth.common.repos.secondary"})
 @ConditionalOnProperty(prefix = "trecauth", name = "login", havingValue = "true")
 public class SecondaryDataSourceConfiguration {
     @Bean(name = "secondaryDataSourceProperties")

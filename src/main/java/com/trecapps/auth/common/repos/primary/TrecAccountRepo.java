@@ -1,4 +1,4 @@
-package com.trecapps.auth.web.repos.primary;
+package com.trecapps.auth.common.repos.primary;
 
 import com.trecapps.auth.common.models.primary.TrecAccount;
 import org.springframework.data.jpa.repository.JpaRepository;

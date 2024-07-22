@@ -1,11 +1,10 @@
 package com.trecapps.auth.web.services;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.trecapps.auth.common.models.*;
 import com.trecapps.auth.common.models.primary.TrecAccount;
 import com.trecapps.auth.common.models.secondary.BrandEntry;
-import com.trecapps.auth.web.repos.primary.TrecAccountRepo;
-import com.trecapps.auth.web.repos.secondary.BrandEntryRepo;
+import com.trecapps.auth.common.repos.primary.TrecAccountRepo;
+import com.trecapps.auth.common.repos.secondary.BrandEntryRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;

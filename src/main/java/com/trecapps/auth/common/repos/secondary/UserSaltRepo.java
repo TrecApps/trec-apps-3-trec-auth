@@ -1,4 +1,4 @@
-package com.trecapps.auth.web.repos.secondary;
+package com.trecapps.auth.common.repos.secondary;
 
 import com.trecapps.auth.common.models.secondary.UserSalt;
 import org.springframework.data.jpa.repository.JpaRepository;
