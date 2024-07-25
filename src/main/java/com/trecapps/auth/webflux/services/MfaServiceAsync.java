@@ -61,6 +61,34 @@ public class MfaServiceAsync {
         return ret;
     }
 
+    public boolean enablePhoneVerification(TcUser user){
+        if(user.isPhoneVerified()){
+            Optional<MfaMechanism> oTotp = user.getMechanism("Phone");
+            if(oTotp.isEmpty()) {
+                MfaMechanism phoneMech = new MfaMechanism();
+                phoneMech.setSource("Phone");
+                user.getMfaMechanisms().add(phoneMech);
+                userStorageService.saveUser(user);
+            }
+            return true;
+        }
+        return false;
+    }
+
+    public boolean enableEmailVerification(TcUser user){
+        if(user.isEmailVerified()){
+            Optional<MfaMechanism> oTotp = user.getMechanism("Email");
+            if(oTotp.isEmpty()) {
+                MfaMechanism phoneMech = new MfaMechanism();
+                phoneMech.setSource("Email");
+                user.getMfaMechanisms().add(phoneMech);
+                userStorageService.saveUser(user);
+            }
+            return true;
+        }
+        return false;
+    }
+
     public MfaRegistrationData getQRCode(TcUser user) throws QrGenerationException {
         Optional<MfaMechanism> oTotp = user.getMechanism("Token");
         if(oTotp.isEmpty()) return new MfaRegistrationData(null, null);

@@ -3,6 +3,7 @@ package com.trecapps.auth.web.services;
 import com.trecapps.auth.ObjectTestProvider;
 import com.trecapps.auth.common.models.MfaMechanism;
 import com.trecapps.auth.common.models.MfaRegistrationData;
+import com.trecapps.auth.common.models.PhoneNumber;
 import com.trecapps.auth.common.models.TcUser;
 import dev.samstevens.totp.code.CodeVerifier;
 import dev.samstevens.totp.exceptions.QrGenerationException;
@@ -21,6 +22,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -85,6 +87,40 @@ public class MfaServiceTest {
         Assertions.assertTrue(options.contains("Token"));
         Assertions.assertTrue(options.contains("Email"));
         Assertions.assertTrue(options.contains("Phone"));
+    }
+
+    @Test
+    void testEnablePhoneVerification(){
+        user.setPhoneVerified(false);
+        Assertions.assertFalse(mfaService.enablePhoneVerification(user));
+
+        user.setPhoneVerified(true);
+        user.setMobilePhone(new PhoneNumber(555555555));
+
+        Mockito.doAnswer((InvocationOnMock invoke) -> {
+            TcUser pUser = invoke.getArgument(0, TcUser.class);
+            Optional<MfaMechanism> mechanismOptional = pUser.getMechanism("Phone");
+            Assertions.assertTrue(mechanismOptional.isPresent());
+            return null;
+        }).when(userStorageService).saveUser(user);
+        Assertions.assertTrue(mfaService.enablePhoneVerification(user));
+    }
+
+    @Test
+    void testEnableEmailVerification(){
+        user.setEmailVerified(false);
+        Assertions.assertFalse(mfaService.enableEmailVerification(user));
+
+        user.setEmailVerified(true);
+        user.setEmail("john.doe@gmail.com");
+
+        Mockito.doAnswer((InvocationOnMock invoke) -> {
+            TcUser pUser = invoke.getArgument(0, TcUser.class);
+            Optional<MfaMechanism> mechanismOptional = pUser.getMechanism("Email");
+            Assertions.assertTrue(mechanismOptional.isPresent());
+            return null;
+        }).when(userStorageService).saveUser(user);
+        Assertions.assertTrue(mfaService.enableEmailVerification(user));
     }
 
     @Test

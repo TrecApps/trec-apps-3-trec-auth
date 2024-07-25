@@ -41,6 +41,33 @@ public class MfaService {
         });
         return ret.stream().toList();
     }
+    public boolean enablePhoneVerification(TcUser user){
+        if(user.isPhoneVerified()){
+            Optional<MfaMechanism> oTotp = user.getMechanism("Phone");
+            if(oTotp.isEmpty()) {
+                MfaMechanism phoneMech = new MfaMechanism();
+                phoneMech.setSource("Phone");
+                user.getMfaMechanisms().add(phoneMech);
+                userStorageService.saveUser(user);
+            }
+            return true;
+        }
+        return false;
+    }
+
+    public boolean enableEmailVerification(TcUser user){
+        if(user.isEmailVerified()){
+            Optional<MfaMechanism> oTotp = user.getMechanism("Email");
+            if(oTotp.isEmpty()) {
+                MfaMechanism phoneMech = new MfaMechanism();
+                phoneMech.setSource("Email");
+                user.getMfaMechanisms().add(phoneMech);
+                userStorageService.saveUser(user);
+            }
+            return true;
+        }
+        return false;
+    }
 
     public String setUpKey(TcUser user){
         Optional<MfaMechanism> oTotp = user.getMechanism("Token");
