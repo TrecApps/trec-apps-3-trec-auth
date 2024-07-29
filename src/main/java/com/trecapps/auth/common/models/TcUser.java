@@ -67,6 +67,8 @@ public class TcUser implements UserDetails {
 
     List<MfaMechanism> mfaMechanisms = new ArrayList<>();
 
+    List<MfaReq> mfaRequirements = new ArrayList<>();
+
     public Optional<MfaMechanism> getMechanism(String source) {
         for(MfaMechanism mech: mfaMechanisms){
             if(source.equals(mech.getSource()))
