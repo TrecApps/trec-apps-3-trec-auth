@@ -145,6 +145,7 @@ public class GoogleCloudUserStorageServiceAsync implements IUserStorageServiceAs
 
     @Override    @SneakyThrows
     public void saveUser(TcUser user) {
+        checkUserPermissions(user);
         String objectName = "user-" + user.getId();
         BlobInfo blobInfo = getBlobInfo(objectName, client.getName());
         Storage.BlobTargetOption precondition = getPrecondition(blobInfo);

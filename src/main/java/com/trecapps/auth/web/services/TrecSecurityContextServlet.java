@@ -1,11 +1,9 @@
 package com.trecapps.auth.web.services;
 
+import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.trecapps.auth.common.ISecurityAlertHandler;
-import com.trecapps.auth.common.models.LoginToken;
-import com.trecapps.auth.common.models.TcUser;
-import com.trecapps.auth.common.models.TokenFlags;
-import com.trecapps.auth.common.models.TrecAuthentication;
+import com.trecapps.auth.common.models.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -158,6 +156,26 @@ public class TrecSecurityContextServlet extends TrecCookieSaver implements Secur
         return context;
     }
 
+    boolean needsMfa(TcUser user, DecodedJWT jwt){
+        Claim mfaClaim = jwt.getClaim("mfa");
+        if(!mfaClaim.isMissing() && mfaClaim.asBoolean()) {
+            // MFA is factored in, no need to prompt user
+            // Go ahead and add the MFA_PROVIDED Authority while at it
+            user.addAuthority("MFA_PROVIDED");
+
+            return false;
+        }
+        String jwtApp = jwt.getIssuer();
+        if(jwtApp == null) throw new RuntimeException("'app' is a required field in the Authentication token!");
+
+        // MFA is not verified, need to see if required
+        for (MfaReq mfaRequirement : user.getMfaRequirements()) {
+            if(mfaRequirement.getApp().equals(jwtApp))
+                return mfaRequirement.isRequireMfa();
+        }
+
+        return false;
+    }
 
     SecurityContext getContextFromHeader(HttpServletRequest request)
     {
@@ -174,6 +192,7 @@ public class TrecSecurityContextServlet extends TrecCookieSaver implements Secur
             return context;
         }
         TrecAuthentication acc = tokenService.verifyToken(decode, tokenFlags);
+
         if(acc == null) {
             if(alertHandler != null){
                 alertHandler.alertNullAccount(
@@ -185,6 +204,9 @@ public class TrecSecurityContextServlet extends TrecCookieSaver implements Secur
             }
             return context;
         }
+
+        acc.setMfaBlock(!needsMfa(acc.getUser(), decode));
+
         // Now that we have our account, get Session Information
         String sessionId = tokenService.getSessionId(auth);
         // Only authenticate if both the user, app, and session can be verified
@@ -206,9 +228,6 @@ public class TrecSecurityContextServlet extends TrecCookieSaver implements Secur
             tcUser.addAuthority("EMAIL_VERIFIED");
         if(tcUser.isPhoneVerified())
             tcUser.addAuthority("PHONE_VERIFIED");
-
-        if(tokenFlags.getIsMfa())
-            tcUser.addAuthority("MFA_PROVIDED");
 
         for(String role : tcUser.getAuthRoles())
             tcUser.addAuthority(role);

@@ -206,6 +206,7 @@ public class AwsS3UserStorageService implements IUserStorageService{
     @SneakyThrows
     @Override
     public void saveUser(TcUser user) {
+        checkUserPermissions(user);
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                 .bucket(s3BucketName)
                 .key("user-" + user.getId())

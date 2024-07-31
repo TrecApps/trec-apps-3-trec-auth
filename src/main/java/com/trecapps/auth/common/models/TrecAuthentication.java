@@ -26,6 +26,10 @@ public class TrecAuthentication implements Authentication {
     @Setter
     boolean useCookie;
 
+    @Getter
+    @Setter
+    boolean mfaBlock;
+
 //    @Setter
 //    @Getter
 //    Map<String, String> claims = new HashMap<>();

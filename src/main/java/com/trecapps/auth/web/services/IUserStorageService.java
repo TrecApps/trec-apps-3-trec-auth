@@ -4,11 +4,18 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.trecapps.auth.common.models.*;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
 public interface IUserStorageService {
 
+    default void checkUserPermissions(TcUser user){
+        List<String> authRoles = user.getAuthRoles();
+        authRoles.remove("EMAIL_VERIFIED");
+        authRoles.remove("PHONE_VERIFIED");
+        authRoles.remove("MFA_PROVIDED");
+    }
 
     String retrieveKey(String keyId);
 

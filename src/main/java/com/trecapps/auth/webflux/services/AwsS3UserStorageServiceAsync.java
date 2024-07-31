@@ -183,6 +183,8 @@ public class AwsS3UserStorageServiceAsync implements IUserStorageServiceAsync {
     @SneakyThrows
     @Override
     public Mono<Void> saveUserMono(TcUser user) {
+        checkUserPermissions(user);
+
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                 .bucket(this.s3BucketName)
                 .key("user-" + user.getId())

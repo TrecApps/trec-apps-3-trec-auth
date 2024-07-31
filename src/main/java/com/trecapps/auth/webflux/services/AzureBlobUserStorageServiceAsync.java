@@ -150,6 +150,7 @@ public class AzureBlobUserStorageServiceAsync implements IUserStorageServiceAsyn
 
     @Override
     public Mono<Void> saveUserMono(TcUser user) {
+        checkUserPermissions(user);
         BlobAsyncClient client = containerClient.getBlobAsyncClient("user-" + user.getId());
 
         return client.upload(BinaryData.fromObject(encryptor.encrypt(user)),true).then(Mono.empty());

@@ -190,6 +190,7 @@ public class AzureBlobUserStorageService implements IUserStorageService{
     @Override
     public void saveUser(TcUser user)
     {
+        checkUserPermissions(user);
         BlobClient client = containerClient.getBlobClient("user-" + user.getId());
 
         client.upload(BinaryData.fromObject(encryptor.encrypt(user)),true);

@@ -15,7 +15,7 @@ public class TrecAuthManagerReactive implements ReactiveAuthenticationManager {
         return Mono.just(authentication)
                 .doOnNext((Authentication auth)-> {
                     if(auth instanceof TrecAuthentication trecAuthentication)
-                        trecAuthentication.setAuthenticated(true);
+                        trecAuthentication.setAuthenticated(!trecAuthentication.isMfaBlock());
                     else auth.setAuthenticated(false);
                 });
     }

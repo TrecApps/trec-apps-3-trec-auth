@@ -12,7 +12,7 @@ public class TrecAuthManagerWeb implements AuthenticationManager {
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         if(authentication instanceof TrecAuthentication trecAuthentication)
         {
-            trecAuthentication.setAuthenticated(true);
+            trecAuthentication.setAuthenticated(!trecAuthentication.isMfaBlock());
         }
         else authentication.setAuthenticated(false);
         return authentication;

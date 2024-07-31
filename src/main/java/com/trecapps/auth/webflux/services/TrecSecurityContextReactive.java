@@ -1,6 +1,7 @@
 package com.trecapps.auth.webflux.services;
 
 
+import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.trecapps.auth.common.ISecurityAlertHandler;
 import com.trecapps.auth.common.models.*;
@@ -101,7 +102,7 @@ public class TrecSecurityContextReactive extends TrecCookieSaverAsync implements
         Mono<SecurityContext> ret;
         String path = req.getPath().value();
         if(cookieApp != null && path.endsWith("/refresh_token"))
-            ret = getContectFromCookie(req);
+            ret = getContextFromCookie(req);
         else
             ret = getContextFromHeader(req);
         return ret.doOnNext((SecurityContext context) -> {
@@ -143,7 +144,7 @@ public class TrecSecurityContextReactive extends TrecCookieSaverAsync implements
     }
 
 
-    Mono<SecurityContext> getContectFromCookie(ServerHttpRequest request) {
+    Mono<SecurityContext> getContextFromCookie(ServerHttpRequest request) {
         return Mono.just(SecurityContextHolder.createEmptyContext())
                 .flatMap((SecurityContext context) -> {
 
@@ -167,6 +168,27 @@ public class TrecSecurityContextReactive extends TrecCookieSaverAsync implements
                 });
 
 
+    }
+
+    boolean needsMfa(TcUser user, DecodedJWT jwt){
+        Claim mfaClaim = jwt.getClaim("mfa");
+        if(!mfaClaim.isMissing() && mfaClaim.asBoolean()) {
+            // MFA is factored in, no need to prompt user
+            // Go ahead and add the MFA_PROVIDED Authority while at it
+            user.addAuthority("MFA_PROVIDED");
+
+            return false;
+        }
+        String jwtApp = jwt.getIssuer();
+        if(jwtApp == null) throw new RuntimeException("'app' is a required field in the Authentication token!");
+
+        // MFA is not verified, need to see if required
+        for (MfaReq mfaRequirement : user.getMfaRequirements()) {
+            if(mfaRequirement.getApp().equals(jwtApp))
+                return mfaRequirement.isRequireMfa();
+        }
+
+        return false;
     }
 
     Mono<SecurityContext> getContextFromHeader(ServerHttpRequest request) {
@@ -193,6 +215,9 @@ public class TrecSecurityContextReactive extends TrecCookieSaverAsync implements
                                         return sessionManager.isValidSession(acc.getUser().getId(), app, sessionId)
                                                 .map((Boolean isValidSession) -> {
                                                     if(isValidSession){
+
+                                                        acc.setMfaBlock(!needsMfa(acc.getUser(), decode));
+
                                                         acc.setSessionId(sessionId);
                                                         LoginToken token = new LoginToken();
                                                         token.setAccess_token(auth);
@@ -229,9 +254,6 @@ public class TrecSecurityContextReactive extends TrecCookieSaverAsync implements
                             tcUser.addAuthority("EMAIL_VERIFIED");
                         if(tcUser.isPhoneVerified())
                             tcUser.addAuthority("PHONE_VERIFIED");
-
-//                        if(tokenFlags.getIsMfa())
-//                            tcUser.addAuthority("MFA_PROVIDED");
 
                         for(String role : tcUser.getAuthRoles())
                             tcUser.addAuthority(role);
