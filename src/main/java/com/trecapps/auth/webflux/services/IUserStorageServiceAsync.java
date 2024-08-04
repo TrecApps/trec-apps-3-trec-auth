@@ -15,6 +15,8 @@ public interface IUserStorageServiceAsync {
         authRoles.remove("EMAIL_VERIFIED");
         authRoles.remove("PHONE_VERIFIED");
         authRoles.remove("MFA_PROVIDED");
+
+        user.setAuthorities(null);
     }
 
     Mono<String> retrieveKey(String keyId);

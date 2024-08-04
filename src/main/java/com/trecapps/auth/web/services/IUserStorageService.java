@@ -15,6 +15,8 @@ public interface IUserStorageService {
         authRoles.remove("EMAIL_VERIFIED");
         authRoles.remove("PHONE_VERIFIED");
         authRoles.remove("MFA_PROVIDED");
+
+        user.setAuthorities(null);
     }
 
     String retrieveKey(String keyId);
