@@ -168,6 +168,9 @@ public class TrecSecurityContextServlet extends TrecCookieSaver implements Secur
         String jwtApp = jwt.getIssuer();
         if(jwtApp == null) throw new RuntimeException("'app' is a required field in the Authentication token!");
 
+        if(user.getMfaMechanisms().isEmpty())
+            return false;
+
         // MFA is not verified, need to see if required
         for (MfaReq mfaRequirement : user.getMfaRequirements()) {
             if(mfaRequirement.getApp().equals(jwtApp))
