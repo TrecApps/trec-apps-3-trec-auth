@@ -91,7 +91,7 @@ public class MfaService {
 
         String userCode = oTotp.get().getUserCode();
 
-        QrData data = new QrData.Builder().label("MFA")
+        QrData data = new QrData.Builder().label(user.getUsername())
                 .secret(userCode)
                 .issuer("Trec-Apps")
                 .digits(6)

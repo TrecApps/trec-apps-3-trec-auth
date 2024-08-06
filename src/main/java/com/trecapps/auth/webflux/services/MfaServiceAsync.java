@@ -95,7 +95,10 @@ public class MfaServiceAsync {
 
         String userCode = oTotp.get().getUserCode();
 
-        QrData data = new QrData.Builder().label("MFA")
+        String label = user.getUsername();
+
+
+        QrData data = new QrData.Builder().label(label)
                 .secret(userCode)
                 .issuer("Trec-Apps")
                 .digits(6)
