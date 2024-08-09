@@ -89,11 +89,11 @@ public class MfaServiceAsync {
         return false;
     }
 
-    public MfaRegistrationData getQRCode(TcUser user) throws QrGenerationException {
+    public MfaRegistrationData getQRCode(TcUser user, String code) throws QrGenerationException {
         Optional<MfaMechanism> oTotp = user.getMechanism("Token");
         if(oTotp.isEmpty()) return new MfaRegistrationData(null, null);
 
-        String userCode = oTotp.get().getUserCode();
+        String userCode = code;
 
         String label = user.getUsername();
 

@@ -85,11 +85,11 @@ public class MfaService {
         return ret;
     }
 
-    public MfaRegistrationData getQRCode(TcUser user) throws QrGenerationException {
+    public MfaRegistrationData getQRCode(TcUser user, String code) throws QrGenerationException {
         Optional<MfaMechanism> oTotp = user.getMechanism("Token");
         if(oTotp.isEmpty()) return new MfaRegistrationData(null, null);
 
-        String userCode = oTotp.get().getUserCode();
+        String userCode = code;
 
         QrData data = new QrData.Builder().label(user.getUsername())
                 .secret(userCode)

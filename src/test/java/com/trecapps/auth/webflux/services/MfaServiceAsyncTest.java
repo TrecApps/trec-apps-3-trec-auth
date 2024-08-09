@@ -146,10 +146,11 @@ public class MfaServiceAsyncTest {
 
     @Test
     void testGetQRCode() throws QrGenerationException {
-        MfaRegistrationData code = mfaService.getQRCode(user);
+        MfaRegistrationData code = mfaService.getQRCode(user, null);
         Assertions.assertFalse(code.isValid());
 
-        addTokenMech(defaultSecretGenerator.generate());
+        String userCode = defaultSecretGenerator.generate();
+        addTokenMech(userCode);
 
         Mockito.doAnswer((InvocationOnMock invoke) ->
                         defaultQrGenerator.generate(invoke.getArgument(0, QrData.class)))
@@ -158,7 +159,7 @@ public class MfaServiceAsyncTest {
                         defaultQrGenerator.getImageMimeType())
                 .when(qrGenerator).getImageMimeType();
 
-        code = mfaService.getQRCode(user);
+        code = mfaService.getQRCode(user, userCode);
 
         Assertions.assertTrue(code.isValid());
     }

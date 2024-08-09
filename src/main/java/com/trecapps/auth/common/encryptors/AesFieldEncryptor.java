@@ -68,21 +68,23 @@ public class AesFieldEncryptor implements IFieldEncryptor{
 
     @SneakyThrows
     private String encryptField(String value){
+        if(isFieldEncrypted(value)) return value;
         byte[] result = aesCipherEncrypt.doFinal(value.getBytes(StandardCharsets.UTF_8));
         return wrapField(Base64.getEncoder().encodeToString(result));
     }
 
     @SneakyThrows
     private String decryptField(String value){
-        // If not Encrypted yet, this will only screw the process up
-        if(!isFieldEncrypted(value)) return value;
 
-        // If it is encrypted, remove the markers
-        value = unwrapField(value);
+        while(isFieldEncrypted(value)){
+            value = unwrapField(value);
 
-        byte[] encryptedBytes = Base64.getDecoder().decode(value);
-        byte[] decryptedBytes = aesCipherDecrypt.doFinal(encryptedBytes);
-        return new String(decryptedBytes, StandardCharsets.UTF_8);
+            byte[] encryptedBytes = Base64.getDecoder().decode(value);
+            byte[] decryptedBytes = aesCipherDecrypt.doFinal(encryptedBytes);
+            value = new String(decryptedBytes, StandardCharsets.UTF_8);
+        }
+
+        return value;
     }
 
     @Override
@@ -136,9 +138,10 @@ public class AesFieldEncryptor implements IFieldEncryptor{
                 field.setAccessible(true);
                 Object fieldValue = field.get(obj);
 
-                if(fieldValue instanceof String)
-                    field.set(obj, decryptField(fieldValue.toString()));
-                else if(fieldValue instanceof List collectionValue){
+                if(fieldValue instanceof String) {
+                    String decryptedValue = decryptField(fieldValue.toString());
+                    field.set(obj, decryptedValue);
+                }else if(fieldValue instanceof List collectionValue){
                     for(int c = 0; c < collectionValue.size(); c++)
                     {
                         collectionValue.set(c, decrypt(collectionValue.get(c)));
