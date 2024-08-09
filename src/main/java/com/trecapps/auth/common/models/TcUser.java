@@ -65,6 +65,7 @@ public class TcUser implements UserDetails {
 
     Map<String, String> profilePics = new HashMap<>();
 
+    @EncryptedField
     List<MfaMechanism> mfaMechanisms = new ArrayList<>();
 
     List<MfaReq> mfaRequirements = new ArrayList<>();
