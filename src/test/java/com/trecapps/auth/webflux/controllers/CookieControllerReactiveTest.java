@@ -139,7 +139,7 @@ public class CookieControllerReactiveTest {
 
             return null;
         }).when(userStorageService).saveSessions(any(SessionListV2.class), anyString());
-        Mono<ResponseEntity<LoginToken>> mono = cookieController.checkRefresh("", trecAuthentication);
+        Mono<ResponseEntity<LoginToken>> mono = cookieController.checkRefresh("", "non-mfa", trecAuthentication);
 
         StepVerifier.create(mono)
                         .consumeNextWith((ResponseEntity<LoginToken> response) -> {
@@ -153,7 +153,7 @@ public class CookieControllerReactiveTest {
     @Test
     void testFailedRefresh()
     {
-        Mono<ResponseEntity<LoginToken>> mono = cookieController.checkRefresh("", null);
+        Mono<ResponseEntity<LoginToken>> mono = cookieController.checkRefresh("", "non-mfa", null);
 
         StepVerifier.create(mono)
                         .consumeNextWith((ResponseEntity<LoginToken> response) ->{

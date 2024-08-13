@@ -1,6 +1,8 @@
 package com.trecapps.auth.webflux.controllers;
 
 import com.trecapps.auth.common.models.LoginToken;
+import com.trecapps.auth.common.models.MfaReq;
+import com.trecapps.auth.common.models.TcUser;
 import com.trecapps.auth.common.models.TrecAuthentication;
 import com.trecapps.auth.webflux.services.IUserStorageServiceAsync;
 import com.trecapps.auth.webflux.services.JwtTokenServiceAsync;
@@ -14,10 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 import java.util.Optional;
@@ -40,8 +39,19 @@ public class CookieController extends TrecCookieSaverAsync {
         this.cookieBase = cookieBase;
     }
 
+    boolean isMfaRequired(TcUser user, String app) {
+        for(MfaReq req: user.getMfaRequirements())
+        {
+            if(app.equals(req.getApp()))
+                return req.isRequireMfa();
+        }
+        return false;
+    }
+
     @GetMapping
-    public Mono<ResponseEntity<LoginToken>> checkRefresh(@RequestHeader("User-Agent") String userClient, Authentication authentication){
+    public Mono<ResponseEntity<LoginToken>> checkRefresh(@RequestHeader("User-Agent") String userClient,
+                                                         @RequestParam("app") String app,
+                                                         Authentication authentication){
 
         if(authentication instanceof TrecAuthentication tAuth){
 
@@ -51,7 +61,16 @@ public class CookieController extends TrecCookieSaverAsync {
                     .flatMap((Optional<LoginToken> oToken) ->{
                                 return oToken.<Mono<? extends ResponseEntity<LoginToken>>>map(
                                         loginToken -> this.cookieBase.assertAppAdded(tAuth.getAccount().getId(), tAuth.getSessionId(), null)
-                                        .thenReturn(new ResponseEntity<>(loginToken, HttpStatus.OK))).orElseGet(() -> Mono.just(new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR)));
+
+                                        .thenReturn(loginToken)
+                                                .doOnNext((LoginToken token) -> {
+                                                    if(isMfaRequired(tAuth.getUser(), app))
+                                                        token.setToken_type("User-requires_mfa");
+                                                })
+                                                .map(ResponseEntity::ok)
+                                        )
+
+                                        .orElseGet(() -> Mono.just(new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR)));
                             }
 
                     );

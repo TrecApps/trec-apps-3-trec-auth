@@ -139,7 +139,7 @@ public class CookieControllerServletTest {
                 return null;
             }).when(userStorageService).saveSessions(any(SessionListV2.class), anyString());
 
-            ResponseEntity<LoginToken> response = cookieController.checkRefresh("");
+            ResponseEntity<LoginToken> response = cookieController.checkRefresh("", "non-mfa");
 
             Assertions.assertEquals(HttpStatusCode.OK, response.getStatusCode().value());
             Assertions.assertEquals(token, response.getBody());
@@ -149,7 +149,7 @@ public class CookieControllerServletTest {
     @Test
     void testFailedRefresh()
     {
-        ResponseEntity<LoginToken> response = cookieController.checkRefresh("");
+        ResponseEntity<LoginToken> response = cookieController.checkRefresh("", "non-mfa");
 
         Assertions.assertEquals(HttpStatusCode.NOT_FOUND, response.getStatusCode().value());
 
