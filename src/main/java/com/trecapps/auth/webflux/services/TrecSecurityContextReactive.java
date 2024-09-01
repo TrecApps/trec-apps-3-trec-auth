@@ -47,6 +47,9 @@ public class TrecSecurityContextReactive extends TrecCookieSaverAsync implements
         return address.contains("localhost") || address.contains("127.0.0.1");
     }
 
+    // endpoints that must not require MFA, likely because they help with getting MFA verified
+    final List<String> mfaEndpointExceptions;
+
     @Autowired
     public TrecSecurityContextReactive(
             JwtTokenServiceAsync tokenService,
@@ -57,7 +60,8 @@ public class TrecSecurityContextReactive extends TrecCookieSaverAsync implements
             @Value("${trecauth.refresh.domain:#{NULL}}") String domain,
             @Value("${trecauth.refresh.app:#{NULL}}") String cookieApp,
             @Value("${trecauth.refresh.cookie-name:#{NULL}}") String cookieName,
-            @Value("${trecauth.flag-local:false}") boolean flagLocal
+            @Value("${trecauth.flag-local:false}") boolean flagLocal,
+            @Value("${trecauth.mfa.endpoint.exceptions:#{NULL}}") String exceptedEndpoints
     )
     {
         super(sessionManager,tokenService, userStorageService1, app);
@@ -66,6 +70,13 @@ public class TrecSecurityContextReactive extends TrecCookieSaverAsync implements
         this.cookieApp = cookieApp;
         this.cookieName = cookieName;
         this.logLocal = flagLocal;
+
+        if(exceptedEndpoints == null)
+            this.mfaEndpointExceptions = List.of();
+        else {
+            String[] endpoints = exceptedEndpoints.split(";");
+            mfaEndpointExceptions = List.of(endpoints);
+        }
     }
 
     @Override
@@ -170,7 +181,7 @@ public class TrecSecurityContextReactive extends TrecCookieSaverAsync implements
 
     }
 
-    boolean needsMfa(TcUser user, DecodedJWT jwt){
+    boolean needsMfa(TcUser user, DecodedJWT jwt, String endpoint){
         Claim mfaClaim = jwt.getClaim("mfa");
         if(!mfaClaim.isMissing() && mfaClaim.asBoolean()) {
             // MFA is factored in, no need to prompt user
@@ -179,6 +190,10 @@ public class TrecSecurityContextReactive extends TrecCookieSaverAsync implements
 
             return false;
         }
+
+        if(this.mfaEndpointExceptions.contains(endpoint))
+            return false;
+
         String jwtApp = jwt.getIssuer();
         if(jwtApp == null) throw new RuntimeException("'app' is a required field in the Authentication token!");
 
@@ -219,7 +234,7 @@ public class TrecSecurityContextReactive extends TrecCookieSaverAsync implements
                                                 .map((Boolean isValidSession) -> {
                                                     if(isValidSession){
 
-                                                        acc.setMfaBlock(!needsMfa(acc.getUser(), decode));
+                                                        acc.setMfaBlock(needsMfa(acc.getUser(), decode, request.getPath().value()));
 
                                                         acc.setSessionId(sessionId);
                                                         LoginToken token = new LoginToken();
@@ -227,8 +242,8 @@ public class TrecSecurityContextReactive extends TrecCookieSaverAsync implements
                                                         acc.setLoginToken(token);
 
                                                         acc.setBrandId(acc.getBrandId());
-
-                                                        context.setAuthentication(acc);
+                                                        if(!acc.isMfaBlock())
+                                                            context.setAuthentication(acc);
                                                     }
                                                     else {
                                                         logger.info("Session {} deemed invalid!", sessionId);

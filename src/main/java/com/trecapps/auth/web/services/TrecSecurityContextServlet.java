@@ -19,6 +19,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -39,6 +40,9 @@ public class TrecSecurityContextServlet extends TrecCookieSaver implements Secur
         return address.contains("localhost") || address.contains("127.0.0.1");
     }
 
+    // endpoints that must not require MFA, likely because they help with getting MFA verified
+    final List<String> mfaEndpointExceptions;
+
     @Autowired
     public TrecSecurityContextServlet(
             JwtTokenService jwtService,
@@ -49,7 +53,8 @@ public class TrecSecurityContextServlet extends TrecCookieSaver implements Secur
             @Value("${trecauth.refresh.cookie-name:#{NULL}}") String cookieName,
             @Value("${trecauth.refresh.app:#{NULL}}") String cookieApp,
             @Value("${trecauth.refresh.domain:#{NULL}}") String domain,
-            @Value("${trecauth.flag-local:false}") boolean flagLocal
+            @Value("${trecauth.flag-local:false}") boolean flagLocal,
+            @Value("${trecauth.mfa.endpoint.exceptions:#{NULL}}") String exceptedEndpoints
     )
     {
         super(sessionManager, jwtService, userStorageService, app);
@@ -58,6 +63,13 @@ public class TrecSecurityContextServlet extends TrecCookieSaver implements Secur
         this.cookieApp = cookieApp;
         this.alertHandler = alertHandler;
         this.logLocal = flagLocal;
+
+        if(exceptedEndpoints == null)
+            this.mfaEndpointExceptions = List.of();
+        else {
+            String[] endpoints = exceptedEndpoints.split(";");
+            mfaEndpointExceptions = List.of(endpoints);
+        }
     }
 
     Logger logger = LoggerFactory.getLogger(TrecSecurityContextServlet.class);
@@ -156,7 +168,7 @@ public class TrecSecurityContextServlet extends TrecCookieSaver implements Secur
         return context;
     }
 
-    boolean needsMfa(TcUser user, DecodedJWT jwt){
+    boolean needsMfa(TcUser user, DecodedJWT jwt, String endpoint){
         Claim mfaClaim = jwt.getClaim("mfa");
         if(!mfaClaim.isMissing() && mfaClaim.asBoolean()) {
             // MFA is factored in, no need to prompt user
@@ -165,6 +177,10 @@ public class TrecSecurityContextServlet extends TrecCookieSaver implements Secur
 
             return false;
         }
+
+        if(this.mfaEndpointExceptions.contains(endpoint))
+            return false;
+
         String jwtApp = jwt.getIssuer();
         if(jwtApp == null) throw new RuntimeException("'app' is a required field in the Authentication token!");
 
@@ -208,7 +224,7 @@ public class TrecSecurityContextServlet extends TrecCookieSaver implements Secur
             return context;
         }
 
-        acc.setMfaBlock(!needsMfa(acc.getUser(), decode));
+        acc.setMfaBlock(needsMfa(acc.getUser(), decode, request.getRequestURI()));
 
         // Now that we have our account, get Session Information
         String sessionId = tokenService.getSessionId(auth);

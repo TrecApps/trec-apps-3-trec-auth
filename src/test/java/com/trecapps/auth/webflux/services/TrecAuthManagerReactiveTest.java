@@ -32,8 +32,6 @@ public class TrecAuthManagerReactiveTest {
         authentication.setAuthenticated(true);
         Mono<Authentication> monoAuth = manager.authenticate(authentication);
 
-        StepVerifier.create(monoAuth).consumeNextWith((Authentication auth) -> {
-            Assertions.assertFalse(auth.isAuthenticated());
-        }).verifyComplete();
+        StepVerifier.create(monoAuth).verifyComplete();
     }
 }

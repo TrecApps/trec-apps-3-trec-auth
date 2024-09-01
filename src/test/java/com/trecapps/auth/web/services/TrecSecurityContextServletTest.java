@@ -85,7 +85,8 @@ public class TrecSecurityContextServletTest {
                 "trecapps.com",
                 "trec-app",
                 "trec-app",
-                false
+                false,
+                null
         );
     }
 

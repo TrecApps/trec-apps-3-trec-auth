@@ -92,7 +92,8 @@ public class TrecSecurityContextReactiveTest {
                 "trecapps.com",
                 "trec-app",
                 "trec-app",
-                false
+                false,
+                null
         );
     }
 
