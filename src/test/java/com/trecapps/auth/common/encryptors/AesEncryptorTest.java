@@ -12,6 +12,17 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import javax.crypto.*;
+import javax.crypto.spec.IvParameterSpec;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
+import java.util.Base64;
+
 @ExtendWith(MockitoExtension.class)
 public class AesEncryptorTest {
 
@@ -39,6 +50,40 @@ public class AesEncryptorTest {
         Mockito.doReturn(ivBytes).when(keyHolder).getSecret(keyIvBytes);
 
         aesFieldEncryptor = new AesFieldEncryptor(keyHolder, keyPassword, keySalt, keyIvBytes);
+    }
+
+    @Test
+    void testCBCCompatabiity() throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidAlgorithmParameterException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        // First set up am AES CBC encryptor
+        String[] bytesStr = ivBytes.split(",");
+        byte[] ivBytes = new byte[bytesStr.length];
+        for (int c = 0; c < bytesStr.length; c++) {
+            ivBytes[c] = Byte.parseByte(bytesStr[c]);
+        }
+        IvParameterSpec ivspec = new IvParameterSpec(ivBytes);
+
+
+        SecretKey key = AesFieldEncryptor.getKeyFromPassword(aesPassword, aesSalt);
+
+        Cipher aesCbcCipherEncrypt = Cipher.getInstance("AES/CBC/PKCS5PADDING");
+        aesCbcCipherEncrypt.init(Cipher.ENCRYPT_MODE, key, ivspec);
+
+
+        String plainText = "Unencrypted Plain Text (for AES CBC Encryption)";
+        byte[] result = aesCbcCipherEncrypt.doFinal(plainText.getBytes(StandardCharsets.UTF_8));
+
+        String FRONT_WRAP = "_ENC_(";
+        String BACK_WRAP = ")";
+
+        String encryptedField = String.format("%s%s%s", FRONT_WRAP, Base64.getEncoder().encodeToString(result), BACK_WRAP);
+
+        Method decryptFieldMethod = AesFieldEncryptor.class.getDeclaredMethod("decryptField", String.class);
+        decryptFieldMethod.setAccessible(true);
+
+
+        String decryptedField = (String) decryptFieldMethod.invoke(aesFieldEncryptor, encryptedField);
+
+        Assertions.assertEquals(plainText, decryptedField);
     }
 
     @Test

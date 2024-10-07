@@ -226,6 +226,8 @@ public class TrecSecurityContextServlet extends TrecCookieSaver implements Secur
 
         acc.setMfaBlock(needsMfa(acc.getUser(), decode, request.getRequestURI()));
 
+        if(acc.isMfaBlock())
+            return context;
         // Now that we have our account, get Session Information
         String sessionId = tokenService.getSessionId(auth);
         // Only authenticate if both the user, app, and session can be verified
@@ -237,6 +239,7 @@ public class TrecSecurityContextServlet extends TrecCookieSaver implements Secur
             acc.setLoginToken(token);
 
             acc.setBrandId(acc.getBrandId());
+
 
             context.setAuthentication(acc);
         }

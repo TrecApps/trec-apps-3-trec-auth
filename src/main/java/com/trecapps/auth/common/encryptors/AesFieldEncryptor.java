@@ -6,6 +6,7 @@ import lombok.SneakyThrows;
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
@@ -37,6 +38,10 @@ public class AesFieldEncryptor implements IFieldEncryptor{
                 .getEncoded(), "AES");
     }
 
+    // Use this as a fallback for old fields encrypted under AES BCB
+    Cipher aesCbcCipherDecrypt;
+
+    // Use these for new AES GCM encryption
     Cipher aesCipherEncrypt;
     Cipher aesCipherDecrypt;
 
@@ -60,10 +65,18 @@ public class AesFieldEncryptor implements IFieldEncryptor{
 
         SecretKey key = getKeyFromPassword(password, salt);
 
-        aesCipherEncrypt = Cipher.getInstance("AES/CBC/PKCS5PADDING");
-        aesCipherDecrypt = Cipher.getInstance("AES/CBC/PKCS5PADDING");
-        aesCipherEncrypt.init(Cipher.ENCRYPT_MODE, key, ivspec);
-        aesCipherDecrypt.init(Cipher.DECRYPT_MODE, key, ivspec);
+        // Set up CBC Decryption for backwards compatibility
+        aesCbcCipherDecrypt = Cipher.getInstance("AES/CBC/PKCS5PADDING");
+        aesCbcCipherDecrypt.init(Cipher.DECRYPT_MODE, key, ivspec);
+
+        // Set up GCM Encryption and Decryption for new mode
+        // Set the GCM parameters
+        GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(128, ivBytes);
+
+        aesCipherEncrypt = Cipher.getInstance("AES/GCM/NoPadding");
+        aesCipherDecrypt = Cipher.getInstance("AES/GCM/NoPadding");
+        aesCipherEncrypt.init(Cipher.ENCRYPT_MODE, key, gcmParameterSpec);
+        aesCipherDecrypt.init(Cipher.DECRYPT_MODE, key, gcmParameterSpec);
     }
 
     @SneakyThrows
@@ -80,8 +93,15 @@ public class AesFieldEncryptor implements IFieldEncryptor{
             value = unwrapField(value);
 
             byte[] encryptedBytes = Base64.getDecoder().decode(value);
-            byte[] decryptedBytes = aesCipherDecrypt.doFinal(encryptedBytes);
-            value = new String(decryptedBytes, StandardCharsets.UTF_8);
+            try {
+                // First try to use the GCM mode
+                byte[] decryptedBytes = aesCipherDecrypt.doFinal(encryptedBytes);
+                value = new String(decryptedBytes, StandardCharsets.UTF_8);
+            } catch(Exception e_){
+                // Presumable, we are using the old CBC Mode
+                byte[] decryptedBytes = aesCbcCipherDecrypt.doFinal(encryptedBytes);
+                value = new String(decryptedBytes, StandardCharsets.UTF_8);
+            }
         }
 
         return value;
