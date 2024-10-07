@@ -41,7 +41,11 @@ public class RsaEncryptorTest {
     {
         EncryptableTestObj obj = new EncryptableTestObj();
 
+        obj.getListOfStrings().add("String 1");
+        obj.getListOfStrings().add("String 2");
 
+        obj.getSetOfStrings().add("String 1");
+        obj.getSetOfStrings().add("String 2");
 
         obj.setEncryptedField(doEncrypt);
         obj.setBasicField(noEncrypt);
@@ -50,6 +54,10 @@ public class RsaEncryptorTest {
 
         Assertions.assertTrue(rsaFieldEncryptor.isFieldEncrypted(obj.getEncryptedField()));
         Assertions.assertFalse(rsaFieldEncryptor.isFieldEncrypted(obj.getBasicField()));
+
+        Assertions.assertTrue(rsaFieldEncryptor.isFieldEncrypted(obj.getListOfStrings().get(0)));
+        String field = obj.getSetOfStrings().toArray(new String[0])[1];
+        Assertions.assertTrue(rsaFieldEncryptor.isFieldEncrypted(field));
 
         Assertions.assertNotEquals(doEncrypt, obj.getEncryptedField());
         Assertions.assertEquals(noEncrypt, obj.getBasicField());
@@ -63,6 +71,8 @@ public class RsaEncryptorTest {
 
         Assertions.assertFalse(rsaFieldEncryptor.isFieldEncrypted(obj.getEncryptedField()));
         Assertions.assertFalse(rsaFieldEncryptor.isFieldEncrypted(obj.getBasicField()));
+        Assertions.assertFalse(rsaFieldEncryptor.isFieldEncrypted(obj.getListOfStrings().get(0)));
+        Assertions.assertFalse(rsaFieldEncryptor.isFieldEncrypted(obj.getSetOfStrings().toArray(new String[0])[1]));
 
         Assertions.assertEquals(doEncrypt, obj.getEncryptedField());
         Assertions.assertEquals(noEncrypt, obj.getBasicField());

@@ -14,8 +14,11 @@ import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Encrypts and decrupts marked fields of the specified object using the RSA Algorithm
@@ -86,6 +89,9 @@ public class RsaFieldEncryptor implements IFieldEncryptor{
 
     @Override
     public <A> A encrypt(A obj) {
+        if(obj instanceof String strObj)
+            return (A) encryptField(strObj);
+
         Class objClass = obj.getClass();
         List<EncryptableFields> fieldsList = getEncryptableFields(objClass.getDeclaredFields());
 
@@ -105,6 +111,9 @@ public class RsaFieldEncryptor implements IFieldEncryptor{
                     {
                         collectionValue.set(c, encrypt(collectionValue.get(c)));
                     }
+                }else if(fieldValue instanceof Set collectionValue){
+
+                    field.set(obj, collectionValue.stream().map(this::encrypt).collect(Collectors.toSet()));
                 }
                 else if(fieldValue != null)
                     field.set(obj, encrypt(fieldValue));
@@ -119,6 +128,9 @@ public class RsaFieldEncryptor implements IFieldEncryptor{
 
     @Override
     public <A> A decrypt(A obj) {
+        if(obj instanceof String strObj)
+            return (A) decryptField(strObj);
+
         Class objClass = obj.getClass();
         List<EncryptableFields> fieldsList = getEncryptableFields(objClass.getDeclaredFields());
 
@@ -137,6 +149,10 @@ public class RsaFieldEncryptor implements IFieldEncryptor{
                     {
                         collectionValue.set(c, decrypt(collectionValue.get(c)));
                     }
+                }
+                else if(fieldValue instanceof Set collectionValue){
+
+                    field.set(obj, collectionValue.stream().map(this::decrypt).collect(Collectors.toSet()));
                 }
                 else if(fieldValue != null)
                     field.set(obj, decrypt(fieldValue));

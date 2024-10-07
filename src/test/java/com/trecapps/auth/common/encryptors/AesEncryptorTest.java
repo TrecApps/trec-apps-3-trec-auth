@@ -33,11 +33,13 @@ public class AesEncryptorTest {
 
     String aesPassword = "nuictyqo348cyt9834yx";
     String aesSalt = "nicouqyn58tx894ur";
-    String ivBytes = "1,0,0,1,0,1,1,1,0,1,1,0,0,0,0,1";
+    String ivBytes = "1,0,0,1,0,1,1,1,0,1,1,0";
+    String ivBytesCbc = "1,0,0,1,0,1,1,1,0,1,1,0,0,0,0,1";
 
     String keyPassword = "aesPassword";
     String keySalt = "aesSalt";
     String keyIvBytes = "ivBytes";
+    String keyIvBytesCbc = "ivBytesCbc";
 
 
     static String noEncrypt = "Not Encrypted";
@@ -47,15 +49,16 @@ public class AesEncryptorTest {
     void prepare(){
         Mockito.doReturn(aesPassword).when(keyHolder).getSecret(keyPassword);
         Mockito.doReturn(aesSalt).when(keyHolder).getSecret(keySalt);
-        Mockito.doReturn(ivBytes).when(keyHolder).getSecret(keyIvBytes);
+        //Mockito.doReturn(ivBytes).when(keyHolder).getSecret(keyIvBytes);
+        Mockito.doReturn(ivBytesCbc).when(keyHolder).getSecret(keyIvBytesCbc);
 
-        aesFieldEncryptor = new AesFieldEncryptor(keyHolder, keyPassword, keySalt, keyIvBytes);
+        aesFieldEncryptor = new AesFieldEncryptor(keyHolder, keyPassword, keySalt, keyIvBytesCbc);
     }
 
     @Test
     void testCBCCompatabiity() throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidAlgorithmParameterException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         // First set up am AES CBC encryptor
-        String[] bytesStr = ivBytes.split(",");
+        String[] bytesStr = ivBytesCbc.split(",");
         byte[] ivBytes = new byte[bytesStr.length];
         for (int c = 0; c < bytesStr.length; c++) {
             ivBytes[c] = Byte.parseByte(bytesStr[c]);
@@ -96,10 +99,20 @@ public class AesEncryptorTest {
         obj.setEncryptedField(doEncrypt);
         obj.setBasicField(noEncrypt);
 
+        obj.getListOfStrings().add("String 1");
+        obj.getListOfStrings().add("String 2");
+
+        obj.getSetOfStrings().add("String 1");
+        obj.getSetOfStrings().add("String 2");
+
         obj = aesFieldEncryptor.encrypt(obj);
 
         Assertions.assertTrue(aesFieldEncryptor.isFieldEncrypted(obj.getEncryptedField()));
         Assertions.assertFalse(aesFieldEncryptor.isFieldEncrypted(obj.getBasicField()));
+
+        Assertions.assertTrue(aesFieldEncryptor.isFieldEncrypted(obj.getListOfStrings().get(0)));
+        String field = obj.getSetOfStrings().toArray(new String[0])[1];
+        Assertions.assertTrue(aesFieldEncryptor.isFieldEncrypted(field));
 
         Assertions.assertNotEquals(doEncrypt, obj.getEncryptedField());
         Assertions.assertEquals(noEncrypt, obj.getBasicField());
@@ -113,6 +126,8 @@ public class AesEncryptorTest {
 
         Assertions.assertFalse(aesFieldEncryptor.isFieldEncrypted(obj.getEncryptedField()));
         Assertions.assertFalse(aesFieldEncryptor.isFieldEncrypted(obj.getBasicField()));
+        Assertions.assertFalse(aesFieldEncryptor.isFieldEncrypted(obj.getListOfStrings().get(0)));
+        Assertions.assertFalse(aesFieldEncryptor.isFieldEncrypted(obj.getSetOfStrings().toArray(new String[0])[1]));
 
         Assertions.assertEquals(doEncrypt, obj.getEncryptedField());
         Assertions.assertEquals(noEncrypt, obj.getBasicField());
