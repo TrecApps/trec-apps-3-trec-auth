@@ -26,16 +26,32 @@ public class TcUser implements UserDetails {
     String displayName;
     String userProfile;
 
-    // Phone Used by the User
+    // Phone Used by the User (Deprecated)
     @EncryptedField
     PhoneNumber mobilePhone;
     boolean phoneVerified;
+    // Phone Used by the User (New Version)
 
-    // External Email used by the User
+    @EncryptedField
+    PhoneNumber proposedNumber;
+    @EncryptedField
+    PhoneNumber verifiedNumber;
+
+    // External Email used by the User (Deprecated)
     @Email
     @EncryptedField
     String email;
     boolean emailVerified;
+
+    // External Email used by the User (New Version)
+    @Email
+    @EncryptedField
+    String proposedEmail;
+    @Email
+    @EncryptedField
+    String verifiedEmail;
+    @EncryptedField
+    Set<String> pastEmails = new HashSet<>();
 
     // Aides in phone/Email Verification
     String currentCode;
@@ -69,6 +85,31 @@ public class TcUser implements UserDetails {
     List<MfaMechanism> mfaMechanisms = new ArrayList<>();
 
     List<MfaReq> mfaRequirements = new ArrayList<>();
+
+    @EncryptedField
+    String subscriptionId;
+
+    @EncryptedField
+    AddressList addressList;
+
+
+    public void verifyEmail(){
+        this.verifiedEmail = this.proposedEmail;
+        this.pastEmails.add(this.verifiedEmail);
+    }
+
+    public boolean verifyEmail(String email){
+        if(pastEmails.contains(email)) {
+            this.verifiedEmail = email;
+            return true;
+        }
+        return false;
+    }
+
+    public void verifyPhone(){
+        this.verifiedNumber = this.proposedNumber;
+    }
+
 
     public Optional<MfaMechanism> getMechanism(String source) {
         for(MfaMechanism mech: mfaMechanisms){

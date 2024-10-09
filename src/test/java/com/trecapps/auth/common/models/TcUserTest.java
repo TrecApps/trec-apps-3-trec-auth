@@ -42,4 +42,29 @@ public class TcUserTest {
 
         Assertions.assertEquals(3, grantedAuthorities.size());
     }
+
+    @Test
+    void testNewEmailSystem(){
+        user.setProposedEmail("john.doe@gmail.com");
+        user.verifyEmail();
+        Assertions.assertEquals("john.doe@gmail.com", user.getVerifiedEmail());
+
+        user.setProposedEmail("jane.doe@gmail.com");
+        user.verifyEmail();
+        Assertions.assertEquals("jane.doe@gmail.com", user.getVerifiedEmail());
+
+        Assertions.assertTrue(user.verifyEmail("john.doe@gmail.com"));
+        Assertions.assertEquals("john.doe@gmail.com", user.getVerifiedEmail());
+
+        Assertions.assertFalse(user.verifyEmail("joker@gmail.com"));
+        Assertions.assertEquals("john.doe@gmail.com", user.getVerifiedEmail());
+    }
+
+    @Test
+    void testNewPhoneSystem(){
+        PhoneNumber number = new PhoneNumber("5555555555");
+        user.setProposedNumber(number);
+        user.verifyPhone();
+        Assertions.assertEquals(number, user.getVerifiedNumber());
+    }
 }

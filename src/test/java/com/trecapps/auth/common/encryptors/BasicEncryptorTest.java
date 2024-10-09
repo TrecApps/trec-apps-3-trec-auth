@@ -75,7 +75,7 @@ public class BasicEncryptorTest {
         List<EncryptableFields> encFields = encryptor.getEncryptableFields(fields);
         List<String> encFieldNames = encFields.stream().map((EncryptableFields ef) -> ef.getField()).toList();
 
-        Assertions.assertEquals(2, encFields.size());
+        Assertions.assertEquals(4, encFields.size());
         Assertions.assertTrue(encFieldNames.contains("encryptedField"));
         Assertions.assertTrue(encFieldNames.contains("childObject"));
     }

@@ -89,6 +89,8 @@ public class RsaFieldEncryptor implements IFieldEncryptor{
 
     @Override
     public <A> A encrypt(A obj) {
+        if(obj == null) return null;
+
         if(obj instanceof String strObj)
             return (A) encryptField(strObj);
 
@@ -128,6 +130,8 @@ public class RsaFieldEncryptor implements IFieldEncryptor{
 
     @Override
     public <A> A decrypt(A obj) {
+        if(obj == null) return null;
+
         if(obj instanceof String strObj)
             return (A) decryptField(strObj);
 
