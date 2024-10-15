@@ -14,14 +14,22 @@ public class AddressList {
     int billingAddress = -1;
     int mailingAddress = -1;
 
+    public int getMailingAddressIndex() {
+        return mailingAddress;
+    }
+
+    public int getBillingAddressIndex() {
+        return billingAddress;
+    }
+
 
     public boolean setMailingAddress(int index) {
-        if(index < 0 || index >= addressList.size()) return false;
+        if(index < -1 || index >= addressList.size()) return false;
         this.mailingAddress = index;
         return true;
     }
     public boolean setBillingAddress(int index) {
-        if(index < 0 || index >= addressList.size()) return false;
+        if(index < -1 || index >= addressList.size()) return false;
         this.billingAddress = index;
         return true;
     }

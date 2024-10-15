@@ -8,6 +8,7 @@ public class Address {
 
     String country;
     String region;
+    String township;
     @EncryptedField
     String address1;
     @EncryptedField
