@@ -90,6 +90,9 @@ public class TcUser implements UserDetails {
     String subscriptionId;
 
     @EncryptedField
+    String customerId;
+
+    @EncryptedField
     AddressList addressList;
 
 
