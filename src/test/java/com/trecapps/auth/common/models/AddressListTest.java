@@ -31,7 +31,7 @@ public class AddressListTest {
         Assertions.assertFalse(addressList.setMailingAddress(2));
         Assertions.assertTrue(addressList.setMailingAddress(0));
 
-        Optional<Address> mailingAddress = addressList.getMailingAddress();
+        Optional<Address> mailingAddress = addressList.getCurrentMailingAddress();
         Assertions.assertTrue(mailingAddress.isPresent());
 
         Assertions.assertEquals(address1, mailingAddress.get());
@@ -42,7 +42,7 @@ public class AddressListTest {
         Assertions.assertFalse(addressList.setBillingAddress(2));
         Assertions.assertTrue(addressList.setBillingAddress(1));
 
-        Optional<Address> billingAddress = addressList.getBillingAddress();
+        Optional<Address> billingAddress = addressList.getCurrentBillingAddress();
         Assertions.assertTrue(billingAddress.isPresent());
 
         Assertions.assertEquals(address2, billingAddress.get());

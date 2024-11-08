@@ -14,14 +14,6 @@ public class AddressList {
     int billingAddress = -1;
     int mailingAddress = -1;
 
-    public int getMailingAddressIndex() {
-        return mailingAddress;
-    }
-
-    public int getBillingAddressIndex() {
-        return billingAddress;
-    }
-
 
     public boolean setMailingAddress(int index) {
         if(index < -1 || index >= addressList.size()) return false;
@@ -34,11 +26,11 @@ public class AddressList {
         return true;
     }
 
-    public Optional<Address> getMailingAddress(){
+    public Optional<Address> getCurrentMailingAddress(){
         if(mailingAddress < 0) return Optional.empty();
         return Optional.of(addressList.get(mailingAddress));
     }
-    public Optional<Address> getBillingAddress(){
+    public Optional<Address> getCurrentBillingAddress(){
         if(billingAddress < 0) return Optional.empty();
         return Optional.of(addressList.get(billingAddress));
     }
