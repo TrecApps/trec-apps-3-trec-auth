@@ -33,7 +33,7 @@ public class StorageJwtKeyHolder extends IJwtKeyHolder{
 
 
     @Override
-    protected String getKey(KeyPathHolder holder) {
+    protected String getKey(KeyPathHolder holder, int ignore) {
         if(!holder.isKeySet())
         {
             holder.setKey(userStorageService.retrieveKey(holder.getKeyPath()));

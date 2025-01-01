@@ -3,6 +3,11 @@ package com.trecapps.auth.common.keyholders;
 import com.azure.identity.ClientSecretCredentialBuilder;
 import com.azure.security.keyvault.secrets.SecretClient;
 import com.azure.security.keyvault.secrets.SecretClientBuilder;
+import com.azure.security.keyvault.secrets.models.SecretProperties;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 /**
  * Looks for Keys in the Specified Azure Key Vault
@@ -10,6 +15,8 @@ import com.azure.security.keyvault.secrets.SecretClientBuilder;
 public class AKVJwtKeyHolder extends IJwtKeyHolder {
 
     SecretClient keyVaultClient;
+
+    HashMap<String, List<String>> versions = new HashMap<>();
 
     private void prepClient(String vaultName,
                             String tenantId,
@@ -37,6 +44,12 @@ public class AKVJwtKeyHolder extends IJwtKeyHolder {
         prepClient(vaultName, tenantId, clientId, clientSecret);
     }
 
+    void refreshVersionList(String keyName){
+        List<String> newVersionList = new ArrayList<>();
+        keyVaultClient.listPropertiesOfSecretVersions(keyName).forEach((SecretProperties props) -> newVersionList.add(props.getVersion()));
+        this.versions.put(keyName, newVersionList);
+    }
+
     public AKVJwtKeyHolder(
             String publicKeyStr,
             String privateKeyStr,
@@ -52,10 +65,18 @@ public class AKVJwtKeyHolder extends IJwtKeyHolder {
     }
 
     @Override
-    protected String getKey(KeyPathHolder holder){
+    protected String getKey(KeyPathHolder holder, int version){
+
+        if(!versions.containsKey(holder.getKeyPath()))
+            this.refreshVersionList(holder.getKeyPath());
+        List<String> keyVersions = versions.get(holder.getKeyPath());
+
         if(!holder.isKeySet())
         {
-            holder.setKey(keyVaultClient.getSecret(holder.getKeyPath()).getValue().replace("|", "\r\n"));
+            if(version == 0)
+                holder.setKey(keyVaultClient.getSecret(holder.getKeyPath()).getValue().replace("|", "\r\n"));
+            else if(version < keyVersions.size())
+                holder.setKey(keyVaultClient.getSecret(holder.getKeyPath(), keyVersions.get(version)).getValue().replace("|", "\r\n"));
         }
         return holder.getKey();
     }

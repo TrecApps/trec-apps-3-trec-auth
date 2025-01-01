@@ -9,8 +9,12 @@ import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
+import software.amazon.awssdk.services.secretsmanager.model.ListSecretVersionIdsRequest;
+import software.amazon.awssdk.services.secretsmanager.model.SecretVersionsListEntry;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class AWSSMJwtKeyHolder extends IJwtKeyHolder{
 
@@ -20,6 +24,8 @@ public class AWSSMJwtKeyHolder extends IJwtKeyHolder{
     TypeReference<HashMap<String,Object>> typeRef
             = new TypeReference<HashMap<String,Object>>() {};
     ObjectMapper mapper = new ObjectMapper();
+
+    HashMap<String, List<String>> versions = new HashMap<>();
 
     private void prepResource(String secretContainer,
                               String region,
@@ -61,16 +67,37 @@ public class AWSSMJwtKeyHolder extends IJwtKeyHolder{
         prepResource(endpoint, region, clientName, clientSecret);
     }
 
+    void refreshVersionList(String keyName){
+        List<String> newVersionList = new ArrayList<>();
+        ListSecretVersionIdsRequest request = ListSecretVersionIdsRequest.builder()
+                .secretId(keyName)
+                .build();
+        client.listSecretVersionIds(request).versions()
+                .forEach((SecretVersionsListEntry entry) -> newVersionList.add(entry.versionId()));
+        this.versions.put(keyName, newVersionList);
+    }
 
 
     @SneakyThrows
     @Override
-    protected String getKey(KeyPathHolder holder) {
+    protected String getKey(KeyPathHolder holder, int version) {
+        if(!versions.containsKey(holder.getKeyPath()))
+            this.refreshVersionList(holder.getKeyPath());
+        List<String> keyVersions = versions.get(holder.getKeyPath());
         if(!holder.isKeySet())
         {
-            GetSecretValueRequest request = GetSecretValueRequest.builder()
+            GetSecretValueRequest request;
+            if(version == 0)
+                request = GetSecretValueRequest.builder()
                     .secretId(secretContainer)
                     .build();
+            else if (version < keyVersions.size())
+                request = GetSecretValueRequest.builder()
+                        .secretId(secretContainer)
+                        .versionId(keyVersions.get(version))
+                        .build();
+            else return null;
+
             String secret = client.getSecretValue(request).secretString();
             HashMap<String,Object> values = mapper.readValue(secret, typeRef);
             Object o = values.get(holder.getKeyPath());

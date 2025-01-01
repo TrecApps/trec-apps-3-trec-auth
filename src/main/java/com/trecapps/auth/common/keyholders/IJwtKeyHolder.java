@@ -39,16 +39,31 @@ public abstract class IJwtKeyHolder {
         return getPrivateKey(RsaKeyPair.BASIC_AUTH);
     }
 
-    protected abstract String getKey(KeyPathHolder holder);
+    /**
+     * Retrieves the key according to the specified means of doing so
+     *
+     * @param holder holds the name of the key
+     * @param version the version to retrieve (0 means latest)
+     */
+    protected abstract String getKey(KeyPathHolder holder, int version);
 
     public String getPublicKey(RsaKeyPair pair){
+        return getPublicKey(pair, 0);
+    }
+
+    public String getPublicKey(RsaKeyPair pair, int version){
         KeyPathHolder holder = pair.equals(RsaKeyPair.BASIC_AUTH) ? basicPublic : notifyPublic;
 
-        return getKey(holder);
+        return getKey(holder, version);
     }
+
     public String getPrivateKey(RsaKeyPair pair){
+        return getPrivateKey(pair, 0);
+    }
+
+    public String getPrivateKey(RsaKeyPair pair, int version){
         KeyPathHolder holder = pair.equals(RsaKeyPair.BASIC_AUTH) ? basicPrivate : notifyPrivate;
 
-        return getKey(holder);
+        return getKey(holder, version);
     }
 }
