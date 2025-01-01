@@ -5,10 +5,7 @@ import com.trecapps.auth.ObjectTestProvider;
 import com.trecapps.auth.RSATestHelper;
 import com.trecapps.auth.common.ISecurityAlertHandler;
 import com.trecapps.auth.common.keyholders.IJwtKeyHolder;
-import com.trecapps.auth.common.models.AnonymousAuthentication;
-import com.trecapps.auth.common.models.LoginToken;
-import com.trecapps.auth.common.models.TcUser;
-import com.trecapps.auth.common.models.TrecAuthentication;
+import com.trecapps.auth.common.models.*;
 import lombok.Getter;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -72,13 +69,14 @@ public class TrecSecurityContextReactiveTest {
 
     @BeforeEach
     void setUp(){
-        Mockito.doReturn(RSATestHelper.publicKeyValue).when(jwtKeyHolder).getPublicKey();
-        Mockito.doReturn(RSATestHelper.privateKeyValue.replace('|', '\n')).when(jwtKeyHolder).getPrivateKey();
+        Mockito.doReturn(RSATestHelper.publicKeyValue).when(jwtKeyHolder).getPublicKey(0);
+        Mockito.doReturn(RSATestHelper.privateKeyValue.replace('|', '\n')).when(jwtKeyHolder).getPrivateKey(0);
         tokenService = new JwtTokenServiceAsync(
                 userStorageService,
                 sessionManager,
                 jwtKeyHolder,
-                "app"
+                "app",
+                1
         );
 
 
@@ -238,7 +236,7 @@ public class TrecSecurityContextReactiveTest {
                 SecurityContext.class, ServerHttpRequest.class);
         targetMethod.setAccessible(true);
 
-        DecodedJWT decoded = this.tokenService.decodeToken(RSATestHelper.NO_SESSION_OR_BRAND_OR_EXP);
+        JwtKeyArray.DecodedHolder decoded = this.tokenService.decodeToken(RSATestHelper.NO_SESSION_OR_BRAND_OR_EXP);
 
         ServerHttpRequest request = Mockito.mock(ServerHttpRequest.class);
         InetSocketAddress address = Mockito.mock(InetSocketAddress.class);
@@ -254,7 +252,7 @@ public class TrecSecurityContextReactiveTest {
 
         Mono<SecurityContext> mono = (Mono<SecurityContext>)targetMethod.invoke(
                 this.trecSecurtyContext,
-                decoded,
+                decoded.getDecodedJwt().get(),
                 SecurityContextHolder.createEmptyContext(),
                 request
                 );

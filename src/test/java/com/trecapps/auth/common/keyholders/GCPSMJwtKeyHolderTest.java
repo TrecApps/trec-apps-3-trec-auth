@@ -1,9 +1,6 @@
 package com.trecapps.auth.common.keyholders;
 
-import com.google.cloud.secretmanager.v1.AccessSecretVersionResponse;
-import com.google.cloud.secretmanager.v1.SecretManagerServiceClient;
-import com.google.cloud.secretmanager.v1.SecretPayload;
-import com.google.cloud.secretmanager.v1.SecretVersionName;
+import com.google.cloud.secretmanager.v1.*;
 import com.google.protobuf.ByteString;
 import com.trecapps.auth.RSATestHelper;
 import org.junit.jupiter.api.Assertions;
@@ -17,6 +14,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 
 import static org.mockito.ArgumentMatchers.any;
 
@@ -53,6 +51,11 @@ public class GCPSMJwtKeyHolderTest {
 
         Mockito.doReturn(payloadPrivate).when(responsePrivate).getPayload();
         Mockito.doReturn(payloadPublic).when(responsePublic).getPayload();
+
+        SecretManagerServiceClient.ListSecretVersionsPagedResponse pageResponse = Mockito.mock(SecretManagerServiceClient.ListSecretVersionsPagedResponse.class);
+        Mockito.doReturn(pageResponse).when(client).listSecretVersions(any(SecretName.class));
+        Mockito.doReturn(new ArrayList<>()).when(pageResponse).iterateAll();
+
 
         Mockito.doAnswer((InvocationOnMock invoke) -> {
             SecretVersionName name = invoke.getArgument(0, SecretVersionName.class);

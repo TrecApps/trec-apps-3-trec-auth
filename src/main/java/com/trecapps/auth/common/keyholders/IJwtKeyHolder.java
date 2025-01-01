@@ -35,8 +35,16 @@ public abstract class IJwtKeyHolder {
     public String getPublicKey(){
         return getPublicKey(RsaKeyPair.BASIC_AUTH);
     }
+    public String getPublicKey(int version) {
+        basicPublic.setKey(null);
+        return getPublicKey(RsaKeyPair.BASIC_AUTH, version);
+    }
     public String getPrivateKey() {
         return getPrivateKey(RsaKeyPair.BASIC_AUTH);
+    }
+    public String getPrivateKey(int version) {
+        basicPrivate.setKey(null);
+        return getPrivateKey(RsaKeyPair.BASIC_AUTH, version);
     }
 
     /**

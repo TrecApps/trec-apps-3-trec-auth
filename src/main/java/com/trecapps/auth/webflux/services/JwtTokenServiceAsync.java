@@ -40,9 +40,9 @@ import java.util.concurrent.atomic.AtomicReference;
 public class JwtTokenServiceAsync {
     String app;
 
-    RSAPublicKey publicKey;
-
-    RSAPrivateKey privateKey;
+//    RSAPublicKey publicKey;
+//
+//    RSAPrivateKey privateKey;
 
     IUserStorageServiceAsync userStorageService;
 
@@ -50,35 +50,22 @@ public class JwtTokenServiceAsync {
 
     IJwtKeyHolder jwtKeyHolder;
 
+
+    JwtKeyArray keyArray;
+
     @Autowired
     public JwtTokenServiceAsync(
             IUserStorageServiceAsync userStorageServiceAsync,
             V2SessionManagerAsync sessionManager,
             IJwtKeyHolder jwtKeyHolder,
-            @Value("${trecauth.app}") String app
+            @Value("${trecauth.app}") String app,
+            @Value("${trecauth.key.version-count:1}") int versionCount
     ) {
         this.userStorageService = userStorageServiceAsync;
         this.sessionManager = sessionManager;
         this.jwtKeyHolder = jwtKeyHolder;
         this.app = app;
-        setKeys();
-    }
-
-    private DecodedJWT decodeJWT(String token)
-    {
-        DecodedJWT ret = null;
-        try
-        {
-            ret = JWT.require(Algorithm.RSA512(publicKey,privateKey))
-                    .build()
-                    .verify(token);
-        }
-        catch(JWTVerificationException e)
-        {
-            //e.printStackTrace();
-            return null;
-        }
-        return ret;
+        setKeys(versionCount);
     }
 
     // chose a Character random from this String
@@ -93,25 +80,13 @@ public class JwtTokenServiceAsync {
     private static final long ONE_MINUTE = 60_000;
 
     @SneakyThrows
-    private void setKeys()
+    private void setKeys(int versionCount)
     {
-        if(publicKey == null)
-        {
-            String encKey = jwtKeyHolder.getPublicKey();
-            X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(Base64.getDecoder().decode(encKey));
-            publicKey = (RSAPublicKey) KeyFactory.getInstance("RSA").generatePublic(pubKeySpec);
-        }
+        this.keyArray = new JwtKeyArray(versionCount);
 
-        if(privateKey == null)
-        {
-            String encKey = jwtKeyHolder.getPrivateKey();
-            try (PEMParser parser = new PEMParser(new StringReader(encKey))) {
-
-                PemObject pemObject = parser.readPemObject();
-                byte[] content = pemObject.getContent();
-                PKCS8EncodedKeySpec privKeySpec = new PKCS8EncodedKeySpec(content);
-                privateKey =  (RSAPrivateKey) KeyFactory.getInstance("RSA").generatePrivate(privKeySpec);
-            }
+        while(versionCount > 0){
+            versionCount--;
+            this.keyArray.AddKey(jwtKeyHolder.getPublicKey(versionCount), jwtKeyHolder.getPrivateKey(versionCount));
         }
     }
 
@@ -183,7 +158,7 @@ public class JwtTokenServiceAsync {
                 if(ret.getExpiration() != null)
                     jwtBuilder = jwtBuilder.withExpiresAt(ret.getExpiration().toInstant());
 
-                ret.setToken(jwtBuilder.sign(Algorithm.RSA512(publicKey, privateKey)));
+                ret.setToken(keyArray.encodeJWT(jwtBuilder));
 
         }).map(Optional::of);
 
@@ -193,16 +168,16 @@ public class JwtTokenServiceAsync {
     {
         if (token == null)
             return null;
-        DecodedJWT decodedJwt = decodeJWT(token);
+        JwtKeyArray.DecodedHolder decodedJwt = keyArray.decodeJwt(token);
 
-        if (decodedJwt == null) {
+        if (decodedJwt.getDecodedJwt().isEmpty()) {
             return null;
         }
 
         AtomicReference<JWTCreator.Builder> jwtBuilder = new AtomicReference<>(JWT.create());
         AtomicBoolean mfaFound = new AtomicBoolean(false);
 
-        decodedJwt.getClaims().forEach((String claimName, Claim claim) -> {
+        decodedJwt.getDecodedJwt().get().getClaims().forEach((String claimName, Claim claim) -> {
             if("mfa".equals(claimName))
             {
                 mfaFound.set(true);
@@ -228,24 +203,18 @@ public class JwtTokenServiceAsync {
             jwtBuilder.set(jwtBuilder.get().withClaim("mfa", true));
         }
         TokenTime ret = new TokenTime();
-        ret.setToken(jwtBuilder.get().sign(Algorithm.RSA512(publicKey, privateKey)));
+        ret.setToken(keyArray.encodeJWT(jwtBuilder.get()));
+        ret.setOldToken(decodedJwt.isKeyOutdated());
         return ret;
     }
 
     public Mono<TokenTime> generateNewTokenFromRefresh(String refreshToken)
     {
-        DecodedJWT decodedJwt = null;
-        try
-        {
-            decodedJwt = JWT.require(Algorithm.RSA512(publicKey,privateKey))
-                    .build()
-                    .verify(refreshToken);
-        }
-        catch(JWTVerificationException e)
-        {
-            e.printStackTrace();
+        JwtKeyArray.DecodedHolder decodedJwtHolder = keyArray.decodeJwt(refreshToken);
+        if(decodedJwtHolder.getDecodedJwt().isEmpty())
             return Mono.empty();
-        }
+
+        DecodedJWT decodedJwt = decodedJwtHolder.getDecodedJwt().get();
 
         String user = decodedJwt.getClaim("ID").asString();
         String session = decodedJwt.getClaim("SessionId").asString();
@@ -266,7 +235,8 @@ public class JwtTokenServiceAsync {
 
                     ret.setSession(session);
                     ret.setExpiration(newExp);
-                    ret.setToken(jwtBuilder.sign(Algorithm.RSA512(publicKey, privateKey)));
+                    ret.setToken(keyArray.encodeJWT(jwtBuilder));
+                    ret.setOldToken(decodedJwtHolder.isKeyOutdated());
                     return ret;
                 });
 
@@ -287,34 +257,22 @@ public class JwtTokenServiceAsync {
                 .withClaim("SessionId", sessionId)
                 .withIssuedAt(now));
 
-        return jwtBuilder.get()
-                .sign(Algorithm.RSA512(publicKey, privateKey));
+        return keyArray.encodeJWT(jwtBuilder.get());
     }
 
     public String getSessionId(String token)
     {
-        DecodedJWT decodedJwt = null;
-        try
-        {
-            decodedJwt = JWT.require(Algorithm.RSA512(publicKey,privateKey))
-                    .build()
-                    .verify(token);
-        }
-        catch(JWTVerificationException e)
-        {
-            e.printStackTrace();
+        JwtKeyArray.DecodedHolder decodedJwt = keyArray.decodeJwt(token);
+        if(decodedJwt.getDecodedJwt().isEmpty())
             return null;
-        }
 
-        Claim idClaim = decodedJwt.getClaim("SessionId");
+        Claim idClaim = decodedJwt.getDecodedJwt().get().getClaim("SessionId");
 
         return idClaim.asString();
     }
 
-    public DecodedJWT decodeToken(String token){
-        if (token == null)
-            return null;
-        return decodeJWT(token);
+    public JwtKeyArray.DecodedHolder decodeToken(String token){
+        return keyArray.decodeJwt(token);
     }
 
     /***

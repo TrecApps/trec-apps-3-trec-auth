@@ -1,10 +1,12 @@
 package com.trecapps.auth.common.keyholders;
 
+import com.azure.core.http.rest.PagedIterable;
 import com.azure.identity.ClientSecretCredential;
 import com.azure.identity.ClientSecretCredentialBuilder;
 import com.azure.security.keyvault.secrets.SecretClient;
 import com.azure.security.keyvault.secrets.SecretClientBuilder;
 import com.azure.security.keyvault.secrets.models.KeyVaultSecret;
+import com.azure.security.keyvault.secrets.models.SecretProperties;
 import com.trecapps.auth.RSATestHelper;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -60,8 +62,11 @@ public class AKVJwtKeyHolderTest {
             doReturn(RSATestHelper.privateKeyValue).when(keyVaultSecretPrivate).getValue();
             doReturn(RSATestHelper.publicKeyValue).when(keyVaultSecretPublic).getValue();
 
+            PagedIterable<SecretProperties> mockIterable = Mockito.mock(PagedIterable.class);
 
 
+            doReturn(mockIterable).when(keyVaultClient).listPropertiesOfSecretVersions("publicKey");
+            doReturn(mockIterable).when(keyVaultClient).listPropertiesOfSecretVersions("privateKey");
 
             doReturn(keyVaultSecretPublic).when(keyVaultClient).getSecret("publicKey");
             doReturn(keyVaultSecretPrivate).when(keyVaultClient).getSecret("privateKey");

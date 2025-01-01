@@ -23,18 +23,18 @@ public class JwtKeyArray {
 
     @Data
     public static class DecodedHolder {
-        Optional<DecodedJWT> decodedJwt;
+        Optional<DecodedJWT> decodedJwt = Optional.empty();
         boolean keyOutdated = false; // If a previous key set was used to generate the decoded JWT, set this to true
     }
 
-    record JwtKeyPair(RSAPublicKey publicKey, RSAPrivateKey privateKey) {
+    public record JwtKeyPair(RSAPublicKey publicKey, RSAPrivateKey privateKey) {
         public JwtKeyPair {
             Objects.requireNonNull(publicKey);
             Objects.requireNonNull(privateKey);
         }
     }
 
-    JwtKeyArray(int maxSize) {
+    public JwtKeyArray(int maxSize) {
         this.keys = new AtomicReference<>(new LimitList<>(maxSize));
     }
 

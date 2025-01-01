@@ -14,6 +14,8 @@ public class TokenTime {
     @JsonFormat(pattern="yyyy-MM-dd'T'HH:mm")
     OffsetDateTime expiration;
 
+    boolean oldToken = false;
+
     transient boolean valid = true;
     public static TokenTime getInvalidInstance(){
         TokenTime ret = new TokenTime();

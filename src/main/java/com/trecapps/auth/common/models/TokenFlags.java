@@ -5,4 +5,5 @@ import lombok.Data;
 @Data
 public class TokenFlags {
     Boolean isMfa;
+    boolean isTokenOld = false;
 }

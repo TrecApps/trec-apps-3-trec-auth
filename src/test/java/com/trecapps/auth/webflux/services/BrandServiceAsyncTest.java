@@ -65,13 +65,14 @@ public class BrandServiceAsyncTest {
     @BeforeEach
     void setUp() throws NoSuchFieldException, IllegalAccessException {
         this.sessionManager = new V2SessionManagerAsync(userStorageService, false);
-        Mockito.doReturn(RSATestHelper.publicKeyValue).when(jwtKeyHolder).getPublicKey();
-        Mockito.doReturn(RSATestHelper.privateKeyValue.replace('|', '\n')).when(jwtKeyHolder).getPrivateKey();
+        Mockito.doReturn(RSATestHelper.publicKeyValue).when(jwtKeyHolder).getPublicKey(0);
+        Mockito.doReturn(RSATestHelper.privateKeyValue.replace('|', '\n')).when(jwtKeyHolder).getPrivateKey(0);
         tokenService = new JwtTokenServiceAsync(
                 userStorageService,
                 sessionManager,
                 jwtKeyHolder,
-                "app"
+                "app",
+                1
         );
 
 

@@ -113,7 +113,7 @@ public class TrecSecurityContextReactive extends TrecCookieSaverAsync implements
         Mono<SecurityContext> ret;
         String path = req.getPath().value();
         if(cookieApp != null && path.endsWith("/refresh_token"))
-            ret = getContextFromCookie(req);
+            ret = getContextFromCookie(exchange.getResponse(), req);
         else
             ret = getContextFromHeader(req);
         return ret.doOnNext((SecurityContext context) -> {
@@ -155,7 +155,7 @@ public class TrecSecurityContextReactive extends TrecCookieSaverAsync implements
     }
 
 
-    Mono<SecurityContext> getContextFromCookie(ServerHttpRequest request) {
+    Mono<SecurityContext> getContextFromCookie(ServerHttpResponse response, ServerHttpRequest request) {
         return Mono.just(SecurityContextHolder.createEmptyContext())
                 .flatMap((SecurityContext context) -> {
 
@@ -163,8 +163,8 @@ public class TrecSecurityContextReactive extends TrecCookieSaverAsync implements
                     HttpCookie cookie = cookies.getFirst(cookieName);
                     if(cookie != null)
                     {
-                        DecodedJWT decode = tokenService.decodeToken(cookie.getValue());
-                        if(decode == null) {
+                        JwtKeyArray.DecodedHolder decode = tokenService.decodeToken(cookie.getValue());
+                        if(decode.getDecodedJwt().isEmpty()) {
                             String address = Objects.requireNonNull(request.getRemoteAddress()).toString();
                             if(!isLocal(address) || logLocal)
                                 logger.info("Null Decode token detected in Cookie! request path: {} , IP Address: {}", request.getPath(), address);
@@ -172,7 +172,9 @@ public class TrecSecurityContextReactive extends TrecCookieSaverAsync implements
                         }
                         else
                         {
-                            return handleSecurityDecoding(decode, context, request);
+                            if(decode.isKeyOutdated())
+                                response.getHeaders().add("Update-Token", "true");
+                            return handleSecurityDecoding(decode.getDecodedJwt().get(), context, request);
                         }
                     }
                     return Mono.just(context);
@@ -214,8 +216,8 @@ public class TrecSecurityContextReactive extends TrecCookieSaverAsync implements
                 .flatMap((SecurityContext context) -> {
                     HttpHeaders headers = request.getHeaders();
                     String auth = headers.getFirst("Authorization");
-                    DecodedJWT decode = tokenService.decodeToken(auth);
-                    if(decode == null) {
+                    JwtKeyArray.DecodedHolder decode = tokenService.decodeToken(auth);
+                    if(decode.getDecodedJwt().isEmpty()) {
                         String address = Objects.requireNonNull(request.getRemoteAddress()).toString();
                         if(!isLocal(address) || logLocal)
                             logger.info("Null Decode token detected in Auth Header! request path: {} , IP Address: {}", request.getPath(), address);
@@ -224,8 +226,9 @@ public class TrecSecurityContextReactive extends TrecCookieSaverAsync implements
                     else
                     {
                         TokenFlags tokenFlags = new TokenFlags();
+                        tokenFlags.setTokenOld(decode.isKeyOutdated());
                         String sessionId = tokenService.getSessionId(auth);
-                        return tokenService.verifyToken(decode, tokenFlags)
+                        return tokenService.verifyToken(decode.getDecodedJwt().get(), tokenFlags)
                                 .flatMap((Optional<TrecAuthentication> oAuth) -> {
                                     if(oAuth.isPresent() && sessionId != null)
                                     {
@@ -234,7 +237,7 @@ public class TrecSecurityContextReactive extends TrecCookieSaverAsync implements
                                                 .map((Boolean isValidSession) -> {
                                                     if(isValidSession){
 
-                                                        acc.setMfaBlock(needsMfa(acc.getUser(), decode, request.getPath().value()));
+                                                        acc.setMfaBlock(needsMfa(acc.getUser(), decode.getDecodedJwt().get(), request.getPath().value()));
 
                                                         acc.setSessionId(sessionId);
                                                         LoginToken token = new LoginToken();

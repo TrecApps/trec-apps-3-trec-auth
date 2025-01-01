@@ -17,7 +17,10 @@ import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClientBuilder;
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueResponse;
+import software.amazon.awssdk.services.secretsmanager.model.ListSecretVersionIdsRequest;
+import software.amazon.awssdk.services.secretsmanager.model.ListSecretVersionIdsResponse;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -59,6 +62,13 @@ public class AWSSMJwtKeyHolderTest {
         GetSecretValueResponse response = Mockito.mock(GetSecretValueResponse.class);
         Mockito.doReturn(secretMap).when(response).secretString();
         Mockito.doReturn(response).when(client).getSecretValue(any(GetSecretValueRequest.class));
+
+        ListSecretVersionIdsResponse mockResponse = Mockito.mock(ListSecretVersionIdsResponse.class);
+        Mockito.lenient().doReturn(new ArrayList<>()).when(mockResponse).versions();
+        Mockito.lenient().doReturn(new ArrayList<>()).when(mockResponse).versions();
+
+        Mockito.lenient().doReturn(mockResponse).when(client).listSecretVersionIds(any(ListSecretVersionIdsRequest.class));
+        Mockito.lenient().doReturn(mockResponse).when(client).listSecretVersionIds(any(ListSecretVersionIdsRequest.class));
     }
 
     @Test
