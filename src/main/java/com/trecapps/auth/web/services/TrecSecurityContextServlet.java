@@ -78,11 +78,12 @@ public class TrecSecurityContextServlet extends TrecCookieSaver implements Secur
     public SecurityContext loadContext(HttpRequestResponseHolder requestResponseHolder) {
 
         HttpServletRequest req = requestResponseHolder.getRequest();
+        HttpServletResponse res = requestResponseHolder.getResponse();
 
         if(cookieApp != null && req.getRequestURI().endsWith("/refresh_token"))
-            return getContextFromCookie(req);
+            return getContextFromCookie(res, req);
 
-        return getContextFromHeader(req);
+        return getContextFromHeader(res, req);
 
     }
 
@@ -117,14 +118,14 @@ public class TrecSecurityContextServlet extends TrecCookieSaver implements Secur
 
         SecurityContext ret = null;
         if(cookieApp != null && req.getRequestURI().endsWith("/refresh_token"))
-            ret = getContextFromCookie(req);
+            ret = getContextFromCookie(null, req);
         else
-            ret = getContextFromHeader(req);
+            ret = getContextFromHeader(null, req);
 
         return ret != null;
     }
 
-    SecurityContext getContextFromCookie(HttpServletRequest request){
+    SecurityContext getContextFromCookie(HttpServletResponse response, HttpServletRequest request){
         Cookie[] cookies = request.getCookies();
         SecurityContext context = SecurityContextHolder.createEmptyContext();
         if(cookies == null) {
@@ -137,14 +138,17 @@ public class TrecSecurityContextServlet extends TrecCookieSaver implements Secur
             {
                 String data = c.getValue();
 
-                DecodedJWT decode = tokenService.decodeToken(data);
-                if(decode == null) {
+                JwtKeyArray.DecodedHolder decode = tokenService.decodeToken(data);
+                if(decode.getDecodedJwt().isEmpty()) {
                     String address = Objects.requireNonNull(request.getRemoteAddr());
                     if(!isLocal(address) || logLocal)
                         logger.warn("Null Decode token detected from Cookie! Request Path: {} ; IP Address: {}", request.getContextPath(), request.getRemoteAddr());
                     return context;
                 }
-                TrecAuthentication acc = tokenService.verifyToken(decode, new TokenFlags());
+                if(decode.isKeyOutdated() && response != null)
+                    response.addHeader("Update-Token", "true");
+
+                TrecAuthentication acc = tokenService.verifyToken(decode.getDecodedJwt().get(), new TokenFlags());
                 if(acc == null) {
                     logger.info("Null Account from Cookie detected!");
                     if(alertHandler != null){
@@ -196,21 +200,23 @@ public class TrecSecurityContextServlet extends TrecCookieSaver implements Secur
         return false;
     }
 
-    SecurityContext getContextFromHeader(HttpServletRequest request)
+    SecurityContext getContextFromHeader(HttpServletResponse response, HttpServletRequest request)
     {
         // Get the token and try to generate an Account from it
         String auth = request.getHeader("Authorization");
         SecurityContext context = SecurityContextHolder.createEmptyContext();
 
         TokenFlags tokenFlags = new TokenFlags();
-        DecodedJWT decode = tokenService.decodeToken(auth);
-        if(decode == null) {
+        JwtKeyArray.DecodedHolder decode = tokenService.decodeToken(auth);
+        if(decode.getDecodedJwt().isEmpty()) {
             String address = Objects.requireNonNull(request.getRemoteAddr());
             if(!isLocal(address) || logLocal)
                 logger.warn("Null Decode token detected from Header! Request Path: {} ; IP Address: {}", request.getContextPath(), address);
             return context;
         }
-        TrecAuthentication acc = tokenService.verifyToken(decode, tokenFlags);
+        if(decode.isKeyOutdated() && response != null)
+            response.addHeader("Update-Token", "true");
+        TrecAuthentication acc = tokenService.verifyToken(decode.getDecodedJwt().get(), tokenFlags);
 
         if(acc == null) {
             if(alertHandler != null){
@@ -224,7 +230,7 @@ public class TrecSecurityContextServlet extends TrecCookieSaver implements Secur
             return context;
         }
 
-        acc.setMfaBlock(needsMfa(acc.getUser(), decode, request.getRequestURI()));
+        acc.setMfaBlock(needsMfa(acc.getUser(), decode.getDecodedJwt().get(), request.getRequestURI()));
 
         if(acc.isMfaBlock())
             return context;

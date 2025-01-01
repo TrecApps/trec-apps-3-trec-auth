@@ -25,6 +25,7 @@ import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.time.OffsetDateTime;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -44,8 +45,8 @@ public class JwtTokenServiceTest {
     @BeforeEach
     void setUp(){
 
-        Mockito.doReturn(RSATestHelper.publicKeyValue).when(jwtKeyHolder).getPublicKey();
-        Mockito.doReturn(RSATestHelper.privateKeyValue.replace('|', '\n')).when(jwtKeyHolder).getPrivateKey();
+        Mockito.doReturn(RSATestHelper.publicKeyValue).when(jwtKeyHolder).getPublicKey(0);
+        Mockito.doReturn(RSATestHelper.privateKeyValue.replace('|', '\n')).when(jwtKeyHolder).getPrivateKey(0);
 
 
 
@@ -54,7 +55,8 @@ public class JwtTokenServiceTest {
                 userStorageServiceAsync,
                 sessionManager,
                 jwtKeyHolder,
-                "app"
+                "app",
+                1
         );
     }
 
@@ -62,26 +64,33 @@ public class JwtTokenServiceTest {
     void assertKeysActive() throws NoSuchFieldException, IllegalAccessException {
 
         Class<JwtTokenService> jwtClass = JwtTokenService.class;
-        Field publicKey = jwtClass.getDeclaredField("publicKey");
-        Field privateKey = jwtClass.getDeclaredField("privateKey");
 
-        publicKey.setAccessible(true);
-        Object oPublicKey = publicKey.get(jwtTokenServiceAsync);
+        Field keyArrayField = jwtClass.getDeclaredField("keyArray");
+        keyArrayField.setAccessible(true);
 
-        privateKey.setAccessible(true);
-        Object oPrivateKey = privateKey.get(jwtTokenServiceAsync);
+        JwtKeyArray keyArray = (JwtKeyArray) keyArrayField.get(jwtTokenServiceAsync);
+
+        Class<JwtKeyArray> jwtKeyArrayClass = JwtKeyArray.class;
+        Field keyHolderField = jwtKeyArrayClass.getDeclaredField("keys");
+        keyHolderField.setAccessible(true);
+
+        AtomicReference<LimitList<JwtKeyArray.JwtKeyPair>> keys = (AtomicReference<LimitList<JwtKeyArray.JwtKeyPair>>) keyHolderField.get(keyArray);
+
+        JwtKeyArray.JwtKeyPair pair = keys.get().peek();
+
+        Object oPublicKey = pair.publicKey();
+
+        Object oPrivateKey = pair.privateKey();
 
         Assertions.assertNotNull(oPublicKey);
-        Assertions.assertTrue(oPublicKey instanceof RSAPublicKey);
 
         Assertions.assertNotNull(oPrivateKey);
-        Assertions.assertTrue(oPrivateKey instanceof RSAPrivateKey);
     }
 
     void assertDecode(String token, String claim, Object expectedValue){
-        DecodedJWT decodedJwt = jwtTokenServiceAsync.decodeToken(token);
-
-        Claim claimValue = decodedJwt.getClaim(claim);
+        JwtKeyArray.DecodedHolder decodedJwt = jwtTokenServiceAsync.decodeToken(token);
+        Assertions.assertTrue(decodedJwt.getDecodedJwt().isPresent());
+        Claim claimValue = decodedJwt.getDecodedJwt().get().getClaim(claim);
 
         if(expectedValue == null){
             Assertions.assertTrue(claimValue.isNull());
@@ -256,9 +265,10 @@ public class JwtTokenServiceTest {
                 false,
                 "app");
         Assertions.assertNotNull(tokenTime);
-        DecodedJWT decodedJwt = jwtTokenServiceAsync.decodeToken(tokenTime.getToken());
+        JwtKeyArray.DecodedHolder decodedJwt = jwtTokenServiceAsync.decodeToken(tokenTime.getToken());
+        Assertions.assertTrue(decodedJwt.getDecodedJwt().isPresent());
         TokenFlags flags = new TokenFlags();
-        TrecAuthentication trecAuth = jwtTokenServiceAsync.verifyToken(decodedJwt, flags);
+        TrecAuthentication trecAuth = jwtTokenServiceAsync.verifyToken(decodedJwt.getDecodedJwt().get(), flags);
 
 
         Assertions.assertNotNull(trecAuth);

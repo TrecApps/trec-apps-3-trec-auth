@@ -102,8 +102,8 @@ public class JwtTokenServiceAsync {
 
     /**
      * Use when attempting to log on to User Service directly (through the User Client Project)
-     * @param account
-     * @return
+     * @param account the account to generate a token for
+     * @return Mono hosting a possible TokenTime object
      */
     public Mono<Optional<TokenTime>> generateToken(TrecAccount account, String userAgent, TcBrands brand, String session, boolean expires, boolean useMfa, String app1)
     {
@@ -144,7 +144,7 @@ public class JwtTokenServiceAsync {
                 String useBrand = "null";
                 if(brand != null)
                 {
-                    if(brand.getOwners().contains(account.getId())) useBrand = brand.getId().toString();
+                    if(brand.getOwners().contains(account.getId())) useBrand = brand.getId();
                 }
 
                 JWTCreator.Builder jwtBuilder = JWT.create().withIssuer(app1)

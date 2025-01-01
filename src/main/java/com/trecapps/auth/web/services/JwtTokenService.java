@@ -40,10 +40,11 @@ import java.util.concurrent.atomic.AtomicReference;
 public class JwtTokenService {
 
 	String app;
-	
-	RSAPublicKey publicKey;
-	
-	RSAPrivateKey privateKey;
+
+//	RSAPublicKey publicKey;
+//
+//	RSAPrivateKey privateKey;
+	JwtKeyArray keyArray;
 
 	IUserStorageService userStorageService;
 
@@ -56,30 +57,14 @@ public class JwtTokenService {
             IUserStorageService userStorageService,
             V2SessionManager sessionManager,
             IJwtKeyHolder jwtKeyHolder,
-            @Value("${trecauth.app}") String app
+            @Value("${trecauth.app}") String app,
+			@Value("${trecauth.key.version-count:1}") int versionCount
     ) {
 		this.userStorageService = userStorageService;
 		this.sessionManager = sessionManager;
 		this.jwtKeyHolder = jwtKeyHolder;
 		this.app = app;
-		setKeys();
-	}
-
-	private DecodedJWT decodeJWT(String token)
-	{
-		DecodedJWT ret = null;
-		try
-		{
-			ret = JWT.require(Algorithm.RSA512(publicKey,privateKey))
-					.build()
-					.verify(token);
-		}
-		catch(JWTVerificationException e)
-		{
-			//e.printStackTrace();
-			return null;
-		}
-		return ret;
+		setKeys(versionCount);
 	}
 
 	// chose a Character random from this String
@@ -94,25 +79,13 @@ public class JwtTokenService {
 	private static final long ONE_MINUTE = 60_000;
 
 	@SneakyThrows
-	private void setKeys()
+	private void setKeys(int versionCount)
 	{
-		if(publicKey == null)
-		{
-				String encKey = jwtKeyHolder.getPublicKey();
-				X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(Base64.getDecoder().decode(encKey));
-				publicKey = (RSAPublicKey)KeyFactory.getInstance("RSA").generatePublic(pubKeySpec);
-		}
-		
-		if(privateKey == null)
-		{
-			String encKey = jwtKeyHolder.getPrivateKey();
-			try (PEMParser parser = new PEMParser(new StringReader(encKey))) {
+		this.keyArray = new JwtKeyArray(versionCount);
 
-				        PemObject pemObject = parser.readPemObject();
-				        byte[] content = pemObject.getContent();
-				        PKCS8EncodedKeySpec privKeySpec = new PKCS8EncodedKeySpec(content);
-				        privateKey =  (RSAPrivateKey) KeyFactory.getInstance("RSA").generatePrivate(privKeySpec);
-			}
+		while(versionCount > 0){
+			versionCount--;
+			this.keyArray.AddKey(jwtKeyHolder.getPublicKey(versionCount), jwtKeyHolder.getPrivateKey(versionCount));
 		}
 	}
 
@@ -174,7 +147,7 @@ public class JwtTokenService {
 		if(ret.getExpiration() != null)
 			jwtBuilder = jwtBuilder.withExpiresAt(ret.getExpiration().toInstant());
 
-		ret.setToken(jwtBuilder.sign(Algorithm.RSA512(publicKey, privateKey)));
+		ret.setToken(keyArray.encodeJWT(jwtBuilder));
 		return ret;
 
 	}
@@ -183,16 +156,16 @@ public class JwtTokenService {
 	{
 		if (token == null)
 			return null;
-		DecodedJWT decodedJwt = decodeJWT(token);
+		JwtKeyArray.DecodedHolder decodedJwt = keyArray.decodeJwt(token);
 
-		if (decodedJwt == null) {
+		if (decodedJwt.getDecodedJwt().isEmpty()) {
 			return null;
 		}
 
 		AtomicReference<JWTCreator.Builder> jwtBuilder = new AtomicReference<>(JWT.create());
 		AtomicBoolean mfaFound = new AtomicBoolean(false);
 
-		decodedJwt.getClaims().forEach((String claimName, Claim claim) -> {
+		decodedJwt.getDecodedJwt().get().getClaims().forEach((String claimName, Claim claim) -> {
 			if("mfa".equals(claimName))
 			{
 				mfaFound.set(true);
@@ -218,24 +191,17 @@ public class JwtTokenService {
 			jwtBuilder.set(jwtBuilder.get().withClaim("mfa", true));
 		}
 		TokenTime ret = new TokenTime();
-		ret.setToken(jwtBuilder.get().sign(Algorithm.RSA512(publicKey, privateKey)));
+		ret.setToken(keyArray.encodeJWT(jwtBuilder.get()));
 		return ret;
 	}
 
 	public TokenTime generateNewTokenFromRefresh(String refreshToken)
 	{
-		DecodedJWT decodedJwt = null;
-		try
-		{
-			decodedJwt = JWT.require(Algorithm.RSA512(publicKey,privateKey))
-					.build()
-					.verify(refreshToken);
-		}
-		catch(JWTVerificationException e)
-		{
-			e.printStackTrace();
+		JwtKeyArray.DecodedHolder decodedJwtHolder = keyArray.decodeJwt(refreshToken);
+		if(decodedJwtHolder.getDecodedJwt().isEmpty())
 			return null;
-		}
+
+		DecodedJWT decodedJwt = decodedJwtHolder.getDecodedJwt().get();
 
 		String user = decodedJwt.getClaim("ID").asString();
 		String session = decodedJwt.getClaim("SessionId").asString();
@@ -255,7 +221,7 @@ public class JwtTokenService {
 		TokenTime ret = new TokenTime();
 		ret.setSession(session);
 		ret.setExpiration(newExp);
-		ret.setToken(jwtBuilder.sign(Algorithm.RSA512(publicKey, privateKey)));
+		ret.setToken(keyArray.encodeJWT(jwtBuilder));
 		return ret;
 	}
 
@@ -270,34 +236,22 @@ public class JwtTokenService {
 				.withClaim("SessionId", sessionId)
 				.withIssuedAt(now));
 
-		return jwtBuilder.get()
-				.sign(Algorithm.RSA512(publicKey, privateKey));
+		return keyArray.encodeJWT(jwtBuilder.get());
 	}
 
 	public String getSessionId(String token)
 	{
-		DecodedJWT decodedJwt = null;
-		try
-		{
-			decodedJwt = JWT.require(Algorithm.RSA512(publicKey,privateKey))
-					.build()
-					.verify(token);
-		}
-		catch(JWTVerificationException e)
-		{
-			e.printStackTrace();
+		JwtKeyArray.DecodedHolder decodedJwt = keyArray.decodeJwt(token);
+		if(decodedJwt.getDecodedJwt().isEmpty())
 			return null;
-		}
 
-		Claim idClaim = decodedJwt.getClaim("SessionId");
+		Claim idClaim = decodedJwt.getDecodedJwt().get().getClaim("SessionId");
 
 		return idClaim.asString();
 	}
 
-	public DecodedJWT decodeToken(String token){
-		if (token == null)
-			return null;
-		return decodeJWT(token);
+	public JwtKeyArray.DecodedHolder decodeToken(String token){
+		return keyArray.decodeJwt(token);
 	}
 
 	/***

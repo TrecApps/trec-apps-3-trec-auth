@@ -52,13 +52,14 @@ public class CookieControllerServletTest {
         sessionManager = new V2SessionManager(userStorageService, true);
 
 
-        Mockito.doReturn(RSATestHelper.publicKeyValue).when(jwtKeyHolder).getPublicKey();
-        Mockito.doReturn(RSATestHelper.privateKeyValue.replace('|', '\n')).when(jwtKeyHolder).getPrivateKey();
+        Mockito.doReturn(RSATestHelper.publicKeyValue).when(jwtKeyHolder).getPublicKey(0);
+        Mockito.doReturn(RSATestHelper.privateKeyValue.replace('|', '\n')).when(jwtKeyHolder).getPrivateKey(0);
         tokenService = new JwtTokenService(
                 userStorageService,
                 sessionManager,
                 jwtKeyHolder,
-                "app"
+                "app",
+                1
         );
 
 
