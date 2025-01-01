@@ -42,6 +42,8 @@ public class JwtKeyArray {
 
     @SneakyThrows
     public void AddKey(String publicKeyStr, String privateKeyStr) {
+        if(publicKeyStr == null || privateKeyStr == null) return;
+
         X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(Base64.getDecoder().decode(publicKeyStr));
         RSAPublicKey publicKey = (RSAPublicKey) KeyFactory.getInstance("RSA").generatePublic(pubKeySpec);
 
