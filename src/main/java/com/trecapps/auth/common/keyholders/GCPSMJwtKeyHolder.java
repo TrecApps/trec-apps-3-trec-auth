@@ -1,8 +1,14 @@
 package com.trecapps.auth.common.keyholders;
 
 import com.azure.security.keyvault.secrets.models.SecretProperties;
+import com.google.cloud.secretmanager.v1.Secret;
+import com.google.cloud.secretmanager.v1.SecretName;
+import com.google.cloud.secretmanager.v1.SecretPayload;
+import com.google.cloud.secretmanager.v1.UpdateSecretRequest;
+import com.google.protobuf.ByteString;
 import lombok.SneakyThrows;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -52,5 +58,25 @@ public class GCPSMJwtKeyHolder extends IJwtKeyHolder{
                 holder.setKey(gcpKeyHolder.getSecret(holder.getKeyPath(), keyVersions.get(version)).replace("|", "\r\n"));
         }
         return holder.getKey();
+    }
+
+    @Override
+    public void updateKey(String publicKey, String privateKey) {
+        gcpKeyHolder.client.addSecretVersion(
+                SecretName.newBuilder()
+                        .setProject(gcpKeyHolder.projectName.getProject())
+                        .setSecret(basicPublic.getKeyPath())
+                .build(),
+                SecretPayload.newBuilder()
+                        .setData(ByteString.copyFrom(publicKey.getBytes(StandardCharsets.UTF_8)))
+                        .build());
+        gcpKeyHolder.client.addSecretVersion(
+                SecretName.newBuilder()
+                        .setProject(gcpKeyHolder.projectName.getProject())
+                        .setSecret(basicPrivate.getKeyPath())
+                        .build(),
+                SecretPayload.newBuilder()
+                        .setData(ByteString.copyFrom(privateKey.getBytes(StandardCharsets.UTF_8)))
+                        .build());
     }
 }

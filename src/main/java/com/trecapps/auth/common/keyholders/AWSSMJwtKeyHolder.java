@@ -10,6 +10,7 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
 import software.amazon.awssdk.services.secretsmanager.model.ListSecretVersionIdsRequest;
+import software.amazon.awssdk.services.secretsmanager.model.PutSecretValueRequest;
 import software.amazon.awssdk.services.secretsmanager.model.SecretVersionsListEntry;
 
 import java.util.ArrayList;
@@ -106,5 +107,16 @@ public class AWSSMJwtKeyHolder extends IJwtKeyHolder{
         }
 
         return holder.getKey();
+    }
+
+    public void updateKey(String publicKey, String privateKey) {
+        client.putSecretValue(PutSecretValueRequest.builder()
+                        .secretId(this.basicPublic.getKeyPath())
+                        .secretString(publicKey)
+                .build());
+        client.putSecretValue(PutSecretValueRequest.builder()
+                .secretId(this.basicPrivate.getKeyPath())
+                .secretString(privateKey)
+                .build());
     }
 }

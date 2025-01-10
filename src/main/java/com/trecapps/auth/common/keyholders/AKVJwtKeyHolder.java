@@ -80,4 +80,10 @@ public class AKVJwtKeyHolder extends IJwtKeyHolder {
         }
         return holder.getKey();
     }
+
+    @Override
+    public void updateKey(String publicKey, String privateKey) {
+        keyVaultClient.setSecret(this.basicPublic.getKeyPath(), publicKey);
+        keyVaultClient.setSecret(this.basicPrivate.getKeyPath(), privateKey);
+    }
 }

@@ -74,4 +74,8 @@ public abstract class IJwtKeyHolder {
 
         return getKey(holder, version);
     }
+
+    public void updateKey(String publicKey, String privateKey){
+
+    }
 }
