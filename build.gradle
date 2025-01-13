@@ -58,7 +58,8 @@ dependencies {
 
     implementation "org.springframework.boot:spring-boot-starter-security:$springbootVersion"
     implementation "org.springframework.boot:spring-boot-starter-data-jpa:$springbootVersion"
-    implementation "org.springframework.boot:spring-boot-starter-batch:$springbootVersion"
+    implementation "org.springframework.boot:spring-boot-starter-quartz:$springbootVersion"
+
     implementation 'dev.samstevens.totp:totp:1.7.1'  // MFA Support
     implementation 'commons-net:commons-net:3.11.1'  // Address known vulnerability in the samstevens dependency above
     implementation 'com.beust:jcommander:1.78'      // Address known vulnerability in the samstevens dependency above
