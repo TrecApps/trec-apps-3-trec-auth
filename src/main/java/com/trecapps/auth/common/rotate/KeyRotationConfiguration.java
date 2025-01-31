@@ -118,13 +118,22 @@ public class KeyRotationConfiguration {
     }
 
     @Bean(name="rotateJobTrigger")
-    @ConditionalOnProperty(prefix = "trecauth.rotate", name = "do-rotate", havingValue = "true")
+    @ConditionalOnBean(value = JobDetail.class, name = "rotateJobDetail")
     public Trigger rotateTrigger(
             @Qualifier("rotateJobDetail") JobDetail job,
             @Value("${trecauth.rotate.rotate-interval:7D}")String interval,
-            @Value("${trecauth.rotate.rotate-start:ofweek-1 12:00:00") String start
-
+            @Value("${trecauth.rotate.rotate-start:ofweek-1 12:00:00") String start,
+            @Value("${trecauth.rotate.rotate-cron-schedule:#{NULL}}")String cron
             ) {
+
+        if(cron != null){
+            CronScheduleBuilder scheduleBuilder = CronScheduleBuilder.cronSchedule(cron);
+
+            return TriggerBuilder.newTrigger()
+                    .forJob(job)
+                    .withSchedule(scheduleBuilder)
+                    .build();
+        }
 
         SimpleScheduleBuilder scheduleBuilder = setInterval(simpleSchedule(), interval);
 
@@ -145,15 +154,25 @@ public class KeyRotationConfiguration {
                 .build();
     }
 
-    @Bean(name="rotateJobTrigger")
-    @ConditionalOnProperty(prefix = "trecauth.rotate", name = "do-update", havingValue = "true")
+    @Bean(name="updateJobTrigger")
+    @ConditionalOnProperty(prefix = "trecauth.rotate", name = "update-cron-schedule", matchIfMissing = true)
+    @ConditionalOnBean(value=JobDetail.class, name="updateJobDetail")
     public Trigger updateTrigger(
             @Qualifier("updateJobDetail") JobDetail job,
             @Value("${trecauth.rotate.update-interval:7D}")String interval,
-            @Value("${trecauth.rotate.update-start:ofweek-1 0:00:00") String start
+            @Value("${trecauth.rotate.update-start:ofweek-1 0:00:00") String start,
+            @Value("${trecauth.rotate.update-cron-schedule#{NULL}}")String cron
 
     ) {
 
+        if(cron != null){
+            CronScheduleBuilder scheduleBuilder = CronScheduleBuilder.cronSchedule(cron);
+
+            return TriggerBuilder.newTrigger()
+                    .forJob(job)
+                    .withSchedule(scheduleBuilder)
+                    .build();
+        }
         SimpleScheduleBuilder scheduleBuilder = setInterval(simpleSchedule(), interval);
 
         return TriggerBuilder.newTrigger()
@@ -170,7 +189,11 @@ public class KeyRotationConfiguration {
             @Autowired(required = false)
             @Qualifier("rotateJobTrigger") Trigger rotateTrigger,
             @Autowired(required = false)
-            @Qualifier("updateJobTrigger") Trigger updateTrigger
+            @Qualifier("updateJobTrigger") Trigger updateTrigger,
+            @Autowired(required = false)
+            @Qualifier("rotateJobDetail") JobDetail rotateJobDetail,
+            @Autowired(required = false)
+            @Qualifier("updateJobDetail") JobDetail updateJobDetail
     ) {
         List<Trigger> triggerList = new ArrayList<>(2);
         if(rotateTrigger != null)
@@ -178,6 +201,12 @@ public class KeyRotationConfiguration {
         if(updateTrigger != null)
             triggerList.add(updateTrigger);
 
+
+        List<JobDetail> detailList = new ArrayList<>(2);
+        if(rotateJobDetail != null)
+            detailList.add(rotateJobDetail);
+        if(updateJobDetail != null)
+            detailList.add(updateJobDetail);
 
         SchedulerFactoryBean quartzScheduler = new SchedulerFactoryBean();
 
@@ -187,7 +216,7 @@ public class KeyRotationConfiguration {
         quartzScheduler.setJobFactory(jobFactory);
 
         quartzScheduler.setTriggers(triggerList.toArray(new Trigger[0]));
-
+        quartzScheduler.setJobDetails(detailList.toArray(new JobDetail[0]));
 
         return quartzScheduler;
     }

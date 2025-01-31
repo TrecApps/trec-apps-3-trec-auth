@@ -58,6 +58,7 @@ public class JwtTokenServiceAsync {
             IUserStorageServiceAsync userStorageServiceAsync,
             V2SessionManagerAsync sessionManager,
             IJwtKeyHolder jwtKeyHolder,
+            JwtKeyArray keyArray1,
             @Value("${trecauth.app}") String app,
             @Value("${trecauth.key.version-count:1}") int versionCount
     ) {
@@ -65,6 +66,7 @@ public class JwtTokenServiceAsync {
         this.sessionManager = sessionManager;
         this.jwtKeyHolder = jwtKeyHolder;
         this.app = app;
+        this.keyArray = keyArray1;
         setKeys(versionCount);
     }
 
@@ -82,8 +84,6 @@ public class JwtTokenServiceAsync {
     @SneakyThrows
     private void setKeys(int versionCount)
     {
-        this.keyArray = new JwtKeyArray(versionCount);
-
         while(versionCount > 0){
             versionCount--;
             this.keyArray.AddKey(jwtKeyHolder.getPublicKey(versionCount), jwtKeyHolder.getPrivateKey(versionCount));

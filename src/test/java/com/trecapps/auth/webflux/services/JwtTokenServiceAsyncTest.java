@@ -54,6 +54,7 @@ public class JwtTokenServiceAsyncTest {
                 userStorageServiceAsync,
                 sessionManager,
                 jwtKeyHolder,
+                new JwtKeyArray(1),
                 "app",
                 1
         );

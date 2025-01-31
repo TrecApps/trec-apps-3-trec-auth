@@ -1,6 +1,5 @@
 plugins {
     id 'java'
-    //id 'org.springframework.boot' version '3.0.0'
     id 'maven-publish'
     id 'jacoco'
 }
@@ -13,7 +12,7 @@ group 'com.trecapps.auth'
 version buildVersion
 
 ext {
-    springbootVersion = '3.4.1'
+    springbootVersion = '3.4.2'
 }
 
 repositories {

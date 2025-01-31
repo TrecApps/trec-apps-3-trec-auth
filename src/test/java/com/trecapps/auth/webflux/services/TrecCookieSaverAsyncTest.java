@@ -40,6 +40,7 @@ public class TrecCookieSaverAsyncTest {
                 userStorageService,
                 sessionManager,
                 jwtKeyHolder,
+                new JwtKeyArray(1),
                 "app"
                 ,1
         );

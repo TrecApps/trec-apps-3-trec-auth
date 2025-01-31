@@ -84,6 +84,66 @@ public class TcUser implements UserDetails {
     @EncryptedField
     List<MfaMechanism> mfaMechanisms = new ArrayList<>();
 
+    public String callibrateMechanisms(){
+        int token = 1; // Counter
+
+        // Get a list of mechanisms that use the Token mechanism
+        List<MfaMechanism> currentTokenMechs = mfaMechanisms
+                .stream()
+                .filter((MfaMechanism mech) -> "Token".equals(mech.getSource()))
+                .toList();
+
+        // Get a list of token mechanisms with a null name
+        List<MfaMechanism> tokenMechsNull = currentTokenMechs
+                .stream()
+                .filter((MfaMechanism mech) -> mech.getName() == null)
+                .toList();
+
+        // List of token mechanisms that follow the default name convention "tokenX" where "X" is 1,2,3...
+        List<MfaMechanism> tokenMechDefault = currentTokenMechs
+                .stream()
+                .filter((MfaMechanism mech) -> {
+
+                    String name = mech.getName();
+                    return name != null &&
+                            name.startsWith(("token_")) &&
+                            name.length() >= 7;
+                })
+                .filter((MfaMechanism mech) -> {
+                    String nameNum = mech.getName().substring(6);
+                    try{Integer.parseInt(nameNum); return true; }
+                    catch(NumberFormatException ignore) {return false;}
+                })
+                .map((MfaMechanism mech) -> {
+                    String nameNum = mech.getName().substring(6);
+                    // We don't actually want to modify their names, just use them to name the null-named tokens.
+                    // So clone them
+                    return mech.cloneWithName(String.format("token_%s", nameNum.trim()));
+                })
+                .sorted()
+                .toList();
+
+        if(!tokenMechDefault.isEmpty())
+        {
+            String lastName = tokenMechDefault.get(tokenMechDefault.size() - 1).getName().substring(6);
+            token = Integer.parseInt(lastName) + 1;
+        }
+
+        for(MfaMechanism mech: tokenMechsNull) {
+            mech.setName(String.format("token_%d", token++));
+        }
+
+        return String.format("token_%d", token);
+    }
+
+    public boolean isMechanismNameTaken(String name) {
+        for(MfaMechanism mech: mfaMechanisms){
+            if(name.equals(mech.getName()))return true;
+        }
+
+        return false;
+    }
+
     List<MfaReq> mfaRequirements = new ArrayList<>();
 
     @EncryptedField

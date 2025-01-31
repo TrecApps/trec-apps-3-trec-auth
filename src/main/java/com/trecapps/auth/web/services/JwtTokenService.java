@@ -57,6 +57,7 @@ public class JwtTokenService {
             IUserStorageService userStorageService,
             V2SessionManager sessionManager,
             IJwtKeyHolder jwtKeyHolder,
+			JwtKeyArray jwtKeyArray,
             @Value("${trecauth.app}") String app,
 			@Value("${trecauth.key.version-count:1}") int versionCount
     ) {
@@ -64,6 +65,7 @@ public class JwtTokenService {
 		this.sessionManager = sessionManager;
 		this.jwtKeyHolder = jwtKeyHolder;
 		this.app = app;
+		this.keyArray = jwtKeyArray;
 		setKeys(versionCount);
 	}
 

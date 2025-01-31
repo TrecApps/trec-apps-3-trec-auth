@@ -4,10 +4,7 @@ import com.trecapps.auth.ObjectTestProvider;
 import com.trecapps.auth.RSATestHelper;
 import com.trecapps.auth.common.ISecurityAlertHandler;
 import com.trecapps.auth.common.keyholders.IJwtKeyHolder;
-import com.trecapps.auth.common.models.AnonymousAuthentication;
-import com.trecapps.auth.common.models.LoginToken;
-import com.trecapps.auth.common.models.TcUser;
-import com.trecapps.auth.common.models.TrecAuthentication;
+import com.trecapps.auth.common.models.*;
 import com.trecapps.auth.webflux.services.*;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -71,6 +68,7 @@ public class TrecSecurityContextServletTest {
                 userStorageService,
                 sessionManager,
                 jwtKeyHolder,
+                new JwtKeyArray(1),
                 "app",
                 1
         );

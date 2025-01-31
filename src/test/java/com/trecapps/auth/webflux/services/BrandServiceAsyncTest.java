@@ -71,6 +71,7 @@ public class BrandServiceAsyncTest {
                 userStorageService,
                 sessionManager,
                 jwtKeyHolder,
+                new JwtKeyArray(1),
                 "app",
                 1
         );

@@ -10,6 +10,8 @@ public class MfaMechanism {
 
     String source; // "Email", "Phone", "Google" etc.
 
+    String name; // Used for multiple Authenticator apps
+
     @EncryptedField
     String code;        // Code the user needs to type to perform MFA (for "Email" or "Phone" methods)
 
@@ -17,4 +19,14 @@ public class MfaMechanism {
 
     @EncryptedField
     String UserCode;    // Code to store when using a third party like Google or Microsoft to aid in Authentication
+
+    public MfaMechanism cloneWithName(String name) {
+        MfaMechanism ret = new MfaMechanism();
+        ret.source = source;
+        ret.code = code;
+        ret.expires = expires;
+        ret.UserCode = UserCode;
+        ret.name = name;
+        return ret;
+    }
 }

@@ -2,6 +2,7 @@ package com.trecapps.auth.webflux.controllers;
 
 import com.trecapps.auth.RSATestHelper;
 import com.trecapps.auth.common.keyholders.IJwtKeyHolder;
+import com.trecapps.auth.common.models.JwtKeyArray;
 import com.trecapps.auth.common.models.SessionListV2;
 import com.trecapps.auth.common.models.SessionV2;
 import com.trecapps.auth.webflux.services.IUserStorageServiceAsync;
@@ -56,6 +57,7 @@ public class CookieBaseReactiveTest {
                 userStorageService,
                 sessionManager,
                 jwtKeyHolder,
+                new JwtKeyArray(1),
                 "app",
                 1
         );

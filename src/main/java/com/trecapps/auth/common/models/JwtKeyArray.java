@@ -7,8 +7,11 @@ import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import lombok.Data;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.util.io.pem.PemObject;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import java.io.StringReader;
 import java.security.KeyFactory;
@@ -19,6 +22,8 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
+@Component
+@Slf4j
 public class JwtKeyArray {
 
     @Data
@@ -34,7 +39,7 @@ public class JwtKeyArray {
         }
     }
 
-    public JwtKeyArray(int maxSize) {
+    public JwtKeyArray(@Value("${trecauth.key.version-count:1}") int maxSize) {
         this.keys = new AtomicReference<>(new LimitList<>(maxSize));
     }
 
@@ -56,7 +61,16 @@ public class JwtKeyArray {
 
             LimitList<JwtKeyPair> tempKeys = new LimitList<>(keys.get());
 
-            tempKeys.add(new JwtKeyPair(publicKey, privateKey));
+            JwtKeyPair newPair = new JwtKeyPair(publicKey, privateKey);
+            if(newPair.equals(tempKeys.peekLast()))
+            {
+                // To-Do: Handle - for now, just log a warning, but don't add to the set
+                log.warn("Generated Key Pair is equal to the current list, dropping!");
+                return;
+            }
+
+
+            tempKeys.add(newPair);
             keys.set(tempKeys);
 
         }
