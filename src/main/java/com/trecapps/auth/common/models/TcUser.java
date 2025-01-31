@@ -96,17 +96,17 @@ public class TcUser implements UserDetails {
         // Get a list of token mechanisms with a null name
         List<MfaMechanism> tokenMechsNull = currentTokenMechs
                 .stream()
-                .filter((MfaMechanism mech) -> mech.getName() == null)
+                .filter((MfaMechanism mech) -> !mech.hasName())
                 .toList();
 
         // List of token mechanisms that follow the default name convention "tokenX" where "X" is 1,2,3...
         List<MfaMechanism> tokenMechDefault = currentTokenMechs
                 .stream()
                 .filter((MfaMechanism mech) -> {
-
+                    if(!mech.hasName())
+                        return false;
                     String name = mech.getName();
-                    return name != null &&
-                            name.startsWith(("token_")) &&
+                    return name.startsWith(("token_")) &&
                             name.length() >= 7;
                 })
                 .filter((MfaMechanism mech) -> {

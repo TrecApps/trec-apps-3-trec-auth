@@ -29,4 +29,8 @@ public class MfaMechanism {
         ret.name = name;
         return ret;
     }
+
+    public boolean hasName() {
+        return name != null && !name.trim().isEmpty();
+    }
 }
