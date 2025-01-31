@@ -137,6 +137,7 @@ public class TcUser implements UserDetails {
     }
 
     public boolean isMechanismNameTaken(String name) {
+        if(name == null || !name.trim().isEmpty()) return false;
         for(MfaMechanism mech: mfaMechanisms){
             if(name.equals(mech.getName()))return true;
         }

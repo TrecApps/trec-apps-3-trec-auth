@@ -134,13 +134,15 @@ public class MfaServiceTest {
         List<MfaMechanism> mechs = user.getMfaMechanisms();
         Assertions.assertEquals(1, mechs.size());
         Assertions.assertEquals(token1, mechs.get(0).getUserCode());
+        Assertions.assertEquals("token_1", mechs.get(0).getName());
 
         String token2 = mfaService.setUpKey(user);
         Assertions.assertNotNull(token2);
         mechs = user.getMfaMechanisms();
-        Assertions.assertEquals(1, mechs.size());
-        Assertions.assertEquals(token2, mechs.get(0).getUserCode());
+        Assertions.assertEquals(2, mechs.size());
+        Assertions.assertEquals(token2, mechs.get(1).getUserCode());
         Assertions.assertNotEquals(token1, token2);
+        Assertions.assertEquals("token_2", mechs.get(1).getName());
     }
 
     @Test

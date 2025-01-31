@@ -70,14 +70,23 @@ public class MfaService {
     }
 
     public String setUpKey(TcUser user){
-        Optional<MfaMechanism> oTotp = user.getMechanism("Token");
-        MfaMechanism totp;
-        if(oTotp.isEmpty()){
-            totp = new MfaMechanism();
-            user.getMfaMechanisms().add(totp);
-            totp.setSource("Token");
-        } else
-            totp = oTotp.get();
+        return setUpKey(user, null);
+    }
+
+    public String setUpKey(TcUser user, String name){
+
+        if(user.isMechanismNameTaken(name))
+            throw new IllegalArgumentException(String.format("Name %s is already taken", name));
+
+        MfaMechanism totp = new MfaMechanism();
+        String backupName = user.callibrateMechanisms();
+        totp.setName(name);
+        if(!totp.hasName())
+            totp.setName(backupName);
+
+        user.getMfaMechanisms().add(totp);
+        totp.setSource("Token");
+
 
         String ret = secretGenerator.generate();
         totp.setUserCode(ret);
