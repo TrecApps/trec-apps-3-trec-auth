@@ -1,10 +1,7 @@
 package com.trecapps.auth.web.services;
 
 import com.trecapps.auth.ObjectTestProvider;
-import com.trecapps.auth.common.models.MfaMechanism;
-import com.trecapps.auth.common.models.MfaRegistrationData;
-import com.trecapps.auth.common.models.PhoneNumber;
-import com.trecapps.auth.common.models.TcUser;
+import com.trecapps.auth.common.models.*;
 import dev.samstevens.totp.code.CodeVerifier;
 import dev.samstevens.totp.exceptions.QrGenerationException;
 import dev.samstevens.totp.qr.QrData;
@@ -61,9 +58,10 @@ public class MfaServiceTest {
         user.getMfaMechanisms().add(mech);
     }
 
-    void addTokenMech(String secret){
+    void addTokenMech(String secret, String name){
         MfaMechanism mech = new MfaMechanism();
         mech.setSource("Token");
+        mech.setName((name));
         mech.setUserCode(secret);
         user.getMfaMechanisms().add(mech);
     }
@@ -73,7 +71,7 @@ public class MfaServiceTest {
         List<String> options = this.mfaService.getAvailableMFAOptions(user);
         Assertions.assertTrue(options.isEmpty());
 
-        addTokenMech("aaaaa");
+        addTokenMech("aaaaa", "token_1");
         options = this.mfaService.getAvailableMFAOptions(user);
         Assertions.assertTrue(options.contains("Token"));
 
@@ -128,30 +126,35 @@ public class MfaServiceTest {
         Mockito.doAnswer((InvocationOnMock invoke) -> {
             return this.defaultSecretGenerator.generate();
         }).when(secretGenerator).generate();
-        String token1 = mfaService.setUpKey(user);
+        TokenResult token1 = mfaService.setUpKey(user);
 
         Assertions.assertNotNull(token1);
         List<MfaMechanism> mechs = user.getMfaMechanisms();
         Assertions.assertEquals(1, mechs.size());
-        Assertions.assertEquals(token1, mechs.get(0).getUserCode());
+        Assertions.assertEquals(token1.tokenCode(), mechs.get(0).getUserCode());
         Assertions.assertEquals("token_1", mechs.get(0).getName());
+        Assertions.assertEquals("token_1", token1.name());
 
-        String token2 = mfaService.setUpKey(user);
+        TokenResult token2 = mfaService.setUpKey(user);
         Assertions.assertNotNull(token2);
         mechs = user.getMfaMechanisms();
         Assertions.assertEquals(2, mechs.size());
-        Assertions.assertEquals(token2, mechs.get(1).getUserCode());
+        Assertions.assertEquals(token2.tokenCode(), mechs.get(1).getUserCode());
         Assertions.assertNotEquals(token1, token2);
         Assertions.assertEquals("token_2", mechs.get(1).getName());
+        Assertions.assertEquals("token_2", token2.name());
     }
 
     @Test
     void testGetQRCode() throws QrGenerationException {
-        MfaRegistrationData code = mfaService.getQRCode(user, null);
+        String tokenName = "token1";
+        String userCode = defaultSecretGenerator.generate();
+        TokenResult tr = new TokenResult(userCode, tokenName);
+        MfaRegistrationData code = mfaService.getQRCode(user, tr);
         Assertions.assertFalse(code.isValid());
 
-        String userCode = defaultSecretGenerator.generate();
-        addTokenMech(userCode);
+
+        addTokenMech(userCode, tokenName);
 
         Mockito.doAnswer((InvocationOnMock invoke) ->
                 defaultQrGenerator.generate(invoke.getArgument(0, QrData.class)))
@@ -160,7 +163,7 @@ public class MfaServiceTest {
                         defaultQrGenerator.getImageMimeType())
                 .when(qrGenerator).getImageMimeType();
 
-        code = mfaService.getQRCode(user, userCode);
+        code = mfaService.getQRCode(user, tr);
 
         Assertions.assertTrue(code.isValid());
     }
@@ -170,7 +173,7 @@ public class MfaServiceTest {
         Mockito.doReturn(false).when(codeVerifier).isValidCode(anyString(), anyString());
 
         Assertions.assertFalse(mfaService.verifyTotp("code", user));
-        addTokenMech(defaultSecretGenerator.generate());
+        addTokenMech(defaultSecretGenerator.generate(), "token_1");
         Assertions.assertFalse(mfaService.verifyTotp("code", user));
         Mockito.doReturn(true).when(codeVerifier).isValidCode(anyString(), anyString());
 

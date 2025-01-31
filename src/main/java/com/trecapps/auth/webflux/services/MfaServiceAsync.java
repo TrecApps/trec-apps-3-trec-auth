@@ -3,6 +3,7 @@ package com.trecapps.auth.webflux.services;
 import com.trecapps.auth.common.models.MfaMechanism;
 import com.trecapps.auth.common.models.MfaRegistrationData;
 import com.trecapps.auth.common.models.TcUser;
+import com.trecapps.auth.common.models.TokenResult;
 import dev.samstevens.totp.code.CodeVerifier;
 import dev.samstevens.totp.exceptions.QrGenerationException;
 import dev.samstevens.totp.qr.QrData;
@@ -45,11 +46,11 @@ public class MfaServiceAsync {
         return ret.stream().toList();
     }
 
-    public String setUpKey(TcUser user){
+    public TokenResult setUpKey(TcUser user){
         return setUpKey(user, null);
     }
 
-    public String setUpKey(TcUser user, String name){
+    public TokenResult setUpKey(TcUser user, String name){
         if(user.isMechanismNameTaken(name))
             throw new IllegalArgumentException(String.format("Name %s is already taken", name));
 
@@ -65,7 +66,7 @@ public class MfaServiceAsync {
         String ret = secretGenerator.generate();
         totp.setUserCode(ret);
         userStorageService.saveUser(user);
-        return ret;
+        return new TokenResult(ret, totp.getName());
     }
 
     public boolean enablePhoneVerification(TcUser user){
@@ -96,11 +97,11 @@ public class MfaServiceAsync {
         return false;
     }
 
-    public MfaRegistrationData getQRCode(TcUser user, String code) throws QrGenerationException {
-        Optional<MfaMechanism> oTotp = user.getMechanism("Token");
+    public MfaRegistrationData getQRCode(TcUser user, TokenResult code) throws QrGenerationException {
+        Optional<MfaMechanism> oTotp = user.getMechanism("Token", code.name());
         if(oTotp.isEmpty()) return new MfaRegistrationData(null, null);
 
-        String userCode = code;
+        String userCode = code.tokenCode();
 
         String label = user.getUsername();
 

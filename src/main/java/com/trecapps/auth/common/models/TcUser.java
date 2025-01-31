@@ -175,6 +175,14 @@ public class TcUser implements UserDetails {
     }
 
 
+    public Optional<MfaMechanism> getMechanism(String source, String name) {
+        for(MfaMechanism mech: mfaMechanisms){
+            if(source.equals(mech.getSource()) && name.equals(mech.getName()))
+                return Optional.of(mech);
+        }
+        return Optional.empty();
+    }
+
     public Optional<MfaMechanism> getMechanism(String source) {
         for(MfaMechanism mech: mfaMechanisms){
             if(source.equals(mech.getSource()))
