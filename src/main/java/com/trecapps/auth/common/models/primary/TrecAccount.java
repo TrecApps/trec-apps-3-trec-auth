@@ -11,14 +11,12 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
-@Table
+@Table(name = "trecaccount")
 @Entity
-@javax.persistence.Entity
 @Data
 public class TrecAccount implements UserDetails {
 
     @Id
-    @javax.persistence.Id
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
 

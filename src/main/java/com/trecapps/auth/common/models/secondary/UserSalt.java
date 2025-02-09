@@ -9,16 +9,14 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-@Table
+@Table(name = "usersalt")
 @Entity
-@javax.persistence.Entity
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserSalt {
 
     @Id
-    @javax.persistence.Id
     String id;
 
     @EncryptedField

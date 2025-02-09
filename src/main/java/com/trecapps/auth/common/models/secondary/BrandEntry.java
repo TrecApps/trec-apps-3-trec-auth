@@ -4,14 +4,12 @@ import com.trecapps.auth.common.models.TcBrands;
 import jakarta.persistence.*;
 import lombok.Data;
 
-@Table
+@Table(name = "brandentry")
 @Entity
-@javax.persistence.Entity
 @Data
 public class BrandEntry {
 
     @Id
-    @javax.persistence.Id
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
 
