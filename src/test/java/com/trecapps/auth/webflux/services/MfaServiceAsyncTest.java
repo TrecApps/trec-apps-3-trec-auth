@@ -172,12 +172,12 @@ public class MfaServiceAsyncTest {
     void testVerifyTotp() {
         Mockito.doReturn(false).when(codeVerifier).isValidCode(anyString(), anyString());
 
-        Assertions.assertFalse(mfaService.verifyTotp("code", user));
+        Assertions.assertFalse(mfaService.verifyTotp("code", "token_1", user));
         addTokenMech(defaultSecretGenerator.generate(), "token_1");
-        Assertions.assertFalse(mfaService.verifyTotp("code", user));
+        Assertions.assertFalse(mfaService.verifyTotp("code", "token_1", user));
         Mockito.doReturn(true).when(codeVerifier).isValidCode(anyString(), anyString());
 
-        Assertions.assertTrue(mfaService.verifyTotp("code", user));
+        Assertions.assertTrue(mfaService.verifyTotp("code", "token_1", user));
 
     }
 }

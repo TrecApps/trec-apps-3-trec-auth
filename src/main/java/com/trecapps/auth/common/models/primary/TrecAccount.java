@@ -23,6 +23,7 @@ public class TrecAccount implements UserDetails {
     @Column(unique = true)
     String username;
 
+    @Column(name = "passwordHash")
     String passwordHash;
 
     @Transient

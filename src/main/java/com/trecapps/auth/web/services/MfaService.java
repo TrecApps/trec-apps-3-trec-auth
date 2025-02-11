@@ -118,9 +118,14 @@ public class MfaService {
         return new MfaRegistrationData(qrCode, userCode);
     }
 
-    public boolean verifyTotp(String code, TcUser user){
-        Optional<MfaMechanism> oTotp = user.getMechanism("Token");
+    public boolean verifyTotp(String code, String name, TcUser user){
+        Optional<MfaMechanism> oTotp = name == null ?
+                user.getMechanism("Token") :
+                user.getMechanism("Token", name);
         if(oTotp.isEmpty()) return false;
+
+        if(name == null && oTotp.get().hasName())
+            return false;
 
         String userCode = oTotp.get().getUserCode();
 
