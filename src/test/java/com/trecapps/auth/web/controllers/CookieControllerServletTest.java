@@ -4,6 +4,7 @@ import com.trecapps.auth.ObjectTestProvider;
 import com.trecapps.auth.RSATestHelper;
 import com.trecapps.auth.common.keyholders.IJwtKeyHolder;
 import com.trecapps.auth.common.models.*;
+import com.trecapps.auth.web.services.FailedLoginService;
 import com.trecapps.auth.web.services.IUserStorageService;
 import com.trecapps.auth.web.services.JwtTokenService;
 import com.trecapps.auth.web.services.V2SessionManager;
@@ -40,6 +41,8 @@ public class CookieControllerServletTest {
 
     @Mock
     IUserStorageService userStorageService;
+    @Mock
+    FailedLoginService failedLoginService;
 
     com.trecapps.auth.web.controllers.CookieBase cookieBase;
 
@@ -49,7 +52,7 @@ public class CookieControllerServletTest {
 
     @BeforeEach
     void setUp() throws NoSuchFieldException, IllegalAccessException {
-        sessionManager = new V2SessionManager(userStorageService, true);
+        sessionManager = new V2SessionManager(userStorageService, failedLoginService, true);
 
 
         Mockito.doReturn(RSATestHelper.publicKeyValue).when(jwtKeyHolder).getPublicKey(0);

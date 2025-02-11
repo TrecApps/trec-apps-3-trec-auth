@@ -16,15 +16,18 @@ import java.util.List;
 @Service
 public class V2SessionManagerAsync  extends SessionManagerBase {
     IUserStorageServiceAsync userStorageService;
+    FailedLoginServiceAsync failedLoginServiceAsync;
     boolean appAgnostic;
     @Autowired
     public V2SessionManagerAsync(
             IUserStorageServiceAsync userStorageService1,
+            FailedLoginServiceAsync failedLoginServiceAsync1,
             @Value("${trecauth.app.agnostic:false}") boolean appAgnostic1
     ){
         super(true);
         this.userStorageService = userStorageService1;
         this.appAgnostic = appAgnostic1;
+        this.failedLoginServiceAsync = failedLoginServiceAsync1;
     }
 
     public Mono<TokenTime> addSession(String app, String userId, String clientInfo, boolean expires)
@@ -143,6 +146,10 @@ public class V2SessionManagerAsync  extends SessionManagerBase {
 
                     return appAgnostic || session.getApps().stream().anyMatch((SessionApp sessionApp) -> sessionApp.getApp().equals(app));
 
+                })
+                .flatMap((Boolean valid) -> {
+                    if(!valid) return Mono.just(false);
+                    return failedLoginServiceAsync.isLocked(userId).map((Boolean b) -> !b);
                 });
 
     }

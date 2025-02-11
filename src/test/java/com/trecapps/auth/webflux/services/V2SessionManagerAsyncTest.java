@@ -25,6 +25,8 @@ public class V2SessionManagerAsyncTest {
 
     @Mock
     IUserStorageServiceAsync userStorageService;
+    @Mock
+    FailedLoginServiceAsync failedLoginServiceAsync;
 
     V2SessionManagerAsync sessionManager;
 
@@ -32,7 +34,7 @@ public class V2SessionManagerAsyncTest {
 
     @BeforeEach
     void setUp(){
-        this.sessionManager = new V2SessionManagerAsync(userStorageService, false);
+        this.sessionManager = new V2SessionManagerAsync(userStorageService, failedLoginServiceAsync, false);
     }
 
     @Test
@@ -251,6 +253,7 @@ public class V2SessionManagerAsyncTest {
         sessionListV2.getSessions().add(sessionV2);
 
         Mockito.doReturn(Mono.just(sessionListV2)).when(userStorageService).retrieveSessionList(anyString());
+        Mockito.doReturn(Mono.just(Boolean.FALSE)).when(failedLoginServiceAsync).isLocked(anyString());
 
         Mono<Boolean> mono = sessionManager.isValidSession(user.getId(), "Coffeeshop", "cccccc");
         StepVerifier.create(mono)

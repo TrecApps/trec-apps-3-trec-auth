@@ -5,6 +5,7 @@ import com.trecapps.auth.common.keyholders.IJwtKeyHolder;
 import com.trecapps.auth.common.models.JwtKeyArray;
 import com.trecapps.auth.common.models.SessionListV2;
 import com.trecapps.auth.common.models.SessionV2;
+import com.trecapps.auth.web.services.FailedLoginService;
 import com.trecapps.auth.web.services.IUserStorageService;
 import com.trecapps.auth.web.services.JwtTokenService;
 import com.trecapps.auth.web.services.V2SessionManager;
@@ -41,13 +42,16 @@ public class CookieBaseServletTest {
     @Mock
     IUserStorageService userStorageService;
 
+    @Mock
+    FailedLoginService failedLoginService;
+
     com.trecapps.auth.web.controllers.CookieBase cookieBase;
 
     Map<String, String> fieldValues = new HashMap<>();
 
     @BeforeEach
     void setUp() throws NoSuchFieldException, IllegalAccessException {
-        sessionManager = new V2SessionManager(userStorageService, true);
+        sessionManager = new V2SessionManager(userStorageService, failedLoginService, true);
 
 
         Mockito.doReturn(RSATestHelper.publicKeyValue).when(jwtKeyHolder).getPublicKey(0);

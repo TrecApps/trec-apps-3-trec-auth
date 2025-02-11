@@ -16,13 +16,16 @@ import java.util.List;
 public class V2SessionManager extends SessionManagerBase {
 
     boolean appAgnostic;
+    FailedLoginService failedLoginService;
 
     @Autowired
     public V2SessionManager(IUserStorageService userStorageService1,
+                            FailedLoginService failedLoginService1,
                             @Value("${trecauth.app.agnostic:false}") boolean appAgnostic1){
         super(true);
         userStorageService = userStorageService1;
         this.appAgnostic = appAgnostic1;
+        this.failedLoginService = failedLoginService1;
     }
 
     IUserStorageService userStorageService;
@@ -109,7 +112,7 @@ public class V2SessionManager extends SessionManagerBase {
     public boolean isValidSession(String userId, String app, String sessionId){
         SessionListV2 sessions = userStorageService.retrieveSessionList(userId);
         SessionV2 session = sessions.getSessionById(sessionId);
-        if(session == null || session.isExpired() || session.getBlockedApps().contains(app))
+        if(session == null || session.isExpired() || session.getBlockedApps().contains(app) || failedLoginService.isLocked(userId))
             return false;
 
         return appAgnostic || session.getApps().stream().anyMatch((SessionApp sessionApp) -> sessionApp.getApp().equals(app));

@@ -51,6 +51,9 @@ public class BrandServiceTest {
     @Mock
     IJwtKeyHolder jwtKeyHolder;
 
+    @Mock
+    FailedLoginService failedLoginService;
+
     BrandService brandService;
 
     TcUser user = ObjectTestProvider.getTcUser();
@@ -65,7 +68,7 @@ public class BrandServiceTest {
 
     @BeforeEach
     void setUp() throws NoSuchFieldException, IllegalAccessException {
-        this.sessionManager = new V2SessionManager(userStorageService, false);
+        this.sessionManager = new V2SessionManager(userStorageService, failedLoginService, false);
         Mockito.doReturn(RSATestHelper.publicKeyValue).when(jwtKeyHolder).getPublicKey(0);
         Mockito.doReturn(RSATestHelper.privateKeyValue.replace('|', '\n')).when(jwtKeyHolder).getPrivateKey(0);
         tokenService = new JwtTokenService(

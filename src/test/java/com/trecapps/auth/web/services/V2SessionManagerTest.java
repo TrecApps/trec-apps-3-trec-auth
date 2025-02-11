@@ -27,10 +27,12 @@ public class V2SessionManagerTest {
     V2SessionManager sessionManager;
 
     TcUser user = ObjectTestProvider.getTcUser();
+    @Mock
+    FailedLoginService failedLoginService;
 
     @BeforeEach
     void setUp(){
-        this.sessionManager = new V2SessionManager(userStorageService, false);
+        this.sessionManager = new V2SessionManager(userStorageService, failedLoginService,false);
     }
 
     @Test
@@ -232,6 +234,8 @@ public class V2SessionManagerTest {
         sessionListV2.getSessions().add(sessionV2);
 
         Mockito.doReturn(sessionListV2).when(userStorageService).retrieveSessionList(anyString());
+
+        Mockito.doReturn(Boolean.FALSE).when(failedLoginService).isLocked(anyString());
 
         boolean valid = sessionManager.isValidSession(user.getId(), "Coffeeshop", "cccccc");
         Assertions.assertTrue(valid);
