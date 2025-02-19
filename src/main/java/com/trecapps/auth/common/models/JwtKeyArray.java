@@ -84,7 +84,7 @@ public class JwtKeyArray {
 
 
         while(!tempKeys.isEmpty()){
-            JwtKeyPair curPair = tempKeys.removeFirst();
+            JwtKeyPair curPair = tempKeys.removeLast();
             try{
                 DecodedJWT decodedJWT = JWT.require(
                         Algorithm.RSA512(

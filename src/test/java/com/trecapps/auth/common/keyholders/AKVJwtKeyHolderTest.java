@@ -15,11 +15,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockedConstruction;
 import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.function.Consumer;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class AKVJwtKeyHolderTest {
@@ -62,11 +65,29 @@ public class AKVJwtKeyHolderTest {
             doReturn(RSATestHelper.privateKeyValue).when(keyVaultSecretPrivate).getValue();
             doReturn(RSATestHelper.publicKeyValue).when(keyVaultSecretPublic).getValue();
 
-            PagedIterable<SecretProperties> mockIterable = Mockito.mock(PagedIterable.class);
+            PagedIterable<SecretProperties> mockIterablePub = Mockito.mock(PagedIterable.class);
+            PagedIterable<SecretProperties> mockIterablePriv = Mockito.mock(PagedIterable.class);
 
 
-            doReturn(mockIterable).when(keyVaultClient).listPropertiesOfSecretVersions("publicKey");
-            doReturn(mockIterable).when(keyVaultClient).listPropertiesOfSecretVersions("privateKey");
+            doReturn(mockIterablePub).when(keyVaultClient).listPropertiesOfSecretVersions("publicKey");
+            doReturn(mockIterablePriv).when(keyVaultClient).listPropertiesOfSecretVersions("privateKey");
+
+            SecretProperties publicProp = Mockito.mock(SecretProperties.class);
+            SecretProperties privateProp = Mockito.mock(SecretProperties.class);
+
+            doAnswer((InvocationOnMock invoke) -> {
+                Consumer<SecretProperties> func = invoke.getArgument(0);
+                func.accept(publicProp);
+                return null;
+            }).when(mockIterablePub).forEach(any());
+            doAnswer((InvocationOnMock invoke) -> {
+                Consumer<SecretProperties> func = invoke.getArgument(0);
+                func.accept(privateProp);
+                return null;
+            }).when(mockIterablePriv).forEach(any());
+
+            lenient().doReturn("pubv1").when(publicProp).getVersion();
+            lenient().doReturn("privv1").when(privateProp).getVersion();
 
             doReturn(keyVaultSecretPublic).when(keyVaultClient).getSecret("publicKey");
             doReturn(keyVaultSecretPrivate).when(keyVaultClient).getSecret("privateKey");

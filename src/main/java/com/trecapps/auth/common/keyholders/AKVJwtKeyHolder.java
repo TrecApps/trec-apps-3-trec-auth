@@ -45,9 +45,14 @@ public class AKVJwtKeyHolder extends IJwtKeyHolder {
     }
 
     void refreshVersionList(String keyName){
-        List<String> newVersionList = new ArrayList<>();
-        keyVaultClient.listPropertiesOfSecretVersions(keyName).forEach((SecretProperties props) -> newVersionList.add(props.getVersion()));
-        this.versions.put(keyName, newVersionList);
+        List<SecretProperties> newVersionList = new ArrayList<>();
+        keyVaultClient.listPropertiesOfSecretVersions(keyName).forEach(newVersionList::add);
+
+        this.versions
+                .put(keyName, newVersionList.stream()
+                        .sorted((SecretProperties sp1, SecretProperties sp2) ->
+                                sp2.getCreatedOn().compareTo(sp1.getCreatedOn()))
+                        .map(SecretProperties::getVersion).toList());
     }
 
     public AKVJwtKeyHolder(
@@ -71,13 +76,20 @@ public class AKVJwtKeyHolder extends IJwtKeyHolder {
             this.refreshVersionList(holder.getKeyPath());
         List<String> keyVersions = versions.get(holder.getKeyPath());
 
-        if(!holder.isKeySet())
+
+        if(version < keyVersions.size())
         {
-            if(version == 0)
+            if(version == 0){
+                // Get the latest version
                 holder.setKey(keyVaultClient.getSecret(holder.getKeyPath()).getValue().replace("|", "\r\n"));
-            else if(version < keyVersions.size())
+
+            } else {
+                // During start up, get a previous version
                 holder.setKey(keyVaultClient.getSecret(holder.getKeyPath(), keyVersions.get(version)).getValue().replace("|", "\r\n"));
+            }
         }
+
+        
         return holder.getKey();
     }
 
