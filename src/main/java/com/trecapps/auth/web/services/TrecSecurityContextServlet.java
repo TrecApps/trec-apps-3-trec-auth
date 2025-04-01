@@ -4,6 +4,7 @@ import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.trecapps.auth.common.ISecurityAlertHandler;
 import com.trecapps.auth.common.models.*;
+import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -125,6 +126,7 @@ public class TrecSecurityContextServlet extends TrecCookieSaver implements Secur
         return ret != null;
     }
 
+    @SneakyThrows
     SecurityContext getContextFromCookie(HttpServletResponse response, HttpServletRequest request){
         Cookie[] cookies = request.getCookies();
         SecurityContext context = SecurityContextHolder.createEmptyContext();
@@ -200,6 +202,7 @@ public class TrecSecurityContextServlet extends TrecCookieSaver implements Secur
         return false;
     }
 
+    @SneakyThrows
     SecurityContext getContextFromHeader(HttpServletResponse response, HttpServletRequest request)
     {
         // Get the token and try to generate an Account from it
@@ -243,8 +246,6 @@ public class TrecSecurityContextServlet extends TrecCookieSaver implements Secur
             LoginToken token = new LoginToken();
             token.setAccess_token(auth);
             acc.setLoginToken(token);
-
-            acc.setBrandId(acc.getBrandId());
 
 
             context.setAuthentication(acc);

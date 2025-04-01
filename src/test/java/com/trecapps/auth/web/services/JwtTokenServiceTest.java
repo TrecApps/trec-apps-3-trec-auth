@@ -10,6 +10,7 @@ import com.trecapps.auth.common.models.primary.TrecAccount;
 import com.trecapps.auth.webflux.services.IUserStorageServiceAsync;
 import com.trecapps.auth.webflux.services.JwtTokenServiceAsync;
 import com.trecapps.auth.webflux.services.V2SessionManagerAsync;
+import lombok.SneakyThrows;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -251,6 +252,7 @@ public class JwtTokenServiceTest {
         assertDecode(tokenTime.getToken(), "ID", user.getId());
     }
 
+    @SneakyThrows
     @Test
     void testVerifyToken(){
         TcUser user = ObjectTestProvider.getTcUser();

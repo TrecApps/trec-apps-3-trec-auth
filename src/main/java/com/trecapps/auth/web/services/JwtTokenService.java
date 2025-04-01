@@ -261,7 +261,7 @@ public class JwtTokenService {
 	 * @param token
 	 * @return
 	 */
-	public TrecAuthentication verifyToken(DecodedJWT decodedJwt, TokenFlags tokenFlags) {
+	public TrecAuthentication verifyToken(DecodedJWT decodedJwt, TokenFlags tokenFlags) throws IllegalAccessException {
 
 		if (decodedJwt == null) {
 			return null;
@@ -293,12 +293,17 @@ public class JwtTokenService {
 
 		trecAuthentication.setSessionId(sessionIdClaim.asString());
 
-		try {
-			trecAuthentication.setBrandId(UUID.fromString(brandStr));
-		} catch(Throwable ignored)
-		{
-
+		if(brandStr != null && !"null".equals(brandStr)){
+			if(!acc.getBrands().contains(brandStr))
+				throw new IllegalAccessException("User does not own the target brand!");
+			Optional<TcBrands> brandOptional = userStorageService.getBrandById(brandStr);
+			if(brandOptional.isPresent()){
+				TcBrands brands = brandOptional.get();
+				trecAuthentication.setBrand(brands);
+			}
 		}
+
+
 		return trecAuthentication;
 	}
 

@@ -34,16 +34,9 @@ public class TrecAuthentication implements Authentication {
 //    @Getter
 //    Map<String, String> claims = new HashMap<>();
 
-
-    public UUID getBrandId() {
-        return brandId;
-    }
-
-    public void setBrandId(UUID brandId) {
-        this.brandId = brandId;
-    }
-
-    UUID brandId;
+    @Getter
+    @Setter
+    TcBrands brand;
 
 
 

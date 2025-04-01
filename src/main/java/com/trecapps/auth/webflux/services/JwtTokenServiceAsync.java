@@ -298,7 +298,7 @@ public class JwtTokenServiceAsync {
         String brandStr = decodedJwt.getClaim("Brand").asString();
 
         return userStorageService.getAccountById(idLong)
-                .map((Optional<TcUser> oUser) -> {
+                .flatMap((Optional<TcUser> oUser) -> {
                     if(oUser.isPresent()){
                         TcUser acc = oUser.get();
 
@@ -312,15 +312,19 @@ public class JwtTokenServiceAsync {
 
                         trecAuthentication.setSessionId(sessionIdClaim.asString());
 
-                        try {
-                            trecAuthentication.setBrandId(UUID.fromString(brandStr));
-                        } catch(Throwable ignored)
+                        if(brandStr != null && !"null".equals(brandStr))
                         {
-
+                            if(!acc.getBrands().contains(brandStr))
+                                throw new RuntimeException("User does not own the target Brand Account");
+                            return userStorageService.getBrandById(brandStr)
+                                    .map((Optional<TcBrands> oBrands) -> {
+                                        oBrands.ifPresent(trecAuthentication::setBrand);
+                                        return Optional.of(trecAuthentication);
+                                    });
                         }
-                        return Optional.of(trecAuthentication);
+                        return Mono.just(Optional.of(trecAuthentication));
                     }
-                    else return Optional.empty();
+                    else return Mono.just(Optional.empty());
                 });
     }
 

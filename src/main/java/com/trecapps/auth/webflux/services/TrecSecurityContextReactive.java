@@ -244,7 +244,6 @@ public class TrecSecurityContextReactive extends TrecCookieSaverAsync implements
                                                         token.setAccess_token(auth);
                                                         acc.setLoginToken(token);
 
-                                                        acc.setBrandId(acc.getBrandId());
                                                         if(!acc.isMfaBlock())
                                                             context.setAuthentication(acc);
                                                     }
