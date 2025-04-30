@@ -38,6 +38,9 @@ public class TrecAuthentication implements Authentication {
     @Setter
     TcBrands brand;
 
+    @Getter
+    @Setter
+    boolean needsMfa;
 
 
     public String getSessionId()

@@ -128,8 +128,9 @@ public class JwtTokenServiceAsyncTest {
                 account,
                 "Windows 10 Firefox",
                 null,
-                false,
-                "app");
+                "app",
+                new TokenOptions()
+        );
         StepVerifier.create(mono)
                 .consumeNextWith((Optional<TokenTime> oTokenTime) -> {
                     Assertions.assertTrue(oTokenTime.isPresent());
@@ -150,14 +151,16 @@ public class JwtTokenServiceAsyncTest {
         TokenTime time = new TokenTime();
         time.setSession("aaaaaa");
 
+        TokenOptions options = new TokenOptions();
+        options.setSession("aaaaaa");
+
 
         Mono<Optional<TokenTime>> mono = jwtTokenServiceAsync.generateToken(
                 account,
                 "Windows 10 Firefox",
                 null,
-                "aaaaaa",
-                false,
-                "app");
+                "app",
+                options);
         StepVerifier.create(mono)
                 .consumeNextWith((Optional<TokenTime> oTokenTime) -> {
                     Assertions.assertTrue(oTokenTime.isPresent());
@@ -177,13 +180,16 @@ public class JwtTokenServiceAsyncTest {
 
         Mockito.doReturn(Mono.just(new SessionListV2())).when(sessionManager).updateSessionExpiration(anyString(), anyString(), any(OffsetDateTime.class));
 
+        TokenOptions options = new TokenOptions();
+        options.setSession("aaaaaa");
+        options.setExpires(true);
+
         Mono<Optional<TokenTime>> mono = jwtTokenServiceAsync.generateToken(
                 account,
                 "Windows 10 Firefox",
                 null,
-                "aaaaaa",
-                true,
-                "app");
+                "app",
+                options);
         StepVerifier.create(mono)
                 .consumeNextWith((Optional<TokenTime> oTokenTime) -> {
                     Assertions.assertTrue(oTokenTime.isPresent());
@@ -201,15 +207,16 @@ public class JwtTokenServiceAsyncTest {
         TokenTime time = new TokenTime();
         time.setSession("aaaaaa");
 
+        TokenOptions options = new TokenOptions();
+        options.setSession("aaaaaa");
+        options.setNeedsMfa(true);
 
         Mono<Optional<TokenTime>> mono = jwtTokenServiceAsync.generateToken(
                 account,
                 "Windows 10 Firefox",
                 null,
-                "aaaaaa",
-                false,
-                true,
-                "app");
+                "app",
+                options);
         StepVerifier.create(mono)
                 .consumeNextWith((Optional<TokenTime> oTokenTime) -> {
                     Assertions.assertTrue(oTokenTime.isPresent());
@@ -225,13 +232,15 @@ public class JwtTokenServiceAsyncTest {
         TcUser user = ObjectTestProvider.getTcUser();
         TrecAccount account = user.getTrecAccount();
 
+        TokenOptions options = new TokenOptions();
+        options.setSession("aaaaaa");
+
         Mono<Optional<TokenTime>> mono = jwtTokenServiceAsync.generateToken(
                 account,
                 "Windows 10 Firefox",
                 null,
-                "aaaaaa",
-                false,
-                "app");
+                "app",
+                options);
 
         mono = mono.map((Optional<TokenTime> oTokenTime) -> {
             Assertions.assertTrue(oTokenTime.isPresent());
@@ -285,13 +294,15 @@ public class JwtTokenServiceAsyncTest {
 
         Mockito.doReturn(Mono.just(Optional.of(user))).when(userStorageServiceAsync).getAccountById(anyString());
 
+        TokenOptions options = new TokenOptions();
+        options.setSession("aaaaaa");
+
         Mono<Optional<TokenTime>> mono = jwtTokenServiceAsync.generateToken(
                 account,
                 "Windows 10 Firefox",
                 null,
-                "aaaaaa",
-                false,
-                "app");
+                "app",
+                options);
         Mono<Optional<TrecAuthentication>> mono2 = mono.flatMap((Optional<TokenTime> time) -> {
             Assertions.assertTrue(time.isPresent());
             JwtKeyArray.DecodedHolder decodedJwt = jwtTokenServiceAsync.decodeToken(time.get().getToken());

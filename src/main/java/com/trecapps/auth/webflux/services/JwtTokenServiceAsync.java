@@ -89,23 +89,23 @@ public class JwtTokenServiceAsync {
             this.keyArray.AddKey(jwtKeyHolder.getPublicKey(versionCount), jwtKeyHolder.getPrivateKey(versionCount));
         }
     }
-
-    public Mono<Optional<TokenTime>> generateToken(TrecAccount account, String userAgent, TcBrands brand, boolean expires, String app1)
-    {
-        return generateToken(account, userAgent, brand, null, expires, app1);
-    }
-
-    public Mono<Optional<TokenTime>> generateToken(TrecAccount account, String userAgent, TcBrands brand, String session, boolean expires, String app1)
-    {
-        return generateToken(account, userAgent, brand, session, expires, false, app1);
-    }
+//
+//    public Mono<Optional<TokenTime>> generateToken(TrecAccount account, String userAgent, TcBrands brand, boolean expires, String app1)
+//    {
+//        return generateToken(account, userAgent, brand, null, expires, app1);
+//    }
+//
+//    public Mono<Optional<TokenTime>> generateToken(TrecAccount account, String userAgent, TcBrands brand, String session, boolean expires, String app1)
+//    {
+//        return generateToken(account, userAgent, brand, session, expires, false, app1);
+//    }
 
     /**
      * Use when attempting to log on to User Service directly (through the User Client Project)
      * @param account the account to generate a token for
      * @return Mono hosting a possible TokenTime object
      */
-    public Mono<Optional<TokenTime>> generateToken(TrecAccount account, String userAgent, TcBrands brand, String session, boolean expires, boolean useMfa, String app1)
+    public Mono<Optional<TokenTime>> generateToken(TrecAccount account, String userAgent, TcBrands brand, String app1, TokenOptions tokenOptions)
     {
         if(account == null)
             return Mono.just(Optional.empty());
@@ -117,20 +117,20 @@ public class JwtTokenServiceAsync {
 
         Mono<TokenTime> tokenTime;
 
-        if(session == null)
-            tokenTime = sessionManager.addSession(app1, account.getId(), userAgent, expires);
+        if(tokenOptions.getSession() == null)
+            tokenTime = sessionManager.addSession(app1, account.getId(), userAgent, tokenOptions.isExpires());
         else
         {
             tokenTime = Mono.just(new TokenTime())
                     .flatMap((TokenTime ret) -> {
 
                         ret = new TokenTime();
-                        ret.setSession(session);
+                        ret.setSession(tokenOptions.getSession());
 
-                        if(expires)
+                        if(tokenOptions.isExpires())
                         {
                             OffsetDateTime expiration = OffsetDateTime.now().plusMinutes(10);
-                            return sessionManager.updateSessionExpiration(account.getId(), session, expiration)
+                            return sessionManager.updateSessionExpiration(account.getId(), tokenOptions.getSession(), expiration)
                                     .then(Mono.just(ret))
                                     .doOnNext((TokenTime t) -> t.setExpiration(expiration));
                         }
@@ -153,7 +153,7 @@ public class JwtTokenServiceAsync {
                         .withClaim("Brand", useBrand)
                         .withClaim("SessionId", ret.getSession())
                         .withIssuedAt(now)
-                        .withClaim("mfa", useMfa);
+                        .withClaim("mfa", tokenOptions.isUseMfa());
 
                 if(ret.getExpiration() != null)
                     jwtBuilder = jwtBuilder.withExpiresAt(ret.getExpiration().toInstant());
