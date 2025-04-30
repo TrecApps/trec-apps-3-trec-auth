@@ -209,7 +209,7 @@ public class JwtTokenServiceAsyncTest {
 
         TokenOptions options = new TokenOptions();
         options.setSession("aaaaaa");
-        options.setNeedsMfa(true);
+        options.setUseMfa(true);
 
         Mono<Optional<TokenTime>> mono = jwtTokenServiceAsync.generateToken(
                 account,
