@@ -114,7 +114,10 @@ public class BrandService {
             return null;
         Optional<TcBrands> oBrand = userStorageService.getBrandById(brandId);
         TcBrands brand = oBrand.orElse(null);
-        TokenTime time = jwtTokenService.generateToken(account.getAccount(), userAgent, brand, session, doesExpire, app);
+        TokenOptions options = new TokenOptions();
+        options.setSession(session);
+        options.setExpires(doesExpire);
+        TokenTime time = jwtTokenService.generateToken(account.getAccount(), userAgent, brand, app, options);
 
         sessionManager.setBrand(account.getAccount().getId(), session, brandId, app);
 

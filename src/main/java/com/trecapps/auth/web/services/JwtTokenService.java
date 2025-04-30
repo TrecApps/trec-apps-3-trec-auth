@@ -91,25 +91,21 @@ public class JwtTokenService {
 		}
 	}
 
-	public TokenTime generateToken(TrecAccount account, String userAgent, TcBrands brand, boolean expires, String app1)
-	{
-		return generateToken(account, userAgent, brand, null, expires, app1);
-	}
 
-	public TokenTime generateToken(TrecAccount account, String userAgent, TcBrands brand, String session, boolean expires, String app1)
-	{
-		return generateToken(account, userAgent, brand, session, expires, false, app1);
-	}
 
 	/**
 	 * Use when attempting to log on to User Service directly (through the User Client Project)
 	 * @param account
 	 * @return
 	 */
-	public TokenTime generateToken(TrecAccount account, String userAgent, TcBrands brand, String session, boolean expires, boolean useMfa, String app1)
+	public TokenTime generateToken(TrecAccount account, String userAgent, TcBrands brand, String app1, TokenOptions tokenOptions)
 	{
 		if(account == null)
 			return null;
+
+		String session = tokenOptions.getSession();
+		boolean expires = tokenOptions.isExpires();
+		boolean useMfa = tokenOptions.isUseMfa();
 
 
 		String userId = account.getId();

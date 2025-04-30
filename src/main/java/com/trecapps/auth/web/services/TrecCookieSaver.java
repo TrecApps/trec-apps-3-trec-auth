@@ -34,8 +34,11 @@ public class TrecCookieSaver {
         for(SessionV2 s: sessionList){
             if(authentication.getSessionId().equals(s.getDeviceId())){
                 TcBrands brands = this.getBrand(s, authentication.getAccount().getId());
+                TokenOptions options = new TokenOptions();
+                options.setSession(s.getDeviceId());
+                options.setExpires(s.getExpiration() != null);
 
-                time = tokenService.generateToken(authentication.getAccount(), client, brands, s.getDeviceId(), s.getExpiration() != null, app);
+                time = tokenService.generateToken(authentication.getAccount(), client, brands, app, options);
                 break;
             }
         }
