@@ -145,6 +145,8 @@ public class JwtTokenService {
 		if(ret.getExpiration() != null)
 			jwtBuilder = jwtBuilder.withExpiresAt(ret.getExpiration().toInstant());
 
+		if(tokenOptions.isNeedsMfa())
+			jwtBuilder = jwtBuilder.withClaim("needsMfa", true);
 		ret.setToken(keyArray.encodeJWT(jwtBuilder));
 		return ret;
 
@@ -286,6 +288,10 @@ public class JwtTokenService {
 		TrecAuthentication trecAuthentication = new TrecAuthentication(acc);
 
 		Claim sessionIdClaim = decodedJwt.getClaim("SessionId");
+
+		Claim needsMfa = decodedJwt.getClaim("needsMfa");
+
+		trecAuthentication.setNeedsMfa(Boolean.TRUE.equals(needsMfa.asBoolean()));
 
 		trecAuthentication.setSessionId(sessionIdClaim.asString());
 
