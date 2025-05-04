@@ -119,19 +119,15 @@ public class JwtTokenServiceTest {
         TokenTime time = new TokenTime();
         time.setSession("aaaaaa");
 
-        Mockito.doReturn(time).when(sessionManager).addSession(
-                anyString(),
-                anyString(),
-                anyString(),
-                Mockito.any(Boolean.class)
-        );
+        TokenOptions options = new TokenOptions();
+        options.setSession("aaaaaa");
 
         TokenTime tokenTime = jwtTokenServiceAsync.generateToken(
                 account,
                 "Windows 10 Firefox",
                 null,
-                false,
-                "app");
+                "app",
+                options);
         Assertions.assertNotNull(tokenTime);
         Assertions.assertNotNull(tokenTime.getToken());
 
@@ -147,14 +143,15 @@ public class JwtTokenServiceTest {
         TokenTime time = new TokenTime();
         time.setSession("aaaaaa");
 
+        TokenOptions options = new TokenOptions();
+        options.setSession("aaaaaa");
 
         TokenTime tokenTime = jwtTokenServiceAsync.generateToken(
                 account,
                 "Windows 10 Firefox",
                 null,
-                "aaaaaa",
-                false,
-                "app");
+                "app",
+                options);
 
 
         Assertions.assertNotNull(tokenTime.getToken());
@@ -168,14 +165,16 @@ public class JwtTokenServiceTest {
         TokenTime time = new TokenTime();
         time.setSession("aaaaaa");
 
+        TokenOptions options = new TokenOptions();
+        options.setSession("aaaaaa");
+        options.setExpires(true);
 
         TokenTime tokenTime = jwtTokenServiceAsync.generateToken(
                 account,
                 "Windows 10 Firefox",
                 null,
-                "aaaaaa",
-                true,
-                "app");
+                "app",
+                options);
 
 
         Assertions.assertNotNull(tokenTime.getToken());
@@ -189,15 +188,17 @@ public class JwtTokenServiceTest {
         TokenTime time = new TokenTime();
         time.setSession("aaaaaa");
 
+        TokenOptions options = new TokenOptions();
+        options.setSession("aaaaaa");
+        options.setUseMfa(true);
+
 
         TokenTime tokenTime = jwtTokenServiceAsync.generateToken(
                 account,
                 "Windows 10 Firefox",
                 null,
-                "aaaaaa",
-                false,
-                true,
-                "app");
+                "app",
+                options);
                     Assertions.assertNotNull(tokenTime);
 
                     Assertions.assertNotNull(tokenTime.getToken());
@@ -209,13 +210,15 @@ public class JwtTokenServiceTest {
         TcUser user = ObjectTestProvider.getTcUser();
         TrecAccount account = user.getTrecAccount();
 
+        TokenOptions options = new TokenOptions();
+        options.setSession("aaaaaa");
+
         TokenTime tokenTime = jwtTokenServiceAsync.generateToken(
                 account,
                 "Windows 10 Firefox",
                 null,
-                "aaaaaa",
-                false,
-                "app");
+                "app",
+                options);
 
         Assertions.assertNotNull(tokenTime);
         assertDecode(tokenTime.getToken(), "mfa", false);
@@ -260,13 +263,14 @@ public class JwtTokenServiceTest {
 
         Mockito.doReturn(Optional.of(user)).when(userStorageServiceAsync).getAccountById(anyString());
 
+        TokenOptions options = new TokenOptions();
+        options.setSession("aaaaaa");
         TokenTime tokenTime = jwtTokenServiceAsync.generateToken(
                 account,
                 "Windows 10 Firefox",
                 null,
-                "aaaaaa",
-                false,
-                "app");
+                "app",
+                options);
         Assertions.assertNotNull(tokenTime);
         JwtKeyArray.DecodedHolder decodedJwt = jwtTokenServiceAsync.decodeToken(tokenTime.getToken());
         Assertions.assertTrue(decodedJwt.getDecodedJwt().isPresent());

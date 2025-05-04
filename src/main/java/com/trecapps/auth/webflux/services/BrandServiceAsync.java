@@ -135,7 +135,11 @@ public class BrandServiceAsync {
                            .flatMap((Optional<TcBrands> oBrands) -> {
                                TcBrands brand = oBrands.orElse(null);
 
-                               return jwtTokenService.generateToken(account.getAccount(), userAgent, brand, session, doesExpire, app)
+                               TokenOptions options = new TokenOptions();
+                               options.setExpires(doesExpire);
+                               options.setSession(session);
+
+                               return jwtTokenService.generateToken(account.getAccount(), userAgent, brand, app, options)
                                        .map((Optional<TokenTime> oTime) -> {
                                            if(oTime.isEmpty())
                                                return Optional.empty();

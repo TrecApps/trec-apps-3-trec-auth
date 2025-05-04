@@ -40,9 +40,10 @@ public class TrecCookieSaverAsync {
                     return sOpt.map(sessionV2 -> this.getBrand(sessionV2, authentication.getAccount().getId())
                             .map((Optional<TcBrands> brands) -> {
                                 SessionV2 s = sessionV2;
-                                if (brands.isPresent())
-                                    return tokenService.generateToken(authentication.getAccount(), client, brands.get(), s.getDeviceId(), s.getExpiration() != null, app);
-                                return tokenService.generateToken(authentication.getAccount(), client, null, s.getDeviceId(), s.getExpiration() != null, app);
+                                TokenOptions options = new TokenOptions();
+                                options.setSession(s.getDeviceId());
+                                options.setExpires(s.getExpiration() != null);
+                                return tokenService.generateToken(authentication.getAccount(), client, brands.orElse(null), app, options);
                             }).flatMap(m -> m)).orElseGet(() -> Mono.just(Optional.of(TokenTime.getInvalidInstance())));
                 })
                 .flatMap((Optional<TokenTime> tokenTime) -> {

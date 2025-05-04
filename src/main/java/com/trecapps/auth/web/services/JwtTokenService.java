@@ -91,25 +91,21 @@ public class JwtTokenService {
 		}
 	}
 
-	public TokenTime generateToken(TrecAccount account, String userAgent, TcBrands brand, boolean expires, String app1)
-	{
-		return generateToken(account, userAgent, brand, null, expires, app1);
-	}
 
-	public TokenTime generateToken(TrecAccount account, String userAgent, TcBrands brand, String session, boolean expires, String app1)
-	{
-		return generateToken(account, userAgent, brand, session, expires, false, app1);
-	}
 
 	/**
 	 * Use when attempting to log on to User Service directly (through the User Client Project)
 	 * @param account
 	 * @return
 	 */
-	public TokenTime generateToken(TrecAccount account, String userAgent, TcBrands brand, String session, boolean expires, boolean useMfa, String app1)
+	public TokenTime generateToken(TrecAccount account, String userAgent, TcBrands brand, String app1, TokenOptions tokenOptions)
 	{
 		if(account == null)
 			return null;
+
+		String session = tokenOptions.getSession();
+		boolean expires = tokenOptions.isExpires();
+		boolean useMfa = tokenOptions.isUseMfa();
 
 
 		String userId = account.getId();
@@ -149,6 +145,8 @@ public class JwtTokenService {
 		if(ret.getExpiration() != null)
 			jwtBuilder = jwtBuilder.withExpiresAt(ret.getExpiration().toInstant());
 
+		if(tokenOptions.isNeedsMfa())
+			jwtBuilder = jwtBuilder.withClaim("needsMfa", true);
 		ret.setToken(keyArray.encodeJWT(jwtBuilder));
 		return ret;
 
@@ -173,7 +171,7 @@ public class JwtTokenService {
 				mfaFound.set(true);
 				jwtBuilder.set(jwtBuilder.get().withClaim(claimName, true));
 			}
-			else {
+			else if(!"needsMfa".equals(claimName)){
 				java.util.Date date = claim.asDate();
 				Instant instant = claim.asInstant();
 				Boolean bool = claim.asBoolean();
@@ -290,6 +288,10 @@ public class JwtTokenService {
 		TrecAuthentication trecAuthentication = new TrecAuthentication(acc);
 
 		Claim sessionIdClaim = decodedJwt.getClaim("SessionId");
+
+		Claim needsMfa = decodedJwt.getClaim("needsMfa");
+
+		trecAuthentication.setNeedsMfa(Boolean.TRUE.equals(needsMfa.asBoolean()));
 
 		trecAuthentication.setSessionId(sessionIdClaim.asString());
 
