@@ -171,7 +171,7 @@ public class JwtTokenService {
 				mfaFound.set(true);
 				jwtBuilder.set(jwtBuilder.get().withClaim(claimName, true));
 			}
-			else {
+			else if(!"needsMfa".equals(claimName)){
 				java.util.Date date = claim.asDate();
 				Instant instant = claim.asInstant();
 				Boolean bool = claim.asBoolean();
