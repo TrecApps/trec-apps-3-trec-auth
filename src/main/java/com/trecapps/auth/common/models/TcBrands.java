@@ -19,4 +19,8 @@ public class TcBrands {
     // ID of the Brand
     String id;
     String infoId; // If there is a BrandInfo entry associated with this Brand
+
+    // If a dedicated Brand Account, should TrecApps mask the User account associated with content associated with this
+    // Brand Account
+    boolean maskUserName;
 }

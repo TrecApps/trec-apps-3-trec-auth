@@ -2,6 +2,7 @@ package com.trecapps.auth.common.models;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.trecapps.auth.common.encryptors.EncryptedField;
 import com.trecapps.auth.common.models.primary.TrecAccount;
 import jakarta.persistence.Transient;
@@ -83,6 +84,15 @@ public class TcUser implements UserDetails {
 
     @EncryptedField
     List<MfaMechanism> mfaMechanisms = new ArrayList<>();
+
+    // Supports a feature called a dedicated Brand Account. Basically, people will have the option of setting
+    // up a dedicated BrandAccount (meaning they alone own it). Users can also elect to automatically login to this
+    // account without further action and mask their User Account (useful for public figures)
+    String dedicatedBrandAccount;
+    boolean autoBrandAccount;
+
+    JsonNode extensions; // Extra Features that the library would not concern itself with
+
 
     public String callibrateMechanisms(){
         int token = 1; // Counter
