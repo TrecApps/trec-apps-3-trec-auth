@@ -3,6 +3,8 @@ package com.trecapps.auth.common.models;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.trecapps.auth.common.encryptors.EncryptedField;
 import com.trecapps.auth.common.models.primary.TrecAccount;
 import jakarta.persistence.Transient;
@@ -91,7 +93,7 @@ public class TcUser implements UserDetails {
     String dedicatedBrandAccount;
     boolean autoBrandAccount;
 
-    JsonNode extensions; // Extra Features that the library would not concern itself with
+    JsonNode extensions = new ObjectNode(new JsonNodeFactory(false)); // Extra Features that the library would not concern itself with
 
 
     public String callibrateMechanisms(){

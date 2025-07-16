@@ -12,7 +12,7 @@ group 'com.trecapps.auth'
 version buildVersion
 
 ext {
-    springbootVersion = '3.4.2'
+    springbootVersion = '3.5.3'
 }
 
 repositories {
@@ -24,14 +24,14 @@ jar{
     enabled = true
 }
 
-targetCompatibility = 17
-sourceCompatibility = 17
+targetCompatibility = 21
+sourceCompatibility = 21
 
 dependencies {
-    implementation 'org.projectlombok:lombok:1.18.24'
-    testImplementation 'org.projectlombok:lombok:1.18.24'
-    annotationProcessor 'org.projectlombok:lombok:1.18.24'
-    testAnnotationProcessor 'org.projectlombok:lombok:1.18.24'
+    implementation 'org.projectlombok:lombok:1.18.36'
+    testImplementation 'org.projectlombok:lombok:1.18.36'
+    annotationProcessor 'org.projectlombok:lombok:1.18.36'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.36'
 
     implementation 'jakarta.xml.bind:jakarta.xml.bind-api:4.0.0'
     implementation 'jakarta.activation:jakarta.activation-api:2.1.0'
@@ -147,4 +147,9 @@ publishing {
             }
         }
     }
+}
+
+
+publishMyPublicationPublicationToTcMavenRepoRepository {
+    dependsOn(jar)
 }
