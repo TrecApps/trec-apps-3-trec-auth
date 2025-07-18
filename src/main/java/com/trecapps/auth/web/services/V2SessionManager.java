@@ -95,6 +95,15 @@ public class V2SessionManager extends SessionManagerBase {
         userStorageService.saveSessions(sessions, userId);
     }
 
+    public void removeSessions(String userId, List<String> sessionList){
+        SessionListV2 sessions = userStorageService.retrieveSessionList(userId);
+        sessions.setSessions(sessions.getSessions()
+                .stream()
+                .filter((SessionV2 session) -> !sessionList.contains(session.getDeviceId()))
+                .toList());
+        userStorageService.saveSessions(sessions, userId);
+    }
+
     public void blockApp(String userId, String sessionId, String app){
         SessionListV2 sessions = userStorageService.retrieveSessionList(userId);
         SessionV2 session = sessions.getSessionById(sessionId);

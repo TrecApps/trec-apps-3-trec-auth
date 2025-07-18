@@ -192,6 +192,42 @@ public class V2SessionManagerTest {
     }
 
     @Test
+    void testRemoveSessions(){
+        SessionApp sessionApp = new SessionApp();
+        sessionApp.setApp("Coffeeshop");
+
+        SessionV2 sessionV2 = new SessionV2();
+        sessionV2.setApps(List.of(sessionApp));
+        sessionV2.setDeviceId("cccccc");
+
+        SessionListV2 sessionListV2 = new SessionListV2();
+        sessionListV2.getSessions().add(sessionV2);
+
+        sessionApp = new SessionApp();
+        sessionApp.setApp("WaterCooler");
+        sessionV2 = new SessionV2();
+        sessionV2.setApps(List.of(sessionApp));
+        sessionV2.setDeviceId("dddddd");
+        sessionListV2.getSessions().add(sessionV2);
+
+        sessionApp = new SessionApp();
+        sessionApp.setApp("Falsehoods");
+        sessionV2 = new SessionV2();
+        sessionV2.setApps(List.of(sessionApp));
+        sessionV2.setDeviceId("eeeeee");
+        sessionListV2.getSessions().add(sessionV2);
+
+        Mockito.doReturn(sessionListV2).when(userStorageService).retrieveSessionList(anyString());
+
+
+        sessionManager.removeSessions(user.getId(), List.of("cccccc", "eeeeee"));
+
+        Assertions.assertEquals(1, sessionListV2.getSessions().size());
+        sessionV2 = sessionListV2.getSessions().get(0);
+        Assertions.assertEquals("dddddd", sessionV2.getDeviceId());
+    }
+
+    @Test
     void testBlockApp() {
         SessionApp sessionApp = new SessionApp();
         sessionApp.setApp("Coffeeshop");

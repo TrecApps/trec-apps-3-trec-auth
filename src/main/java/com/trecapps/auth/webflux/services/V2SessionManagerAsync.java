@@ -117,6 +117,17 @@ public class V2SessionManagerAsync  extends SessionManagerBase {
                 .then(Mono.empty());
     }
 
+    public Mono<Void> removeSessionMono(String userId, List<String> sessionList){
+        return userStorageService.retrieveSessionList(userId)
+                .flatMap((SessionListV2 sessions) -> {
+                    sessions.setSessions(sessions.getSessions()
+                            .stream()
+                            .filter((SessionV2 session) -> !sessionList.contains(session.getDeviceId()))
+                            .toList());
+                    return userStorageService.saveSessionsMono(sessions, userId);})
+                .then(Mono.empty());
+    }
+
     public void removeSession(String userId, String sessionId){
         removeSessionMono(userId, sessionId).subscribe();
     }
