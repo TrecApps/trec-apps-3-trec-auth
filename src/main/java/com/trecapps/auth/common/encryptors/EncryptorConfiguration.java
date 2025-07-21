@@ -55,7 +55,7 @@ public class EncryptorConfiguration {
     IFieldEncryptor getRsaEncryptor(
             IEncryptorKeyHolder keyHolder,
             @Value("${trecauth.encryptor.rsa.public-name}") String publicKey,
-            @Value("${trecauth.encryptor.rsa.public-name}") String privateKey
+            @Value("${trecauth.encryptor.rsa.private-name}") String privateKey
     ){
         return new RsaFieldEncryptor(keyHolder, publicKey, privateKey);
     }

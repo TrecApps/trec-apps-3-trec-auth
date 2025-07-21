@@ -161,7 +161,7 @@ public class KeyRotationConfiguration {
             @Qualifier("updateJobDetail") JobDetail job,
             @Value("${trecauth.rotate.update-interval:7D}")String interval,
             @Value("${trecauth.rotate.update-start:ofweek-1 0:00:00") String start,
-            @Value("${trecauth.rotate.update-cron-schedule#{NULL}}")String cron
+            @Value("${trecauth.rotate.update-cron-schedule:#{NULL}}")String cron
 
     ) {
 
