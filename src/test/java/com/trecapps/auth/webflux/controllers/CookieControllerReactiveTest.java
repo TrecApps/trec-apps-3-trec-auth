@@ -108,7 +108,8 @@ public class CookieControllerReactiveTest {
                 tokenService,
                 userStorageService,
                 cookieBase,
-                "app"
+                "app",
+                true
         );
     }
 

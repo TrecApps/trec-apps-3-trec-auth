@@ -25,7 +25,11 @@ public class TrecCookieSaverAsync {
         app = app1;
     }
 
-    protected Mono<Optional<LoginToken>> getLoginTokens(TrecAuthentication authentication, String client)
+    protected Mono<Optional<LoginToken>> getLoginTokens(TrecAuthentication authentication, String client){
+        return getLoginTokens(authentication, client, app);
+    }
+
+    protected Mono<Optional<LoginToken>> getLoginTokens(TrecAuthentication authentication, String client, String useApp)
     {
         return sessionManager.getSessionList(authentication.getAccount().getId())
                 .map((List<SessionV2> sessionList) -> {
@@ -43,12 +47,12 @@ public class TrecCookieSaverAsync {
                                 TokenOptions options = new TokenOptions();
                                 options.setSession(s.getDeviceId());
                                 options.setExpires(s.getExpiration() != null);
-                                return tokenService.generateToken(authentication.getAccount(), client, brands.orElse(null), app, options);
+                                return tokenService.generateToken(authentication.getAccount(), client, brands.orElse(null), useApp, options);
                             }).flatMap(m -> m)).orElseGet(() -> Mono.just(Optional.of(TokenTime.getInvalidInstance())));
                 })
                 .flatMap((Optional<TokenTime> tokenTime) -> {
                     if(tokenTime.isEmpty() || !tokenTime.get().isValid())
-                        return sessionManager.addSession(app, authentication.getAccount().getId(), client, false);
+                        return sessionManager.addSession(useApp, authentication.getAccount().getId(), client, false);
                     return Mono.just(tokenTime.get());
                 })
                 .map((TokenTime tokenTime) -> {
@@ -65,6 +69,16 @@ public class TrecCookieSaverAsync {
                     return login;
                 })
                 .map((loginToken -> loginToken == null ? Optional.empty() : Optional.of(loginToken)));
+    }
+
+    protected Mono<Optional<LoginToken>> prepLoginTokens(TrecAuthentication authentication, String client, String app)  {
+
+        LoginToken token = authentication.getLoginToken();
+        if(token != null)
+            return Mono.just(Optional.of(token));
+        return getLoginTokens(authentication, client, app).doOnNext((Optional<LoginToken> oToken) -> {
+            oToken.ifPresent(authentication::setLoginToken);
+        });
     }
 
     protected Mono<Optional<LoginToken>> prepLoginTokens(TrecAuthentication authentication, String client)  {

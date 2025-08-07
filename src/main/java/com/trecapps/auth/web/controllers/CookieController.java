@@ -24,14 +24,17 @@ import org.springframework.web.bind.annotation.*;
 @ConditionalOnProperty(prefix = "trecauth", name="use-cookie", havingValue = "true")
 public class CookieController extends TrecCookieSaver {
 
-    @Autowired
+    boolean appControl;
 
+    @Autowired
     protected CookieController(
             V2SessionManager sessionManager1,
             JwtTokenService tokenService1,
             IUserStorageService userStorageService1,
-            @Value("${trecauth.app}") String app1) {
+            @Value("${trecauth.app}") String app1,
+            @Value("${trecauth.app-control:false}")boolean appControl) {
         super(sessionManager1, tokenService1, userStorageService1, app1);
+        this.appControl = appControl;
     }
 
     boolean isMfaRequired(TcUser user, String app) {
@@ -44,7 +47,9 @@ public class CookieController extends TrecCookieSaver {
     }
 
     @GetMapping
-    public ResponseEntity<LoginToken> checkRefresh(@RequestHeader("User-Agent") String userClient, @RequestParam("app")String app){
+    public ResponseEntity<LoginToken> checkRefresh(
+            @RequestHeader("User-Agent") String userClient,
+            @RequestParam("app")String app){
         SecurityContext context = SecurityContextHolder.getContext();
         Authentication authentication = context == null ? null : context.getAuthentication();
 
@@ -54,7 +59,9 @@ public class CookieController extends TrecCookieSaver {
 
             this.prepLoginTokens(tAuth, userClient);
 
-            sessionManager.setBrand(tAuth.getAccount().getId(), tAuth.getSessionId(), null, this.app, false);
+            String useApp = appControl ? this.app : app;
+
+            sessionManager.setBrand(tAuth.getAccount().getId(), tAuth.getSessionId(), null, useApp, false);
             LoginToken ret = tAuth.getLoginToken();
             if(isMfaRequired(tAuth.getUser(), app))
                 ret.setToken_type("User-requires_mfa");

@@ -69,7 +69,8 @@ public class V2SessionManagerAsync  extends SessionManagerBase {
                 .doOnNext((SessionListV2 sessions) -> {
                     SessionV2 session = sessions.getSessionById(sessionId);
 
-                    session.setApp(app, brand, updateBrand);
+                    if(session != null)
+                        session.setApp(app, brand, updateBrand);
 
                     userStorageService.saveSessions(sessions, userId);
                 });

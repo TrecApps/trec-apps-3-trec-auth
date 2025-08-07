@@ -103,7 +103,8 @@ public class CookieControllerServletTest {
                 sessionManager,
                 tokenService,
                 userStorageService,
-                "app"
+                "app",
+                true
         );
     }
 
