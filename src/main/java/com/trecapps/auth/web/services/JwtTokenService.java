@@ -280,12 +280,14 @@ public class JwtTokenService {
 		if(ret.isEmpty())
 			return null;
 		TcUser acc = ret.get();
-
-		Claim mfaClaim = decodedJwt.getClaim("mfa");
-		if(mfaClaim != null)
-			tokenFlags.setIsMfa(mfaClaim.asBoolean());
-
 		TrecAuthentication trecAuthentication = new TrecAuthentication(acc);
+		Claim mfaClaim = decodedJwt.getClaim("mfa");
+		if(mfaClaim != null) {
+			tokenFlags.setIsMfa(mfaClaim.asBoolean());
+			trecAuthentication.setHasMfa(true);
+		}
+
+
 
 		Claim sessionIdClaim = decodedJwt.getClaim("SessionId");
 

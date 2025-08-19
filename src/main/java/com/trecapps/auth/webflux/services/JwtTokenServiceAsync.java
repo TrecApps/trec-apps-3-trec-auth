@@ -303,12 +303,13 @@ public class JwtTokenServiceAsync {
                 .flatMap((Optional<TcUser> oUser) -> {
                     if(oUser.isPresent()){
                         TcUser acc = oUser.get();
-
-                        Claim mfaClaim = decodedJwt.getClaim("mfa");
-                        if(mfaClaim != null)
-                            tokenFlags.setIsMfa(mfaClaim.asBoolean());
-
                         TrecAuthentication trecAuthentication = new TrecAuthentication(acc);
+                        Claim mfaClaim = decodedJwt.getClaim("mfa");
+                        if(mfaClaim != null) {
+                            tokenFlags.setIsMfa(mfaClaim.asBoolean());
+                            trecAuthentication.setHasMfa(true);
+                        }
+
 
                         Claim sessionIdClaim = decodedJwt.getClaim("SessionId");
                         Claim needsMfa = decodedJwt.getClaim("needsMfa");

@@ -125,7 +125,11 @@ public class BrandServiceAsync {
                 });
     }
 
-    public Mono<Optional<LoginToken>> loginAsBrand(TrecAuthentication account, String brandId, String userAgent, String session, boolean doesExpire, String app)
+    public Mono<Optional<LoginToken>> loginAsBrand(TrecAuthentication account, String brandId, String userAgent, String session, boolean doesExpire, String app){
+        return loginAsBrand(account, brandId, userAgent, session, doesExpire, false, app);
+    }
+
+    public Mono<Optional<LoginToken>> loginAsBrand(TrecAuthentication account, String brandId, String userAgent, String session, boolean doesExpire, boolean useMfa, String app)
     {
         return isOwner(account.getAccount(), brandId)
                 .flatMap((Boolean isOwner) -> {
@@ -138,6 +142,7 @@ public class BrandServiceAsync {
                                TokenOptions options = new TokenOptions();
                                options.setExpires(doesExpire);
                                options.setSession(session);
+                               options.setUseMfa(useMfa);
 
                                return jwtTokenService.generateToken(account.getAccount(), userAgent, brand, app, options)
                                        .map((Optional<TokenTime> oTime) -> {

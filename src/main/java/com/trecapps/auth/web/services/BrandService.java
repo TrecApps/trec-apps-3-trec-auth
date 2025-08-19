@@ -108,7 +108,11 @@ public class BrandService {
         return brand;
     }
 
-    public LoginToken loginAsBrand(TrecAuthentication account, String brandId, String userAgent, String session, boolean doesExpire, String app)
+    public LoginToken loginAsBrand(TrecAuthentication account, String brandId, String userAgent, String session, boolean doesExpire, String app){
+        return loginAsBrand(account, brandId, userAgent, session, doesExpire, false, app);
+    }
+
+    public LoginToken loginAsBrand(TrecAuthentication account, String brandId, String userAgent, String session, boolean doesExpire, boolean useMfa, String app)
     {
         if(!isOwner(account.getAccount(), brandId))
             return null;
@@ -117,6 +121,7 @@ public class BrandService {
         TokenOptions options = new TokenOptions();
         options.setSession(session);
         options.setExpires(doesExpire);
+        options.setUseMfa(useMfa);
         TokenTime time = jwtTokenService.generateToken(account.getAccount(), userAgent, brand, app, options);
 
         sessionManager.setBrand(account.getAccount().getId(), session, brandId, app);

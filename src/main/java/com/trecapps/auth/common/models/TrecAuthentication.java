@@ -30,6 +30,10 @@ public class TrecAuthentication implements Authentication {
     @Setter
     boolean mfaBlock;
 
+    @Getter
+    @Setter
+    boolean hasMfa = false;
+
 //    @Setter
 //    @Getter
 //    Map<String, String> claims = new HashMap<>();
