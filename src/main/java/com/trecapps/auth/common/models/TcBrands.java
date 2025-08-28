@@ -12,6 +12,8 @@ public class TcBrands {
     // Should hold the IDs of the TcUsers that own it
     Set<String> owners = new HashSet<>();
 
+    String dedicatedOwner;
+
     // Display name for the Brand
     String name;
     String profile;
