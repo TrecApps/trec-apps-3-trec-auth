@@ -259,8 +259,8 @@ public class TrecSecurityContextServletTest {
         TcUser user = ObjectTestProvider.getTcUser();
 
         Mockito.doReturn("SomeBadHeaderToken").when(request).getHeader("Authorization");
-        Mockito.doReturn("/endpoint").when(request).getContextPath();
-        Mockito.doReturn("1.2.3.4").when(request).getRemoteAddr();
+        //Mockito.doReturn("/endpoint").when(request).getContextPath();
+        //Mockito.doReturn("1.2.3.4").when(request).getRemoteAddr();
 
         SecurityContext context = trecSecurtyContext.loadContext(httpRequestResponseHolder);
 

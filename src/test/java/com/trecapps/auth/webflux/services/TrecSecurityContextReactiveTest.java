@@ -309,7 +309,7 @@ public class TrecSecurityContextReactiveTest {
         prepPath(request, "/endpoint");
 
         Mockito.doReturn(headers).when(request).getHeaders();
-        Mockito.doReturn(new InetSocketAddress("1.2.3.4", 80)).when(request).getRemoteAddress();
+        //Mockito.doReturn(new InetSocketAddress("1.2.3.4", 80)).when(request).getRemoteAddress();
         Mono<SecurityContext> mono = this.trecSecurtyContext.load(exchange);
 
         StepVerifier.create(mono)
