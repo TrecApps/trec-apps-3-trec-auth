@@ -212,9 +212,9 @@ public class TrecSecurityContextServlet extends TrecCookieSaver implements Secur
         TokenFlags tokenFlags = new TokenFlags();
         JwtKeyArray.DecodedHolder decode = tokenService.decodeToken(auth);
         if(decode.getDecodedJwt().isEmpty()) {
-            String address = Objects.requireNonNull(request.getRemoteAddr());
-            if(!isLocal(address) || logLocal)
-                logger.warn("Null Decode token detected from Header! Request Path: {} ; IP Address: {}", request.getContextPath(), address);
+//            String address = Objects.requireNonNull(request.getRemoteAddr());
+//            if(!isLocal(address) || logLocal)
+//                logger.warn("Null Decode token detected from Header! Request Path: {} ; IP Address: {}", request.getContextPath(), address);
             return context;
         }
         if(decode.isKeyOutdated() && response != null)
