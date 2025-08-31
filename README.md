@@ -1,6 +1,6 @@
 # TrecAuth
 
-* **Current Version:** 0.9.26-alpha
+* **Current Version:** 0.9.33-alpha
 * **Minimum Java:** 21 (since 0.9.24-alpha)
 
 The **TrecAuth** project is a library designed to provide a cloud-agnostic mechanism for providing customized Security 
