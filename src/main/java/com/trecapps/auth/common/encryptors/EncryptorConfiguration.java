@@ -21,13 +21,21 @@ public class EncryptorConfiguration {
 
     @Bean
     @ConditionalOnProperty(prefix="trecauth.key-holder", name="type", havingValue = "azure-key-vault")
-    IEncryptorKeyHolder getAzureEncryptorKeyHolder(
+    IEncryptorKeyHolder getAzureEncryptorKeyHolderId(
             @Value("${trecauth.keyvault.name}") String vaultName,
             @Value("${trecauth.keyvault.tenantId}") String tenantId,
             @Value("${trecauth.keyvault.clientId}") String clientId,
             @Value("${trecauth.keyvault.clientSecret}") String clientSecret
     ) {
         return new AKVEncryptorKeyHolder(vaultName, tenantId, clientId, clientSecret);
+    }
+
+    @Bean
+    @ConditionalOnProperty(prefix="trecauth.key-holder", name="type", havingValue = "azure-key-vault-pwl")
+    IEncryptorKeyHolder getAzureEncryptorKeyHolderPwl(
+            @Value("${trecauth.keyvault.name}") String vaultName
+    ) {
+        return new AKVEncryptorKeyHolder(vaultName);
     }
 
     @Bean

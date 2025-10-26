@@ -1,6 +1,6 @@
 # TrecAuth
 
-* **Current Version:** 0.9.34-alpha
+* **Current Version:** 0.9.37-alpha
 * **Minimum Java:** 21 (since 0.9.24-alpha)
 
 The **TrecAuth** project is a library designed to provide a cloud-agnostic mechanism for providing customized Security 
@@ -232,6 +232,13 @@ trec.jwt.clientId=${Entra Client ID}
 trec.jwt.clientSecret=${Entra Client Secret}
 ```
 
+If you wish to go passwordless, here is an alternative configuration:
+```properties
+trecauth.jwt.key-storage.strategy=AKV-pwl
+
+trec.jwt.vault-name=${name of the key vault}
+```
+
 #### Using AWS Secrets Manager
 
 **Note:** AWS Secrets Manager supports plain text mode and Key-Value mode. TrecAuth uses the latter configuration
@@ -300,6 +307,14 @@ trecauth.keyvault.clientId=${Entra Client ID}
 trecauth.keyvault.clientSecret=${Entra Client Secret}
 ```
 
+For Passwordless:
+
+```properties
+trecauth.key-holder.type=azure-key-vault-pwl
+
+trecauth.keyvault.name=${azure-key-vault}
+```
+
 #### AWS Secrets Manager
 
 ```properties
@@ -331,6 +346,13 @@ trecauth.storage.strategy=Azure-key
 
 trecauth.storage.account-name=${STORAGE_ACCOUNT_NAME}
 trecauth.storage.account-key=${STORAGE_ACCOUNT_KEY}
+trecauth.storage.blob-endpoint=${STORAGE_ACCOUNT_ENDPOINT}
+```
+
+For Passwordless
+```properties
+trecauth.storage.strategy=Azure-pwl
+
 trecauth.storage.blob-endpoint=${STORAGE_ACCOUNT_ENDPOINT}
 ```
 

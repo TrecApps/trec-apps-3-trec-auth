@@ -25,7 +25,7 @@ public class KeyHolderBeanFactory {
 
     @Bean
     @ConditionalOnProperty(prefix = "trecauth.jwt.key-storage", name="strategy", havingValue = "AKV")
-    IJwtKeyHolder getAKVJwtKeyHolder(
+    IJwtKeyHolder getAKVJwtKeyHolderId(
             @Value("${trec.jwt.vault-name}") String vaultName,
             @Value("${trec.key.public}") String publicKeyStr,
             @Value("${trec.key.private}") String privateKeyStr,
@@ -39,6 +39,21 @@ public class KeyHolderBeanFactory {
             return new AKVJwtKeyHolder(publicKeyStr, privateKeyStr, publicKeyStrNotify, privateKeyStrNotify, vaultName, tenantId, clientId, clientSecret);
 
         return new AKVJwtKeyHolder(publicKeyStr, privateKeyStr, vaultName, tenantId, clientId, clientSecret);
+    }
+
+    @Bean
+    @ConditionalOnProperty(prefix = "trecauth.jwt.key-storage", name="strategy", havingValue = "AKV-pwl")
+    IJwtKeyHolder getAKVJwtKeyHolderPwl(
+            @Value("${trec.jwt.vault-name}") String vaultName,
+            @Value("${trec.key.public}") String publicKeyStr,
+            @Value("${trec.key.private}") String privateKeyStr,
+            @Value("${trec.key-notify.public:#{NULL}}") String publicKeyStrNotify,
+            @Value("${trec.key-notify.private:#{NULL}}") String privateKeyStrNotify
+    ){
+        if(publicKeyStrNotify != null && privateKeyStrNotify != null)
+            return new AKVJwtKeyHolder(publicKeyStr, privateKeyStr, publicKeyStrNotify, privateKeyStrNotify, vaultName);
+
+        return new AKVJwtKeyHolder(publicKeyStr, privateKeyStr, vaultName);
     }
 
     @Bean

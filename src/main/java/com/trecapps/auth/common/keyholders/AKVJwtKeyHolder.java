@@ -1,6 +1,7 @@
 package com.trecapps.auth.common.keyholders;
 
 import com.azure.identity.ClientSecretCredentialBuilder;
+import com.azure.identity.DefaultAzureCredentialBuilder;
 import com.azure.security.keyvault.secrets.SecretClient;
 import com.azure.security.keyvault.secrets.SecretClientBuilder;
 import com.azure.security.keyvault.secrets.models.SecretProperties;
@@ -32,6 +33,14 @@ public class AKVJwtKeyHolder extends IJwtKeyHolder {
                 .buildClient();
     }
 
+    private void prepClient(String vaultName){
+        String vaultUri = String.format("https://%s.vault.azure.net/", vaultName);
+        this.keyVaultClient = new SecretClientBuilder().vaultUrl(vaultUri)
+                .credential(new DefaultAzureCredentialBuilder()
+                        .build())
+                .buildClient();
+    }
+
     public AKVJwtKeyHolder(
             String publicKeyStr,
             String privateKeyStr,
@@ -42,6 +51,13 @@ public class AKVJwtKeyHolder extends IJwtKeyHolder {
     {
         super(publicKeyStr, privateKeyStr);
         prepClient(vaultName, tenantId, clientId, clientSecret);
+    }
+
+    public AKVJwtKeyHolder(String publicKeyStr,
+                           String privateKeyStr,
+                           String vaultName){
+        super(publicKeyStr, privateKeyStr);
+        prepClient(vaultName);
     }
 
     void refreshVersionList(String keyName){
@@ -67,6 +83,17 @@ public class AKVJwtKeyHolder extends IJwtKeyHolder {
     {
         super(publicKeyStr, privateKeyStr, publicKeyStrNotify, privateKeyStrNotify);
         prepClient(vaultName, tenantId, clientId, clientSecret);
+    }
+
+    public AKVJwtKeyHolder(
+            String publicKeyStr,
+            String privateKeyStr,
+            String publicKeyStrNotify,
+            String privateKeyStrNotify,
+            String vaultName)
+    {
+        super(publicKeyStr, privateKeyStr, publicKeyStrNotify, privateKeyStrNotify);
+        prepClient(vaultName);
     }
 
     @Override
