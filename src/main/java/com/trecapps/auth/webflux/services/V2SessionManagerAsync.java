@@ -135,7 +135,7 @@ public class V2SessionManagerAsync  extends SessionManagerBase {
 
     public Mono<SessionListV2> blockApp(String userId, String sessionId, String app){
         return userStorageService.retrieveSessionList(userId)
-                .doOnNext((SessionListV2 sessions) -> {
+                .flatMap((SessionListV2 sessions) -> {
                     SessionV2 session = sessions.getSessionById(sessionId);
 
                     session.setApps(session.getApps()
@@ -145,7 +145,7 @@ public class V2SessionManagerAsync  extends SessionManagerBase {
                     List<String> blockedApps = session.getBlockedApps();
                     if (!blockedApps.contains(app))
                         blockedApps.add(app);
-                    userStorageService.saveSessions(sessions, userId);
+                    return userStorageService.saveSessionsMono(sessions, userId).thenReturn(sessions);
                 });
     }
 
