@@ -56,23 +56,23 @@ public class V2SessionManagerAsync  extends SessionManagerBase {
 
     public Mono<SessionListV2> updateSessionExpiration(String userId, String sessionId, OffsetDateTime time) {
         return userStorageService.retrieveSessionList(userId)
-                .doOnNext((SessionListV2 sessions) -> {
+                .flatMap((SessionListV2 sessions) -> {
                     SessionV2 session = sessions.getSessionById(sessionId);
                     session.setExpiration(time);
-                    userStorageService.saveSessions(sessions, userId);
+                    return userStorageService.saveSessionsMono(sessions, userId).thenReturn(sessions);
                 });
     }
 
     public Mono<SessionListV2> setBrandMono(String userId, String sessionId, String brand, String app, boolean updateBrand)
     {
         return userStorageService.retrieveSessionList(userId)
-                .doOnNext((SessionListV2 sessions) -> {
+                .flatMap((SessionListV2 sessions) -> {
                     SessionV2 session = sessions.getSessionById(sessionId);
 
                     if(session != null)
                         session.setApp(app, brand, updateBrand);
 
-                    userStorageService.saveSessions(sessions, userId);
+                    return userStorageService.saveSessionsMono(sessions, userId).thenReturn(sessions);
                 });
     }
 
