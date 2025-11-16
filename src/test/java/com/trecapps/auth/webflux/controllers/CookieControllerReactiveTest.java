@@ -144,8 +144,8 @@ public class CookieControllerReactiveTest {
             SessionApp app = apps.get(0);
             Assertions.assertEquals("brandId", app.getBrandId());
 
-            return null;
-        }).when(userStorageService).saveSessions(any(SessionListV2.class), anyString());
+            return Mono.empty();
+        }).when(userStorageService).saveSessionsMono(any(SessionListV2.class), anyString());
         Mono<ResponseEntity<LoginToken>> mono = cookieController.checkRefresh("", "non-mfa", trecAuthentication);
 
         StepVerifier.create(mono)

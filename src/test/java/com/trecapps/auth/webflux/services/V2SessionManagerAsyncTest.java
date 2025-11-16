@@ -89,6 +89,8 @@ public class V2SessionManagerAsyncTest {
 
         Mono<SessionListV2> mono = this.sessionManager.updateSessionExpiration(user.getId(), "cccccc", time);
 
+        Mockito.doReturn(Mono.empty()).when(userStorageService).saveSessionsMono(Mockito.any(SessionListV2.class), anyString());
+
         StepVerifier.create(mono)
                 .consumeNextWith((SessionListV2 list) -> {
                     SessionV2 session = list.getSessionById("cccccc");
@@ -110,6 +112,8 @@ public class V2SessionManagerAsyncTest {
         sessionListV2.getSessions().add(sessionV2);
 
         Mockito.doReturn(Mono.just(sessionListV2)).when(userStorageService).retrieveSessionList(anyString());
+
+        Mockito.doReturn(Mono.empty()).when(userStorageService).saveSessionsMono(Mockito.any(SessionListV2.class), anyString());
 
         Mono<SessionListV2> mono = this.sessionManager.setBrandMono(user.getId(), "cccccc", "brandId", "Coffeeshop", false);
 
@@ -174,6 +178,7 @@ public class V2SessionManagerAsyncTest {
         Mockito.doReturn(Mono.just(sessionListV2)).when(userStorageService).retrieveSessionList(anyString());
 
         Mono<String> mono = sessionManager.getBrand(user.getId(), "cccccc", "Coffeeshop");
+
 
         StepVerifier.create(mono)
                 .consumeNextWith((String brandId) -> {
@@ -266,6 +271,7 @@ public class V2SessionManagerAsyncTest {
         sessionListV2.getSessions().add(sessionV2);
 
         Mockito.doReturn(Mono.just(sessionListV2)).when(userStorageService).retrieveSessionList(anyString());
+        Mockito.doReturn(Mono.empty()).when(userStorageService).saveSessionsMono(any(SessionListV2.class), anyString());
 
         Mono<SessionListV2> mono = sessionManager.blockApp(user.getId(), "cccccc", "Watercooler");
 
