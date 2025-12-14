@@ -99,7 +99,7 @@ public class TrecSecurityContextServlet extends TrecCookieSaver implements Secur
         if(cookieApp != null && req.getRequestURI().endsWith("/refresh_token"))
             return getContextFromCookie(res, req, this.cookieName);
 
-        String auth = req.getHeader("Authentication");
+        String auth = req.getHeader("Authorization");
         if(auth == null && this.useRequestCookie)
             getContextFromCookie(res, req, this.requestCookieName);
 

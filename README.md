@@ -1,6 +1,6 @@
 # TrecAuth
 
-* **Current Version:** 0.9.38-alpha
+* **Current Version:** 0.9.38-alpha (1.0.0-M1 also available, requires Spring Boot 4)
 * **Minimum Java:** 21 (since 0.9.24-alpha)
 
 The **TrecAuth** project is a library designed to provide a cloud-agnostic mechanism for providing customized Security 
@@ -399,4 +399,17 @@ trecauth.rotate.update-cron-schedule=0 0 1 ? * SUN *
 **Note:** Because you might have multiple instances of an application running, it is recommented to 
 disable `trecauth.rotate.do-update` and delegate that task to the clouds serverless function
 
+### Version 1.x features
 
+Starting with version 1.x, TrecAuth requires Spring Boot 4. In addition, we are adding support to holding request tokens
+in a cookie similar to the refresh tokens available. This is intended to support applications that utilize Spring's MVC
+support and serve Web-Pages directly (such as those using JSP or Thymeleaf).
+
+```properties
+trecauth.request.cookie-name=TREC_REQUEST
+trecauth.request.use-cookie=true
+```
+
+Rules:
+1. If `trecauth.request.use-cookie` is set to `true` then `trecauth.request.cookie-name` must be set
+2. `trecauth.request.cookie-name` cannot have the same value as `trecauth.refresh.cookie-name`

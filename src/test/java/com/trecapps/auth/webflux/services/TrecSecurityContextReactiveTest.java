@@ -113,6 +113,7 @@ public class TrecSecurityContextReactiveTest {
 
         TcUser user = ObjectTestProvider.getTcUser();
         TrecAuthentication trecAuthentication = new TrecAuthentication(user);
+        trecAuthentication.setUseCookie(true);
         trecAuthentication.setLoginToken(loginToken);
 
 
@@ -182,6 +183,8 @@ public class TrecSecurityContextReactiveTest {
         Mockito.doReturn(cookieMap).when(request).getCookies();
 
         Mockito.doReturn(Mono.just(Optional.of(user))).when(userStorageService).getAccountById(anyString());
+
+        Mockito.doReturn(new HttpHeaders()).when(request).getHeaders();
 
         Mono<SecurityContext> mono = this.trecSecurtyContext.load(exchange);
 
@@ -286,6 +289,7 @@ public class TrecSecurityContextReactiveTest {
         Mockito.doReturn(new InetSocketAddress("1.2.3.4", 80)).when(request).getRemoteAddress();
 
         //Mockito.doReturn(Mono.just(Optional.of(user))).when(userStorageService).getAccountById(anyString());
+        Mockito.doReturn(new HttpHeaders()).when(request).getHeaders();
 
         Mono<SecurityContext> mono = this.trecSecurtyContext.load(exchange);
 

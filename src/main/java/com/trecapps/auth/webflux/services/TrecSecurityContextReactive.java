@@ -138,7 +138,7 @@ public class TrecSecurityContextReactive extends TrecCookieSaverAsync implements
         ServerHttpRequest req = exchange.getRequest();
         Mono<SecurityContext> ret;
         String path = req.getPath().value();
-        String auth = req.getHeaders().getFirst("Authentication");
+        String auth = req.getHeaders().getFirst("Authorization");
         if(cookieApp != null && path.endsWith("/refresh_token"))
             ret = getContextFromCookie(exchange.getResponse(), req, this.cookieName);
         else if(auth == null && this.useRequestCookie)
