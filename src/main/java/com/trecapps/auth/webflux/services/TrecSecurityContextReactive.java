@@ -36,6 +36,8 @@ public class TrecSecurityContextReactive extends TrecCookieSaverAsync implements
     String cookieApp;
 
     String cookieName;
+    String requestCookieName;
+    boolean useRequestCookie;
 
     String domain;
 
@@ -60,16 +62,29 @@ public class TrecSecurityContextReactive extends TrecCookieSaverAsync implements
             @Value("${trecauth.refresh.domain:#{NULL}}") String domain,
             @Value("${trecauth.refresh.app:#{NULL}}") String cookieApp,
             @Value("${trecauth.refresh.cookie-name:#{NULL}}") String cookieName,
+            @Value("${trecauth.request.cookie-name:#{NULL}}") String requestCookieName,
+            @Value("${trecauth.request.use-cookie:false}") boolean useRequestCookie,
             @Value("${trecauth.flag-local:false}") boolean flagLocal,
             @Value("${trecauth.mfa.endpoint.exceptions:#{NULL}}") String exceptedEndpoints
     )
     {
         super(sessionManager,tokenService, userStorageService1, app);
+        if(useRequestCookie && requestCookieName == null)
+            throw new IllegalArgumentException("Request Cookie requires Cookie name to be set to be used. " +
+                    "Either set 'trecauth.request.cookie-name' to a valid name or set " +
+                    "'trecauth.request.use-cookie' to false");
         this.alertHandler = alertHandler;
         this.domain = domain;
         this.cookieApp = cookieApp;
         this.cookieName = cookieName;
         this.logLocal = flagLocal;
+
+        this.useRequestCookie = useRequestCookie;
+        this.requestCookieName = requestCookieName;
+
+        if(this.requestCookieName != null && this.cookieName.equals(requestCookieName))
+            throw new IllegalArgumentException("Properties 'trecauth.request.cookie-name' and " +
+                    "'trecauth.refresh.cookie-name' cannot have the same value!");
 
         if(exceptedEndpoints == null)
             this.mfaEndpointExceptions = List.of();
@@ -79,6 +94,21 @@ public class TrecSecurityContextReactive extends TrecCookieSaverAsync implements
         }
     }
 
+    private void setCookie(String cookieName, String value, ServerHttpResponse response){
+
+        ResponseCookie.ResponseCookieBuilder cookieBuilder = ResponseCookie.from(cookieName)
+                .secure(true)
+                .path("/")
+                .httpOnly(true)
+                .maxAge(TimeUnit.DAYS.toSeconds(7))
+                .value(value);
+
+        if(domain != null)
+            cookieBuilder = cookieBuilder.domain(domain);
+
+        response.addCookie(cookieBuilder.build());
+    }
+
     @Override
     public Mono<Void> save(ServerWebExchange exchange, SecurityContext context) {
 
@@ -86,24 +116,20 @@ public class TrecSecurityContextReactive extends TrecCookieSaverAsync implements
         if(!(auth instanceof TrecAuthentication trecAuthentication))
             return Mono.empty();
 
-        this.prepLoginTokens(trecAuthentication, exchange
-                .getRequest()
-                .getHeaders()
-                .getFirst("User-Agent"));
+        if(trecAuthentication.isUseCookie() || this.useRequestCookie) {
+            this.prepLoginTokens(trecAuthentication, exchange
+                    .getRequest()
+                    .getHeaders()
+                    .getFirst("User-Agent"));
 
-        ServerHttpResponse response = exchange.getResponse();
-        ResponseCookie.ResponseCookieBuilder cookieBuilder = ResponseCookie.from(cookieName)
-            .secure(true)
-            .path("/")
-            .httpOnly(true)
-            .maxAge(TimeUnit.DAYS.toSeconds(7))
-            .value(trecAuthentication.getLoginToken().getRefresh_token());
+            ServerHttpResponse response = exchange.getResponse();
 
-        if(domain != null)
-            cookieBuilder = cookieBuilder.domain(domain);
 
-        response.addCookie(cookieBuilder.build());
-
+            if(trecAuthentication.isUseCookie())
+                setCookie(cookieName, trecAuthentication.getLoginToken().getRefresh_token(), response);
+            if(this.useRequestCookie)
+                setCookie(requestCookieName, trecAuthentication.getLoginToken().getAccess_token(), response);
+        }
         return Mono.empty();
     }
 
@@ -112,8 +138,11 @@ public class TrecSecurityContextReactive extends TrecCookieSaverAsync implements
         ServerHttpRequest req = exchange.getRequest();
         Mono<SecurityContext> ret;
         String path = req.getPath().value();
+        String auth = req.getHeaders().getFirst("Authentication");
         if(cookieApp != null && path.endsWith("/refresh_token"))
-            ret = getContextFromCookie(exchange.getResponse(), req);
+            ret = getContextFromCookie(exchange.getResponse(), req, this.cookieName);
+        else if(auth == null && this.useRequestCookie)
+            ret = getContextFromCookie(exchange.getResponse(), req, this.requestCookieName);
         else
             ret = getContextFromHeader(req);
         return ret.doOnNext((SecurityContext context) -> {
@@ -155,12 +184,12 @@ public class TrecSecurityContextReactive extends TrecCookieSaverAsync implements
     }
 
 
-    Mono<SecurityContext> getContextFromCookie(ServerHttpResponse response, ServerHttpRequest request) {
+    Mono<SecurityContext> getContextFromCookie(ServerHttpResponse response, ServerHttpRequest request, String useCookie) {
         return Mono.just(SecurityContextHolder.createEmptyContext())
                 .flatMap((SecurityContext context) -> {
 
                     MultiValueMap<String, HttpCookie> cookies = request.getCookies();
-                    HttpCookie cookie = cookies.getFirst(cookieName);
+                    HttpCookie cookie = cookies.getFirst(useCookie);
                     if(cookie != null)
                     {
                         JwtKeyArray.DecodedHolder decode = tokenService.decodeToken(cookie.getValue());

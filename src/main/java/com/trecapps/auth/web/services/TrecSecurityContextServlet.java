@@ -30,6 +30,8 @@ public class TrecSecurityContextServlet extends TrecCookieSaver implements Secur
     ISecurityAlertHandler alertHandler;
 
     String cookieName;
+    String requestCookieName;
+    boolean useRequestCookie;
 
     String cookieApp;
 
@@ -54,16 +56,29 @@ public class TrecSecurityContextServlet extends TrecCookieSaver implements Secur
             @Value("${trecauth.refresh.cookie-name:#{NULL}}") String cookieName,
             @Value("${trecauth.refresh.app:#{NULL}}") String cookieApp,
             @Value("${trecauth.refresh.domain:#{NULL}}") String domain,
+            @Value("${trecauth.request.cookie-name:#{NULL}}") String requestCookieName,
+            @Value("${trecauth.request.use-cookie:false}") boolean useRequestCookie,
             @Value("${trecauth.flag-local:false}") boolean flagLocal,
             @Value("${trecauth.mfa.endpoint.exceptions:#{NULL}}") String exceptedEndpoints
     )
     {
         super(sessionManager, jwtService, userStorageService, app);
+        if(useRequestCookie && requestCookieName == null)
+            throw new IllegalArgumentException("Request Cookie requires Cookie name to be set to be used. " +
+                    "Either set 'trecauth.request.cookie-name' to a valid name or set " +
+                    "'trecauth.request.use-cookie' to false");
         this.domain = domain;
         this.cookieName = cookieName;
         this.cookieApp = cookieApp;
         this.alertHandler = alertHandler;
         this.logLocal = flagLocal;
+
+        this.useRequestCookie = useRequestCookie;
+        this.requestCookieName = requestCookieName;
+
+        if(this.requestCookieName != null && this.cookieName.equals(requestCookieName))
+            throw new IllegalArgumentException("Properties 'trecauth.request.cookie-name' and " +
+                    "'trecauth.refresh.cookie-name' cannot have the same value!");
 
         if(exceptedEndpoints == null)
             this.mfaEndpointExceptions = List.of();
@@ -82,10 +97,28 @@ public class TrecSecurityContextServlet extends TrecCookieSaver implements Secur
         HttpServletResponse res = requestResponseHolder.getResponse();
 
         if(cookieApp != null && req.getRequestURI().endsWith("/refresh_token"))
-            return getContextFromCookie(res, req);
+            return getContextFromCookie(res, req, this.cookieName);
+
+        String auth = req.getHeader("Authentication");
+        if(auth == null && this.useRequestCookie)
+            getContextFromCookie(res, req, this.requestCookieName);
 
         return getContextFromHeader(res, req);
+    }
 
+    private void setCookie(String cookieName, String value, HttpServletResponse response){
+        Cookie cook = new Cookie(cookieName, value);
+        cook.setHttpOnly(true);
+        cook.setPath("/");
+        if(domain != null) {
+            logger.debug("Setting Cookie domain to {}", domain);
+            cook.setDomain(domain);
+        }
+        cook.setSecure(true);
+
+        cook.setMaxAge((int) TimeUnit.DAYS.toSeconds(7));
+
+        response.addCookie(cook);
     }
 
     @Override
@@ -94,23 +127,17 @@ public class TrecSecurityContextServlet extends TrecCookieSaver implements Secur
         if(!(auth instanceof TrecAuthentication trecAuthentication))
             return;
 
-        if(trecAuthentication.isUseCookie())
+        if(trecAuthentication.isUseCookie() || this.useRequestCookie)
         {
             this.prepLoginTokens(trecAuthentication, request.getHeader("User-Agent"));
 
-            Cookie cook = new Cookie(cookieName, trecAuthentication.getLoginToken().getRefresh_token());
-            cook.setHttpOnly(true);
-            cook.setPath("/");
-            if(domain != null) {
-                logger.debug("Setting Cookie domain to {}", domain);
-                cook.setDomain(domain);
-            }
-            cook.setSecure(true);
-
-            cook.setMaxAge((int) TimeUnit.DAYS.toSeconds(7));
-
-            response.addCookie(cook);
+            if(trecAuthentication.isUseCookie())
+                setCookie(cookieName, trecAuthentication.getLoginToken().getRefresh_token(), response);
+            if(this.useRequestCookie)
+                setCookie(requestCookieName, trecAuthentication.getLoginToken().getAccess_token(), response);
         }
+
+
 
     }
 
@@ -119,7 +146,7 @@ public class TrecSecurityContextServlet extends TrecCookieSaver implements Secur
 
         SecurityContext ret = null;
         if(cookieApp != null && req.getRequestURI().endsWith("/refresh_token"))
-            ret = getContextFromCookie(null, req);
+            ret = getContextFromCookie(null, req, this.cookieName);
         else
             ret = getContextFromHeader(null, req);
 
@@ -127,7 +154,7 @@ public class TrecSecurityContextServlet extends TrecCookieSaver implements Secur
     }
 
     @SneakyThrows
-    SecurityContext getContextFromCookie(HttpServletResponse response, HttpServletRequest request){
+    SecurityContext getContextFromCookie(HttpServletResponse response, HttpServletRequest request, String useCookie){
         Cookie[] cookies = request.getCookies();
         SecurityContext context = SecurityContextHolder.createEmptyContext();
         if(cookies == null) {
@@ -136,7 +163,7 @@ public class TrecSecurityContextServlet extends TrecCookieSaver implements Secur
         for(Cookie c: cookies)
         {
             String name = c.getName();
-            if(name.equals(cookieName))
+            if(name.equals(useCookie))
             {
                 String data = c.getValue();
 
