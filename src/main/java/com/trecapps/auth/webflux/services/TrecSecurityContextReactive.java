@@ -82,7 +82,7 @@ public class TrecSecurityContextReactive extends TrecCookieSaverAsync implements
         this.useRequestCookie = useRequestCookie;
         this.requestCookieName = requestCookieName;
 
-        if(this.requestCookieName != null && this.cookieName.equals(requestCookieName))
+        if(this.requestCookieName != null && this.requestCookieName.equals(cookieName))
             throw new IllegalArgumentException("Properties 'trecauth.request.cookie-name' and " +
                     "'trecauth.refresh.cookie-name' cannot have the same value!");
 
